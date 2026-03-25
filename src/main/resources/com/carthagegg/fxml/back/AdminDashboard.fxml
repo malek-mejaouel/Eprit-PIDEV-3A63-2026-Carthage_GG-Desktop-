@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.AdminDashboardController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" style="-fx-background-color: transparent;">
+            <VBox styleClass="sidebar">
+                <VBox alignment="CENTER" spacing="10">
+                    <padding>
+                        <Insets top="30" bottom="30" />
+                    </padding>
+                    <ImageView fx:id="miniLogo" fitHeight="40" fitWidth="40" pickOnBounds="true" preserveRatio="true" />
+                    <Label text="ADMIN PANEL" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-letter-spacing: 2;" />
+                </VBox>
+                
+                <VBox spacing="5" VBox.vgrow="ALWAYS">
+                    <Button text="Dashboard" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item, active">
+                        <graphic><FontIcon iconLiteral="fas-tachometer-alt" iconColor="#00f0ff" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Users" onAction="#handleNavUsers" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-users-cog" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Games" onAction="#handleNavGames" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-gamepad" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Tournaments" onAction="#handleNavTournaments" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-trophy" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Teams" onAction="#handleNavTeams" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-users" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Matches" onAction="#handleNavMatches" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-gamepad" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Events" onAction="#handleNavEvents" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-calendar-day" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="News &amp; Categories" onAction="#handleNavNews" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-newspaper" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Categories" onAction="#handleNavCategories" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-list" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Products &amp; Orders" onAction="#handleNavProducts" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-shopping-cart" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Streams" onAction="#handleNavStreams" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-video" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                </VBox>
+                
+                <VBox spacing="5">
+                    <padding>
+                        <Insets top="20" bottom="20" />
+                    </padding>
+                    <Button text="Front View" onAction="#handleNavFront" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-external-link-alt" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
+                    <Button text="Sign Out" onAction="#handleSignOut" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconColor="#ef4444" iconSize="18"/></graphic>
+                    </Button>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </left>
+    
+    <center>
+        <VBox spacing="30">
+            <padding>
+                <Insets top="40" left="40" right="40" bottom="40" />
+            </padding>
+            <Label text="Admin Dashboard Overview" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 28;" />
+            
+            <FlowPane hgap="20" vgap="20">
+                <!-- Stat Cards -->
+                <VBox styleClass="stat-card" prefWidth="250">
+                    <Label text="TOTAL USERS" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <Label fx:id="totalUsers" text="0" styleClass="neon-label" style="-fx-font-size: 32; -fx-font-weight: bold;" />
+                </VBox>
+                <VBox styleClass="stat-card" prefWidth="250">
+                    <Label text="TOTAL TOURNAMENTS" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <Label fx:id="totalTournaments" text="0" styleClass="neon-label" style="-fx-font-size: 32; -fx-font-weight: bold;" />
+                </VBox>
+                <VBox styleClass="stat-card" prefWidth="250">
+                    <Label text="TOTAL REVENUE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <Label fx:id="totalRevenue" text="0.00 TND" style="-fx-text-fill: #D4AF37; -fx-font-size: 32; -fx-font-weight: bold;" />
+                </VBox>
+            </FlowPane>
+        </VBox>
+    </center>
+    
+</BorderPane>

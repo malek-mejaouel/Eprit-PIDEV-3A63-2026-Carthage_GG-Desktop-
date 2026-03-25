@@ -1,0 +1,248 @@
+package com.carthagegg.controllers.auth;
+
+import com.carthagegg.dao.UserDAO;
+import com.carthagegg.models.User;
+import com.carthagegg.utils.GoogleAuthService;
+import com.carthagegg.utils.SceneNavigator;
+import com.carthagegg.utils.SessionManager;
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
+
+public class SignInController {
+
+    @FXML private ImageView logoImageView;
+    @FXML private TextField emailField;
+    @FXML private PasswordField passwordField;
+    @FXML private CheckBox rememberMeCheckbox;
+    @FXML private Label errorLabel;
+
+    private UserDAO userDAO = new UserDAO();
+    private static final String PREF_REMEMBER_ME = "remember_me";
+    private static final String PREF_EMAIL = "remembered_email";
+    private final Preferences prefs = Preferences.userNodeForPackage(SignInController.class);
+
+    @FXML
+    public void initialize() {
+        errorLabel.setVisible(false);
+        
+        // Load logo
+        try {
+            logoImageView.setImage(new Image(getClass().getResourceAsStream("/images/zz.png")));
+        } catch (Exception e) {
+            System.err.println("Could not load logo: " + e.getMessage());
+        }
+
+        boolean remember = prefs.getBoolean(PREF_REMEMBER_ME, false);
+        if (remember) {
+            String rememberedEmail = prefs.get(PREF_EMAIL, "");
+            if (rememberedEmail != null && !rememberedEmail.isBlank()) {
+                emailField.setText(rememberedEmail);
+            }
+            rememberMeCheckbox.setSelected(true);
+        }
+    }
+
+    @FXML
+    private void handleSignIn() {
+        String email = emailField.getText() != null ? emailField.getText().trim() : "";
+        String password = passwordField.getText();
+
+        if (email.isEmpty() || password.isEmpty()) {
+            showError("Please enter email and password");
+            return;
+        }
+
+        try {
+            User user = userDAO.findByEmail(email);
+            if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+                
+                // Check if banned
+                if (user.getBannedUntil() != null && user.getBannedUntil().isAfter(LocalDateTime.now())) {
+                    showBanAlert(user);
+                    return;
+                }
+
+                // Check if active
+                if (!user.isActive()) {
+                    showError("Account is inactive");
+                    return;
+                }
+
+                // Successful login
+                SessionManager.setCurrentUser(user);
+
+                if (rememberMeCheckbox != null && rememberMeCheckbox.isSelected()) {
+                    prefs.putBoolean(PREF_REMEMBER_ME, true);
+                    prefs.put(PREF_EMAIL, email);
+                } else {
+                    prefs.putBoolean(PREF_REMEMBER_ME, false);
+                    prefs.remove(PREF_EMAIL);
+                }
+                try {
+                    prefs.flush();
+                } catch (BackingStoreException ignored) {}
+                
+                if (user.isAdmin()) {
+                    SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml");
+                } else {
+                    SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml");
+                }
+            } else {
+                showError("Invalid email or password");
+            }
+        } catch (Exception e) {
+            showError("System error: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Show alert for critical errors like DB connection
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Connection Error");
+            alert.setHeaderText("Database connection failed");
+            alert.setContentText("Please ensure MariaDB is running and the database 'carthage_gg' exists.\n\nError: " + e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+    }
+
+    private void showBanAlert(User user) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Account Banned");
+        alert.setHeaderText("Your account has been banned until " + user.getBannedUntil().toString());
+        alert.setContentText("Reason: " + user.getBanReason());
+        alert.showAndWait();
+    }
+
+    @FXML
+    private void handleGoogleSignIn() {
+        if (!ensureGoogleClientSecretConfiguredIfNeeded()) {
+            return;
+        }
+        GoogleAuthService.authenticate(new GoogleAuthService.GoogleAuthCallback() {
+            @Override
+            public void onSuccess(GoogleAuthService.GoogleUser gUser) {
+                Platform.runLater(() -> {
+                    try {
+                        // 1. Try to find user by Google ID
+                        User user = userDAO.findByGoogleId(gUser.id);
+                        
+                        if (user == null) {
+                            // 2. Fallback: try by email (if they registered manually before)
+                            user = userDAO.findByEmail(gUser.email);
+                            if (user != null) {
+                                // Link Google ID to existing account (optional, requires a DAO update method)
+                                // For now, we just log them in
+                            }
+                        }
+
+                        if (user == null) {
+                            // 3. Register new user
+                            user = new User();
+                            user.setEmail(gUser.email);
+                            user.setGoogleId(gUser.id);
+                            // Default password for google users (can't be logged in normally)
+                            user.setPassword(BCrypt.hashpw(java.util.UUID.randomUUID().toString(), BCrypt.gensalt()));
+                            user.setRoles("[\"ROLE_USER\"]");
+                            
+                            // Generate unique username
+                            String baseUsername = gUser.email.split("@")[0];
+                            user.setUsername(baseUsername + "_" + System.currentTimeMillis() % 1000);
+                            
+                            user.setFirstName(gUser.givenName != null ? gUser.givenName : "");
+                            user.setLastName(gUser.familyName != null ? gUser.familyName : "");
+                            user.setAvatar(gUser.picture);
+                            
+                            userDAO.save(user);
+                        }
+
+                        // Check if banned
+                        if (user.getBannedUntil() != null && user.getBannedUntil().isAfter(LocalDateTime.now())) {
+                            showBanAlert(user);
+                            return;
+                        }
+
+                        // Check if active
+                        if (!user.isActive()) {
+                            showError("Account is inactive");
+                            return;
+                        }
+
+                        // Successful login
+                        SessionManager.setCurrentUser(user);
+                        
+                        if (user.isAdmin()) {
+                            SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml");
+                        } else {
+                            SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml");
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                        showError("Database error during Google Login.");
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                Platform.runLater(() -> showError(error));
+            }
+        });
+    }
+
+    private boolean ensureGoogleClientSecretConfiguredIfNeeded() {
+        String envSecret = System.getenv("CARTHAGEGG_GOOGLE_CLIENT_SECRET");
+        if (envSecret != null && !envSecret.isBlank()) {
+            return true;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Google Sign-In Setup");
+        dialog.setHeaderText("If your Google OAuth Client is a Web client, a client secret is required.\nFor Desktop clients (recommended), leave the secret empty.");
+        ButtonType continueBtn = new ButtonType("Continue", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(continueBtn, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        TextField clientIdField = new TextField();
+        String envClientId = System.getenv("CARTHAGEGG_GOOGLE_CLIENT_ID");
+        clientIdField.setText((envClientId != null && !envClientId.isBlank()) ? envClientId : "");
+        clientIdField.setPromptText("Client ID (…apps.googleusercontent.com)");
+
+        PasswordField secretField = new PasswordField();
+        secretField.setPromptText("Optional (Web client only)");
+
+        grid.addRow(0, new Label("Client ID"), clientIdField);
+        grid.addRow(1, new Label("Client Secret"), secretField);
+
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType result = dialog.showAndWait().orElse(ButtonType.CANCEL);
+        if (result != continueBtn) {
+            return false;
+        }
+
+        GoogleAuthService.setClientCredentials(clientIdField.getText(), secretField.getText());
+        return true;
+    }
+
+    @FXML
+    private void handleGoToSignUp() {
+        SceneNavigator.navigateTo("/com/carthagegg/fxml/auth/SignUp.fxml");
+    }
+}
