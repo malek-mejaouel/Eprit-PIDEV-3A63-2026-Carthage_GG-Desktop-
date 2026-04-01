@@ -4,6 +4,7 @@ import com.carthagegg.dao.CategoryDAO;
 import com.carthagegg.dao.NewsDAO;
 import com.carthagegg.models.Category;
 import com.carthagegg.models.News;
+import com.carthagegg.utils.FileStorage;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.beans.property.SimpleStringProperty;
@@ -13,7 +14,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -31,12 +35,14 @@ public class NewsManagementController {
     @FXML private Label formTitle;
     @FXML private TextField titleField;
     @FXML private ComboBox<Category> categoryComboBox;
+    @FXML private TextField imageField;
     @FXML private TextArea contentArea;
 
     private NewsDAO newsDAO = new NewsDAO();
     private CategoryDAO categoryDAO = new CategoryDAO();
     private ObservableList<News> newsList = FXCollections.observableArrayList();
     private News selectedNews;
+    private File selectedImageFile;
 
     @FXML
     public void initialize() {
@@ -60,14 +66,8 @@ public class NewsManagementController {
         });
 
         colCategory.setCellValueFactory(cellData -> {
-            try {
-                List<Category> cats = categoryDAO.findAll();
-                Category c = cats.stream().filter(cat -> cat.getId() == cellData.getValue().getCategoryId())
-                        .findFirst().orElse(null);
-                return new SimpleStringProperty(c != null ? c.getName() : "Unknown");
-            } catch (SQLException e) {
-                return new SimpleStringProperty("Error");
-            }
+            String name = cellData.getValue().getCategory();
+            return new SimpleStringProperty(name != null ? name : "Unknown");
         });
 
         colActions.setCellFactory(param -> new TableCell<News, Void>() {
@@ -92,7 +92,8 @@ public class NewsManagementController {
 
     private void loadNews() {
         try {
-            newsList.setAll(newsDAO.findAll());
+            List<News> list = newsDAO.findAll();
+            newsList.setAll(list);
             newsTable.setItems(newsList);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -101,29 +102,35 @@ public class NewsManagementController {
 
     private void loadCategories() {
         try {
-            categoryComboBox.setItems(FXCollections.observableArrayList(categoryDAO.findAll()));
+            List<Category> cats = categoryDAO.findAll();
+            categoryComboBox.setItems(FXCollections.observableArrayList(cats));
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    @FXML private void handleShowAddForm() {
+    @FXML
+    private void handleShowAddForm() {
         selectedNews = null;
+        selectedImageFile = null;
         formTitle.setText("ADD ARTICLE");
         titleField.clear();
         categoryComboBox.setValue(null);
+        imageField.clear();
         contentArea.clear();
         showForm();
     }
 
     private void handleEdit(News n) {
         selectedNews = n;
+        selectedImageFile = null;
         formTitle.setText("EDIT ARTICLE");
         titleField.setText(n.getTitle());
+        imageField.setText(n.getImage());
         contentArea.setText(n.getContent());
         
         for (Category c : categoryComboBox.getItems()) {
-            if (c.getId() == n.getCategoryId()) {
+            if (c.getName() != null && c.getName().equalsIgnoreCase(n.getCategory())) {
                 categoryComboBox.setValue(c);
                 break;
             }
@@ -151,6 +158,7 @@ public class NewsManagementController {
     private void handleSaveNews() {
         String title = titleField.getText();
         Category cat = categoryComboBox.getValue();
+        String image = imageField.getText();
         String content = contentArea.getText();
 
         if (title.isEmpty() || cat == null || content.isEmpty()) {
@@ -159,16 +167,27 @@ public class NewsManagementController {
         }
 
         try {
+            if (selectedImageFile != null) {
+                try {
+                    image = FileStorage.saveNewsImage(selectedImageFile);
+                    imageField.setText(image);
+                } catch (IOException ex) {
+                    showAlert("Error", "Could not save image file: " + ex.getMessage(), Alert.AlertType.ERROR);
+                    return;
+                }
+            }
             if (selectedNews == null) {
                 News n = new News();
                 n.setTitle(title);
-                n.setCategoryId(cat.getId());
+                n.setCategory(cat.getName());
+                n.setImage(image);
                 n.setContent(content);
                 newsDAO.save(n);
                 newsList.add(n);
             } else {
                 selectedNews.setTitle(title);
-                selectedNews.setCategoryId(cat.getId());
+                selectedNews.setCategory(cat.getName());
+                selectedNews.setImage(image);
                 selectedNews.setContent(content);
                 newsDAO.update(selectedNews);
                 newsTable.refresh();
@@ -176,6 +195,21 @@ public class NewsManagementController {
             hideForm();
         } catch (SQLException e) {
             showAlert("Error", "Database error: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    private void handleBrowseImage() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Choose News Image");
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+        File file = chooser.showOpenDialog(titleField.getScene() != null ? titleField.getScene().getWindow() : null);
+        if (file != null) {
+            selectedImageFile = file;
+            imageField.setText(file.getAbsolutePath());
         }
     }
 

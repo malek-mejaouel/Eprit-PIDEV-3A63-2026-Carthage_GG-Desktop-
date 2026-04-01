@@ -58,6 +58,14 @@
                 <Label text="CATEGORY" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
             </VBox>
+
+            <VBox spacing="5">
+                <Label text="IMAGE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <HBox spacing="10">
+                    <TextField fx:id="imageField" editable="false" promptText="Choose an image..." styleClass="text-field-dark" HBox.hgrow="ALWAYS" />
+                    <Button text="BROWSE" onAction="#handleBrowseImage" styleClass="btn-gold" prefHeight="36" />
+                </HBox>
+            </VBox>
             
             <VBox spacing="5" VBox.vgrow="ALWAYS">
                 <Label text="CONTENT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />

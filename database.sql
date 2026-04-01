@@ -81,6 +81,20 @@ CREATE TABLE IF NOT EXISTS news (
     category_id INT
 );
 
+-- Comments Table (for News comments)
+CREATE TABLE IF NOT EXISTS comments (
+    commentaire_id INT AUTO_INCREMENT PRIMARY KEY,
+    contenu TEXT NOT NULL,
+    date_commentaire DATETIME DEFAULT CURRENT_TIMESTAMP,
+    gif_url VARCHAR(255),
+    upvotes INT DEFAULT 0,
+    downvotes INT DEFAULT 0,
+    news_id INT NOT NULL,
+    user_id INT,
+    FOREIGN KEY (news_id) REFERENCES news(news_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+);
+
 -- Event Table (Matches EventDAO - Note singular name)
 CREATE TABLE IF NOT EXISTS event (
     id INT AUTO_INCREMENT PRIMARY KEY,

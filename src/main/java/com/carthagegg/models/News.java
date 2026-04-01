@@ -8,7 +8,7 @@ public class News {
     private String content;
     private String image;
     private LocalDateTime publishedAt;
-    private int categoryId;
+    private String category;
 
     public News() {}
 
@@ -22,6 +22,6 @@ public class News {
     public void setImage(String image) { this.image = image; }
     public LocalDateTime getPublishedAt() { return publishedAt; }
     public void setPublishedAt(LocalDateTime publishedAt) { this.publishedAt = publishedAt; }
-    public int getCategoryId() { return categoryId; }
-    public void setCategoryId(int categoryId) { this.categoryId = categoryId; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 }

@@ -49,6 +49,9 @@
                     <Button text="News &amp; Categories" onAction="#handleNavNews" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
                         <graphic><FontIcon iconLiteral="fas-newspaper" iconColor="#71717a" iconSize="18"/></graphic>
                     </Button>
+                    <Button text="Comments" onAction="#handleNavComments" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-comments" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
                     <Button text="Categories" onAction="#handleNavCategories" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
                         <graphic><FontIcon iconLiteral="fas-list" iconColor="#71717a" iconSize="18"/></graphic>
                     </Button>
