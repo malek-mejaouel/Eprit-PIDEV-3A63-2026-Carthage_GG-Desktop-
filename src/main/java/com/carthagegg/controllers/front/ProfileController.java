@@ -30,8 +30,27 @@ public class ProfileController {
             rolesLabel.setText(user.getRoles());
             
             if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
-                try { avatarView.setImage(new Image(user.getAvatar())); } catch (Exception e) {}
+                try {
+                    String avatarPath = user.getAvatar();
+                    if (avatarPath.startsWith("http") || avatarPath.startsWith("file:")) {
+                        avatarView.setImage(new Image(avatarPath));
+                    } else {
+                        avatarView.setImage(new Image(java.nio.file.Path.of(avatarPath).toUri().toString()));
+                    }
+                } catch (Exception e) {
+                    loadDefaultAvatar();
+                }
+            } else {
+                loadDefaultAvatar();
             }
+        }
+    }
+
+    private void loadDefaultAvatar() {
+        try {
+            avatarView.setImage(new Image(getClass().getResourceAsStream("/images/zz.png")));
+        } catch (Exception e) {
+            System.err.println("Could not load default avatar: " + e.getMessage());
         }
     }
 
@@ -43,4 +62,6 @@ public class ProfileController {
     @FXML private void handleNavNews() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/News.fxml"); }
     @FXML private void handleNavShop() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Shop.fxml"); }
     @FXML private void handleNavStreams() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Streams.fxml"); }
+
+    @FXML private void handleNavEditProfile() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/EditProfile.fxml"); }
 }

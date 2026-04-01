@@ -189,7 +189,12 @@ public class NewsController {
                 avatar.setClip(new javafx.scene.shape.Circle(15, 15, 15));
                 if (c.getAvatar() != null && !c.getAvatar().isEmpty()) {
                     try {
-                        avatar.setImage(new Image(c.getAvatar()));
+                        String avatarPath = c.getAvatar();
+                        if (avatarPath.startsWith("http") || avatarPath.startsWith("file:")) {
+                            avatar.setImage(new Image(avatarPath));
+                        } else {
+                            avatar.setImage(new Image(java.nio.file.Path.of(avatarPath).toUri().toString()));
+                        }
                     } catch (Exception e) {
                         avatar.setImage(new Image(getClass().getResourceAsStream("/images/zz.png")));
                     }

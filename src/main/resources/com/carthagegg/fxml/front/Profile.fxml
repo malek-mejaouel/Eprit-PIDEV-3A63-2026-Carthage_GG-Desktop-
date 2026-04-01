@@ -43,7 +43,7 @@
                     <Label fx:id="rolesLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-text-fill: #FFC107;" />
                 </GridPane>
                 
-                <Button text="EDIT PROFILE" styleClass="btn-primary" prefWidth="200" />
+                <Button text="EDIT PROFILE" onAction="#handleNavEditProfile" styleClass="btn-primary" prefWidth="200" />
             </VBox>
         </VBox>
     </center>
