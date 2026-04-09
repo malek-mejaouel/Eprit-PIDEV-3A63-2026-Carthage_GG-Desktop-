@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.EventsManagementController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+            <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+            </Button>
+            <Label text="Events &amp; Locations Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Region HBox.hgrow="ALWAYS" />
+        </HBox>
+    </top>
+    
+    <center>
+        <TabPane fx:id="mainTabPane" side="TOP" styleClass="dark-tab-pane">
+            <tabs>
+                <!-- Events Tab -->
+                <Tab text="Events" closable="false">
+                    <graphic><FontIcon iconLiteral="fas-calendar-alt" iconColor="#00f0ff" iconSize="14"/></graphic>
+                    <VBox spacing="20">
+                        <padding>
+                            <Insets top="20" left="20" right="20" bottom="20" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="20">
+                            <Button text="ADD NEW EVENT" onAction="#handleShowAddEventForm" styleClass="btn-primary" prefHeight="40">
+                                <graphic><FontIcon iconLiteral="fas-plus" iconColor="#0a0a0f" iconSize="14"/></graphic>
+                            </Button>
+                        </HBox>
+                        <TableView fx:id="eventsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                            <columns>
+                                <TableColumn fx:id="colEventId" text="ID" prefWidth="50" />
+                                <TableColumn fx:id="colEventTitle" text="Title" prefWidth="250" />
+                                <TableColumn fx:id="colEventLocation" text="Location" prefWidth="150" />
+                                <TableColumn fx:id="colEventStart" text="Start Date" prefWidth="180" />
+                                <TableColumn fx:id="colEventSeats" text="Max Seats" prefWidth="100" />
+                                <TableColumn fx:id="colEventActions" text="Actions" prefWidth="180" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+                
+                <!-- Locations Tab -->
+                <Tab text="Locations" closable="false">
+                    <graphic><FontIcon iconLiteral="fas-map-marker-alt" iconColor="#00f0ff" iconSize="14"/></graphic>
+                    <VBox spacing="20">
+                        <padding>
+                            <Insets top="20" left="20" right="20" bottom="20" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="20">
+                            <Button text="ADD NEW LOCATION" onAction="#handleShowAddLocationForm" styleClass="btn-primary" prefHeight="40">
+                                <graphic><FontIcon iconLiteral="fas-plus" iconColor="#0a0a0f" iconSize="14"/></graphic>
+                            </Button>
+                        </HBox>
+                        <TableView fx:id="locationsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                            <columns>
+                                <TableColumn fx:id="colLocId" text="ID" prefWidth="50" />
+                                <TableColumn fx:id="colLocName" text="Name" prefWidth="200" />
+                                <TableColumn fx:id="colLocAddress" text="Address" prefWidth="300" />
+                                <TableColumn fx:id="colLocCapacity" text="Capacity" prefWidth="100" />
+                                <TableColumn fx:id="colLocActions" text="Actions" prefWidth="180" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+    
+    <!-- Right Sidebar Form for Events -->
+    <right>
+        <StackPane>
+            <VBox fx:id="eventFormPane" visible="false" managed="false" prefWidth="350" spacing="15" styleClass="card">
+                <padding>
+                    <Insets top="30" left="20" right="20" bottom="20" />
+                </padding>
+                <Label fx:id="eventFormTitle" text="ADD EVENT" styleClass="neon-label" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+                <VBox spacing="5">
+                    <Label text="TITLE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="eventTitleField" styleClass="text-field-dark" />
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="LOCATION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <ComboBox fx:id="eventLocationComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                </VBox>
+                <HBox spacing="10">
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="START AT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                        <DatePicker fx:id="eventStartDatePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+                    </VBox>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="END AT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                        <DatePicker fx:id="eventEndDatePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+                    </VBox>
+                </HBox>
+                <VBox spacing="5">
+                    <Label text="MAX SEATS" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="eventSeatsField" styleClass="text-field-dark" text="50" />
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="DESCRIPTION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextArea fx:id="eventDescriptionArea" prefHeight="100" styleClass="text-field-dark" wrapText="true" />
+                </VBox>
+                <HBox spacing="10">
+                    <Button text="CANCEL" onAction="#hideEventForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
+                    <Button text="SAVE" onAction="#handleSaveEvent" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
+                </HBox>
+            </VBox>
+            
+            <VBox fx:id="locationFormPane" visible="false" managed="false" prefWidth="350" spacing="15" styleClass="card">
+                <padding>
+                    <Insets top="30" left="20" right="20" bottom="20" />
+                </padding>
+                <Label fx:id="locationFormTitle" text="ADD LOCATION" styleClass="neon-label" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+                <VBox spacing="5">
+                    <Label text="NAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="locNameField" styleClass="text-field-dark" />
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="ADDRESS" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="locAddressField" styleClass="text-field-dark" />
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="CAPACITY" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="locCapacityField" styleClass="text-field-dark" text="100" />
+                </VBox>
+                <HBox spacing="10">
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="LATITUDE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                        <TextField fx:id="locLatField" styleClass="text-field-dark" text="0.0" />
+                    </VBox>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="LONGITUDE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                        <TextField fx:id="locLngField" styleClass="text-field-dark" text="0.0" />
+                    </VBox>
+                </HBox>
+                <HBox spacing="10">
+                    <Button text="CANCEL" onAction="#hideLocationForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
+                    <Button text="SAVE" onAction="#handleSaveLocation" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
+                </HBox>
+            </VBox>
+        </StackPane>
+    </right>
+    
+</BorderPane>

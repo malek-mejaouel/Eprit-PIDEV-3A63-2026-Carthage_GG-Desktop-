@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.carthagegg.controllers.front.SidebarController"
+      styleClass="sidebar">
+    
+    <VBox alignment="CENTER" spacing="10">
+        <padding>
+            <Insets top="30" bottom="30" />
+        </padding>
+        <ImageView fx:id="miniLogo" fitHeight="40" fitWidth="40" pickOnBounds="true" preserveRatio="true" />
+        <Label text="CARTHAGEGG" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-letter-spacing: 2;" />
+    </VBox>
+    
+    <VBox spacing="5" VBox.vgrow="ALWAYS">
+        <Button fx:id="adminBtn" text="Admin Panel" onAction="#handleNavAdmin" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item" style="-fx-text-fill: #FFC107; -fx-font-weight: bold;" visible="false" managed="false">
+            <graphic><FontIcon iconLiteral="fas-user-shield" iconColor="#FFC107" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navHome" text="Home" onAction="#handleNavHome" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-home" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navTournaments" text="Tournaments" onAction="#handleNavTournaments" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-trophy" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navTeams" text="Teams" onAction="#handleNavTeams" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-users" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navMatches" text="Matches" onAction="#handleNavMatches" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-fist-raised" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navEvents" text="Events" onAction="#handleNavEvents" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-calendar-alt" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navNews" text="News" onAction="#handleNavNews" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-newspaper" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navShop" text="Shop" onAction="#handleNavShop" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-shopping-cart" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button fx:id="navStreams" text="Streams" onAction="#handleNavStreams" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-tv" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+    </VBox>
+    
+    <VBox spacing="5">
+        <padding>
+            <Insets bottom="20" />
+        </padding>
+        <Button fx:id="navProfile" text="My Profile" onAction="#handleNavProfile" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-user-circle" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
+        <Button text="Sign Out" onAction="#handleSignOut" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconColor="#ef4444" iconSize="18"/></graphic>
+        </Button>
+    </VBox>
+</VBox>

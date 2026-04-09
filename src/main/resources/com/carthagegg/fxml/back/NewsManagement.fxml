@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.NewsManagementController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+            <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+            </Button>
+            <Label text="News Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="ADD NEW ARTICLE" onAction="#handleShowAddForm" styleClass="btn-primary" prefHeight="40">
+                <graphic><FontIcon iconLiteral="fas-plus" iconColor="#0a0a0f" iconSize="14"/></graphic>
+            </Button>
+        </HBox>
+    </top>
+    
+    <center>
+        <VBox spacing="20">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="20" />
+            </padding>
+            <TableView fx:id="newsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50" />
+                    <TableColumn fx:id="colTitle" text="Title" prefWidth="300" />
+                    <TableColumn fx:id="colCategory" text="Category" prefWidth="150" />
+                    <TableColumn fx:id="colPublishedAt" text="Published At" prefWidth="180" />
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="180" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+    
+    <right>
+        <VBox fx:id="formPane" visible="false" managed="false" prefWidth="400" spacing="15" styleClass="card">
+            <padding>
+                <Insets top="30" left="20" right="20" bottom="20" />
+            </padding>
+            <Label fx:id="formTitle" text="ADD ARTICLE" styleClass="neon-label" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            
+            <VBox spacing="5">
+                <Label text="TITLE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextField fx:id="titleField" styleClass="text-field-dark" />
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="CATEGORY" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+            </VBox>
+
+            <VBox spacing="5">
+                <Label text="IMAGE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <HBox spacing="10">
+                    <TextField fx:id="imageField" editable="false" promptText="Choose an image..." styleClass="text-field-dark" HBox.hgrow="ALWAYS" />
+                    <Button text="BROWSE" onAction="#handleBrowseImage" styleClass="btn-gold" prefHeight="36" />
+                </HBox>
+            </VBox>
+            
+            <VBox spacing="5" VBox.vgrow="ALWAYS">
+                <Label text="CONTENT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextArea fx:id="contentArea" prefHeight="300" styleClass="text-field-dark" wrapText="true" />
+            </VBox>
+            
+            <HBox spacing="10">
+                <Button text="CANCEL" onAction="#handleHideForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
+                <Button text="SAVE" onAction="#handleSaveNews" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
+            </HBox>
+        </VBox>
+    </right>
+    
+</BorderPane>
