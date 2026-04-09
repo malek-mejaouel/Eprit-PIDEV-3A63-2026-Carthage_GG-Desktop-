@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.OrdersManagementController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+            <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+            </Button>
+            <Label text="Orders Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="EXPORT TO CSV" onAction="#handleExportCSV" styleClass="btn-gold" prefHeight="40">
+                <graphic><FontIcon iconLiteral="fas-file-csv" iconColor="#0a0a0f" iconSize="14"/></graphic>
+            </Button>
+        </HBox>
+    </top>
+    
+    <center>
+        <VBox spacing="20">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="20" />
+            </padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <ComboBox fx:id="statusFilter" promptText="Filter by Status" styleClass="text-field-dark" prefWidth="200" />
+            </HBox>
+            <TableView fx:id="ordersTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colId" text="Order ID" prefWidth="80" />
+                    <TableColumn fx:id="colUser" text="User" prefWidth="150" />
+                    <TableColumn fx:id="colProduct" text="Product" prefWidth="200" />
+                    <TableColumn fx:id="colQuantity" text="Qty" prefWidth="60" />
+                    <TableColumn fx:id="colTotal" text="Total" prefWidth="100" />
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="180" />
+                    <TableColumn fx:id="colStatus" text="Status" prefWidth="120" />
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="180" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+    
+</BorderPane>

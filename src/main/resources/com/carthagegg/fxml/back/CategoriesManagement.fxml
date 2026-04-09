@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.CategoriesManagementController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+            <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+            </Button>
+            <Label text="Categories Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="ADD NEW CATEGORY" onAction="#handleShowAddForm" styleClass="btn-primary" prefHeight="40">
+                <graphic><FontIcon iconLiteral="fas-plus" iconColor="#0a0a0f" iconSize="14"/></graphic>
+            </Button>
+        </HBox>
+    </top>
+    
+    <center>
+        <VBox spacing="20">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="20" />
+            </padding>
+            <TableView fx:id="categoriesTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="80" />
+                    <TableColumn fx:id="colName" text="Name" prefWidth="250" />
+                    <TableColumn fx:id="colDescription" text="Description" prefWidth="450" />
+                    <TableColumn fx:id="colCreatedAt" text="Created At" prefWidth="200" />
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="180" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+    
+    <right>
+        <VBox fx:id="formPane" visible="false" managed="false" prefWidth="350" spacing="20" styleClass="card">
+            <padding>
+                <Insets top="30" left="20" right="20" bottom="20" />
+            </padding>
+            <Label fx:id="formTitle" text="ADD CATEGORY" styleClass="neon-label" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            
+            <VBox spacing="5">
+                <Label text="NAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextField fx:id="nameField" styleClass="text-field-dark" />
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="DESCRIPTION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextArea fx:id="descriptionArea" prefHeight="150" styleClass="text-field-dark" wrapText="true" />
+            </VBox>
+            
+            <HBox spacing="10">
+                <Button text="CANCEL" onAction="#handleHideForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
+                <Button text="SAVE" onAction="#handleSaveCategory" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
+            </HBox>
+        </VBox>
+    </right>
+    
+</BorderPane>

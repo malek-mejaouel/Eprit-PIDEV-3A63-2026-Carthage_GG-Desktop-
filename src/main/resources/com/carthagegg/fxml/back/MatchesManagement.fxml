@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.MatchesManagementController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+            <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+            </Button>
+            <Label text="Matches Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="ADD NEW MATCH" onAction="#handleShowAddForm" styleClass="btn-primary" prefHeight="40">
+                <graphic><FontIcon iconLiteral="fas-plus" iconColor="#0a0a0f" iconSize="14"/></graphic>
+            </Button>
+        </HBox>
+    </top>
+    
+    <center>
+        <VBox spacing="20">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="20" />
+            </padding>
+            
+            <TableView fx:id="matchesTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50" />
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="180" />
+                    <TableColumn fx:id="colTeamA" text="Team A" prefWidth="150" />
+                    <TableColumn fx:id="colScore" text="Score" prefWidth="100" />
+                    <TableColumn fx:id="colTeamB" text="Team B" prefWidth="150" />
+                    <TableColumn fx:id="colGame" text="Game" prefWidth="150" />
+                    <TableColumn fx:id="colTournament" text="Tournament" prefWidth="200" />
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="180" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+    
+    <right>
+        <VBox fx:id="formPane" visible="false" managed="false" prefWidth="350" spacing="15" styleClass="card">
+            <padding>
+                <Insets top="30" left="20" right="20" bottom="20" />
+            </padding>
+            <Label fx:id="formTitle" text="ADD MATCH" styleClass="neon-label" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            
+            <VBox spacing="5">
+                <Label text="GAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <ComboBox fx:id="gameComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="TOURNAMENT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <ComboBox fx:id="tournamentComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+            </VBox>
+            
+            <HBox spacing="10">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="TEAM A" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <ComboBox fx:id="teamAComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="TEAM B" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <ComboBox fx:id="teamBComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="10">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="SCORE A" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="scoreAField" styleClass="text-field-dark" text="0" />
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="SCORE B" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="scoreBField" styleClass="text-field-dark" text="0" />
+                </VBox>
+            </HBox>
+            
+            <VBox spacing="5">
+                <Label text="MATCH DATE/TIME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <DatePicker fx:id="datePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+            </VBox>
+            
+            <HBox spacing="10">
+                <Button text="CANCEL" onAction="#handleHideForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
+                <Button text="SAVE" onAction="#handleSaveMatch" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
+            </HBox>
+        </VBox>
+    </right>
+    
+</BorderPane>
