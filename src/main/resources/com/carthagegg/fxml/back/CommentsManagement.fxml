@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.CommentsManagementController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+            <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+            </Button>
+            <Label text="Comments Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Region HBox.hgrow="ALWAYS" />
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="20">
+            <padding>
+                <Insets top="20" left="20" right="20" bottom="20" />
+            </padding>
+
+            <TableView fx:id="commentsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="70" />
+                    <TableColumn fx:id="colNewsId" text="News ID" prefWidth="90" />
+                    <TableColumn fx:id="colUserId" text="User ID" prefWidth="90" />
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="180" />
+                    <TableColumn fx:id="colContent" text="Content" prefWidth="520" />
+                    <TableColumn fx:id="colVotes" text="Votes" prefWidth="100" />
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="140" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+</BorderPane>
+
