@@ -8,7 +8,6 @@ import com.carthagegg.utils.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.mindrot.jbcrypt.BCrypt;
@@ -128,9 +127,6 @@ public class SignInController {
 
     @FXML
     private void handleGoogleSignIn() {
-        if (!ensureGoogleClientSecretConfiguredIfNeeded()) {
-            return;
-        }
         GoogleAuthService.authenticate(new GoogleAuthService.GoogleAuthCallback() {
             @Override
             public void onSuccess(GoogleAuthService.GoogleUser gUser) {
@@ -143,8 +139,9 @@ public class SignInController {
                             // 2. Fallback: try by email (if they registered manually before)
                             user = userDAO.findByEmail(gUser.email);
                             if (user != null) {
-                                // Link Google ID to existing account (optional, requires a DAO update method)
-                                // For now, we just log them in
+                                // Link Google ID to existing account
+                                user.setGoogleId(gUser.id);
+                                userDAO.linkGoogleId(user.getUserId(), gUser.id);
                             }
                         }
 
@@ -164,8 +161,17 @@ public class SignInController {
                             user.setFirstName(gUser.givenName != null ? gUser.givenName : "");
                             user.setLastName(gUser.familyName != null ? gUser.familyName : "");
                             user.setAvatar(gUser.picture);
+                            user.setActive(true); // Ensure user is marked active in memory
                             
                             userDAO.save(user);
+                        }
+
+                        if (user != null) {
+                            // Ensure user is active if they just signed in via Google
+                            if (!user.isActive()) {
+                                user.setActive(true);
+                                userDAO.activateUser(user.getUserId());
+                            }
                         }
 
                         // Check if banned
@@ -174,7 +180,7 @@ public class SignInController {
                             return;
                         }
 
-                        // Check if active
+                        // Check if active (now redundant but good to keep)
                         if (!user.isActive()) {
                             showError("Account is inactive");
                             return;
@@ -192,6 +198,13 @@ public class SignInController {
                     } catch (SQLException e) {
                         e.printStackTrace();
                         showError("Database error during Google Login.");
+                        
+                        // Show detailed alert for connection failures
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Connection Error");
+                        alert.setHeaderText("Database connection failed during Google Login");
+                        alert.setContentText("Please ensure MariaDB is running and the database 'carthage_gg' exists.\n\nError: " + e.getMessage());
+                        alert.showAndWait();
                     }
                 });
             }
@@ -201,44 +214,6 @@ public class SignInController {
                 Platform.runLater(() -> showError(error));
             }
         });
-    }
-
-    private boolean ensureGoogleClientSecretConfiguredIfNeeded() {
-        String envSecret = System.getenv("CARTHAGEGG_GOOGLE_CLIENT_SECRET");
-        if (envSecret != null && !envSecret.isBlank()) {
-            return true;
-        }
-
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Google Sign-In Setup");
-        dialog.setHeaderText("If your Google OAuth Client is a Web client, a client secret is required.\nFor Desktop clients (recommended), leave the secret empty.");
-        ButtonType continueBtn = new ButtonType("Continue", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(continueBtn, ButtonType.CANCEL);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-
-        TextField clientIdField = new TextField();
-        String envClientId = System.getenv("CARTHAGEGG_GOOGLE_CLIENT_ID");
-        clientIdField.setText((envClientId != null && !envClientId.isBlank()) ? envClientId : "");
-        clientIdField.setPromptText("Client ID (…apps.googleusercontent.com)");
-
-        PasswordField secretField = new PasswordField();
-        secretField.setPromptText("Optional (Web client only)");
-
-        grid.addRow(0, new Label("Client ID"), clientIdField);
-        grid.addRow(1, new Label("Client Secret"), secretField);
-
-        dialog.getDialogPane().setContent(grid);
-
-        ButtonType result = dialog.showAndWait().orElse(ButtonType.CANCEL);
-        if (result != continueBtn) {
-            return false;
-        }
-
-        GoogleAuthService.setClientCredentials(clientIdField.getText(), secretField.getText());
-        return true;
     }
 
     @FXML

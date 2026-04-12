@@ -53,7 +53,10 @@ public class UserDAO {
             ps.executeUpdate();
             
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) user.setUserId(rs.getInt(1));
+                if (rs.next()) {
+                    user.setUserId(rs.getInt(1));
+                    user.setActive(true); // Since we hardcoded '1' in the INSERT SQL
+                }
             }
         }
     }
@@ -124,6 +127,25 @@ public class UserDAO {
             ps.setString(3, user.getLastName());
             ps.setString(4, user.getAvatar());
             ps.setInt(5, user.getUserId());
+            ps.executeUpdate();
+        }
+    }
+
+    public void linkGoogleId(int userId, String googleId) throws SQLException {
+        String sql = "UPDATE users SET google_id=?, updated_at=NOW() WHERE user_id=?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, googleId);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void activateUser(int userId) throws SQLException {
+        String sql = "UPDATE users SET is_active=1, updated_at=NOW() WHERE user_id=?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
             ps.executeUpdate();
         }
     }

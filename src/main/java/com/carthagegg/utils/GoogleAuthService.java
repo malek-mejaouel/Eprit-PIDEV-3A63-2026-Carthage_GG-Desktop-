@@ -22,9 +22,24 @@ import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public class GoogleAuthService {
 
-    private static final String DEFAULT_CLIENT_ID = "691360458554-18o8dmtcbpechqu3flufomvc3jkb126m.apps.googleusercontent.com";
+    private static final Properties config = new Properties();
+    static {
+        try (InputStream input = GoogleAuthService.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input != null) {
+                config.load(input);
+            }
+        } catch (IOException ex) {
+            System.err.println("Could not load config.properties: " + ex.getMessage());
+        }
+    }
+
+    private static final String DEFAULT_CLIENT_ID = config.getProperty("google.client.id", "");
+    private static final String DEFAULT_CLIENT_SECRET = config.getProperty("google.client.secret", "");
     private static final String ENV_CLIENT_ID = "CARTHAGEGG_GOOGLE_CLIENT_ID";
     private static final String ENV_CLIENT_SECRET = "CARTHAGEGG_GOOGLE_CLIENT_SECRET";
     private static final int PREFERRED_LOCAL_PORT = 5317;
@@ -32,9 +47,6 @@ public class GoogleAuthService {
     private static final String AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
     private static final String USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-    private static volatile String overrideClientId;
-    private static volatile String overrideClientSecret;
 
     public interface GoogleAuthCallback {
         void onSuccess(GoogleUser user);
@@ -48,11 +60,6 @@ public class GoogleAuthService {
         public String givenName;
         public String familyName;
         public String picture;
-    }
-
-    public static void setClientCredentials(String clientId, String clientSecret) {
-        overrideClientId = (clientId != null && !clientId.isBlank()) ? clientId.trim() : null;
-        overrideClientSecret = (clientSecret != null && !clientSecret.isBlank()) ? clientSecret.trim() : null;
     }
 
     public static void authenticate(GoogleAuthCallback callback) {
@@ -263,16 +270,14 @@ public class GoogleAuthService {
     }
 
     private static String resolveClientId() {
-        if (overrideClientId != null && !overrideClientId.isBlank()) return overrideClientId;
         String env = System.getenv(ENV_CLIENT_ID);
         if (env != null && !env.isBlank()) return env.trim();
         return DEFAULT_CLIENT_ID;
     }
 
     private static String resolveClientSecret() {
-        if (overrideClientSecret != null && !overrideClientSecret.isBlank()) return overrideClientSecret;
         String env = System.getenv(ENV_CLIENT_SECRET);
         if (env != null && !env.isBlank()) return env.trim();
-        return null;
+        return DEFAULT_CLIENT_SECRET;
     }
 }
