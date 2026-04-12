@@ -58,6 +58,7 @@ public class AdminDashboardController {
     @FXML private void handleNavCategories() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/CategoriesManagement.fxml"); }
     @FXML private void handleNavProducts() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/ProductsManagement.fxml"); }
     @FXML private void handleNavStreams() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/StreamsManagement.fxml"); }
+    @FXML private void handleNavReclamations() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/ReclamationsManagement.fxml"); }
     
     @FXML private void handleNavFront() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }
     
