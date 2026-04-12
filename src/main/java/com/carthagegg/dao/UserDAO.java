@@ -40,7 +40,7 @@ public class UserDAO {
     public void save(User user) throws SQLException {
         String sql = "INSERT INTO users (email, password, roles, username, first_name, last_name, google_id, avatar, is_active, created_at, updated_at) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())";
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getEmail());
             ps.setString(2, user.getPassword() != null ? user.getPassword() : ""); // allow empty for google users if they don't have standard password
@@ -120,7 +120,7 @@ public class UserDAO {
 
     public void update(User user) throws SQLException {
         String sql = "UPDATE users SET username=?, first_name=?, last_name=?, avatar=?, updated_at=NOW() WHERE user_id=?";
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getFirstName());
