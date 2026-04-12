@@ -27,7 +27,7 @@ public class ProfileController {
             usernameLabel.setText(user.getUsername());
             emailLabel.setText(user.getEmail());
             fullNameLabel.setText(user.getFirstName() + " " + user.getLastName());
-            rolesLabel.setText(user.getRoles());
+            rolesLabel.setText(formatRoles(user.getRoles()));
             
             if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
                 try {
@@ -52,6 +52,15 @@ public class ProfileController {
         } catch (Exception e) {
             System.err.println("Could not load default avatar: " + e.getMessage());
         }
+    }
+
+    private String formatRoles(String rolesJson) {
+        if (rolesJson == null || rolesJson.isEmpty()) return "USER";
+        return rolesJson.replace("[", "")
+                       .replace("]", "")
+                       .replace("\"", "")
+                       .replace("ROLE_", "")
+                       .replace(",", ", ");
     }
 
     @FXML private void handleNavHome() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }

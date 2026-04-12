@@ -47,6 +47,9 @@
         <Button fx:id="navStreams" text="Streams" onAction="#handleNavStreams" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
             <graphic><FontIcon iconLiteral="fas-tv" iconColor="#949499" iconSize="18"/></graphic>
         </Button>
+        <Button fx:id="navReclamation" text="Reclamations" onAction="#handleNavReclamation" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-exclamation-circle" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
     </VBox>
     
     <VBox spacing="5">

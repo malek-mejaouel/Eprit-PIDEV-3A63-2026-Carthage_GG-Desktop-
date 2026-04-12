@@ -149,4 +149,13 @@ public class UserDAO {
             ps.executeUpdate();
         }
     }
+
+    public void delete(int userId) throws SQLException {
+        String sql = "DELETE FROM users WHERE user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
 }
