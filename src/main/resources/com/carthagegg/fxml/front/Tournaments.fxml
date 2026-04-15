@@ -31,6 +31,7 @@
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <TextField fx:id="searchField" promptText="Search tournaments..." styleClass="text-field-dark" prefWidth="300" />
                     <ComboBox fx:id="gameFilter" promptText="All Games" styleClass="text-field-dark" prefWidth="150" />
+                    <ComboBox fx:id="sortComboBox" promptText="Sort by ID" styleClass="text-field-dark" prefWidth="140" />
                 </HBox>
             </HBox>
             

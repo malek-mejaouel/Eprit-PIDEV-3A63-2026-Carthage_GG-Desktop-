@@ -99,6 +99,17 @@ public class CategoryDAO {
         }
     }
 
+    public Category findByName(String name) throws SQLException {
+        String sql = "SELECT * FROM categories WHERE name = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapCategory(rs);
+            }
+        }
+        return null;
+    }
+
     private Category mapCategory(ResultSet rs) throws SQLException {
         Category c = new Category();
         if (hasColumn(rs, "id")) {

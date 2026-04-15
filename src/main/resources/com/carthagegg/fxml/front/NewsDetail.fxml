@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.NewsDetailController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <VBox spacing="0">
+            <padding>
+                <Insets top="0" left="0" right="0" bottom="0" />
+            </padding>
+            
+            <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+                <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                    <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+                </Button>
+                <Label text="Article Details" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20;" />
+            </HBox>
+
+            <ScrollPane fx:id="scrollPane" fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+                <VBox fx:id="contentContainer" spacing="30" alignment="TOP_CENTER" maxWidth="900">
+                    <padding>
+                        <Insets top="40" left="60" right="60" bottom="60" />
+                    </padding>
+                    
+                    <VBox spacing="15" alignment="TOP_LEFT">
+                        <Label fx:id="categoryLabel" text="CATEGORY" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12; -fx-background-color: rgba(255, 193, 7, 0.1); -fx-padding: 5 10; -fx-background-radius: 4;" />
+                        <Label fx:id="titleLabel" text="Title of the News" wrapText="true" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 36;" />
+                        <Label fx:id="dateLabel" text="Published on date" style="-fx-text-fill: #949499; -fx-font-size: 14;" />
+                    </VBox>
+
+                    <ImageView fx:id="newsImage" fitWidth="800" preserveRatio="true" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 20, 0, 0, 10);">
+                        <VBox.margin>
+                            <Insets top="10" bottom="10" />
+                        </VBox.margin>
+                    </ImageView>
+
+                    <Label fx:id="contentText" text="Full content goes here..." wrapText="true" maxWidth="800"
+                           style="-fx-text-fill: #e4e4e7; -fx-font-size: 16; -fx-line-spacing: 1.5;" />
+                    
+                    <Separator style="-fx-background-color: #3f3f46; -fx-opacity: 0.2;" />
+                    
+                    <VBox spacing="20" alignment="TOP_LEFT" maxWidth="800">
+                        <Label text="Discussion" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+                        <VBox fx:id="commentsSectionContainer" />
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+        </VBox>
+    </center>
+    
+</BorderPane>

@@ -131,6 +131,40 @@ public class CommentDAO {
         }
     }
 
+    public void update(Comment c) throws SQLException {
+        String contentCol = hasColumn(tableName, "contenu") ? "contenu" : "content";
+        String idCol = "commentaire_id";
+        if (!hasColumn(tableName, "commentaire_id")) {
+            if (hasColumn(tableName, "comment_id")) {
+                idCol = "comment_id";
+            } else if (hasColumn(tableName, "id")) {
+                idCol = "id";
+            }
+        }
+
+        String sql = "UPDATE " + tableName + " SET " + contentCol + " = ? WHERE " + idCol + " = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, c.getRawContent());
+            ps.setInt(2, c.getCommentaireId());
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateVotes(int commentId, int upvotes, int downvotes) throws SQLException {
+        String idCol = "commentaire_id";
+        if (!hasColumn(tableName, "commentaire_id")) {
+            if (hasColumn(tableName, "comment_id")) idCol = "comment_id";
+            else if (hasColumn(tableName, "id")) idCol = "id";
+        }
+        String sql = "UPDATE " + tableName + " SET upvotes = ?, downvotes = ? WHERE " + idCol + " = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, upvotes);
+            ps.setInt(2, downvotes);
+            ps.setInt(3, commentId);
+            ps.executeUpdate();
+        }
+    }
+
     private Comment mapComment(ResultSet rs) throws SQLException {
         Comment c = new Comment();
         if (hasColumn(rs, "commentaire_id")) {

@@ -1,6 +1,5 @@
 package com.carthagegg.controllers.back;
 
-import com.carthagegg.models.User;
 import com.carthagegg.dao.StatsDAO;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
@@ -59,19 +58,12 @@ public class AdminDashboardController {
     @FXML private void handleNavCategories() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/CategoriesManagement.fxml"); }
     @FXML private void handleNavProducts() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/ProductsManagement.fxml"); }
     @FXML private void handleNavStreams() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/StreamsManagement.fxml"); }
+    @FXML private void handleNavReclamations() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/ReclamationsManagement.fxml"); }
     
     @FXML private void handleNavFront() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }
     
     @FXML 
     private void handleSignOut() {
-        User user = SessionManager.getCurrentUser();
-        if (user != null) {
-            try {
-                new com.carthagegg.dao.UserDAO().setActiveStatus(user.getUserId(), false);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
         SessionManager.logout();
         SceneNavigator.navigateTo("/com/carthagegg/fxml/auth/SignIn.fxml");
     }

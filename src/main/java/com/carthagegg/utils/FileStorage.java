@@ -36,6 +36,19 @@ public class FileStorage {
         return target.toString();
     }
 
+    public static String saveTeamLogo(File source) throws IOException {
+        if (source == null) return null;
+        String name = source.getName();
+        String safeName = name.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String fileName = "team_" + System.currentTimeMillis() + "_" + safeName;
+
+        Path dir = Path.of(System.getProperty("user.home"), "CarthageGG", "uploads", "teams");
+        Files.createDirectories(dir);
+
+        Path target = dir.resolve(fileName);
+        Files.copy(source.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+        return target.toString();
+    }
     public static String saveProductImage(File source) throws IOException {
         if (source == null) return null;
         String name = source.getName();
