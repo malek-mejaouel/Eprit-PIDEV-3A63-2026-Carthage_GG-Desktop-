@@ -13,6 +13,8 @@ import com.carthagegg.utils.SessionManager;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -21,7 +23,10 @@ import javafx.scene.layout.VBox;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MatchesManagementController {
 
@@ -35,21 +40,36 @@ public class MatchesManagementController {
     @FXML private TableColumn<Match, String> colTournament;
     @FXML private TableColumn<Match, Void> colActions;
 
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> sortComboBox;
     @FXML private VBox formPane;
     @FXML private Label formTitle;
     @FXML private ComboBox<Game> gameComboBox;
+    @FXML private Label gameErrorLabel;
     @FXML private ComboBox<Tournament> tournamentComboBox;
+    @FXML private Label tournamentErrorLabel;
     @FXML private ComboBox<Team> teamAComboBox;
+    @FXML private Label teamAErrorLabel;
     @FXML private ComboBox<Team> teamBComboBox;
+    @FXML private Label teamBErrorLabel;
     @FXML private TextField scoreAField;
+    @FXML private Label scoreAErrorLabel;
     @FXML private TextField scoreBField;
+    @FXML private Label scoreBErrorLabel;
     @FXML private DatePicker datePicker;
+    @FXML private Label dateErrorLabel;
 
-    private MatchDAO matchDAO = new MatchDAO();
-    private TeamDAO teamDAO = new TeamDAO();
-    private GameDAO gameDAO = new GameDAO();
-    private TournamentDAO tournamentDAO = new TournamentDAO();
-    private ObservableList<Match> matchesList = FXCollections.observableArrayList();
+    private final MatchDAO matchDAO = new MatchDAO();
+    private final TeamDAO teamDAO = new TeamDAO();
+    private final GameDAO gameDAO = new GameDAO();
+    private final TournamentDAO tournamentDAO = new TournamentDAO();
+    private final ObservableList<Match> matchesList = FXCollections.observableArrayList();
+    private final FilteredList<Match> filteredMatches = new FilteredList<>(matchesList, match -> true);
+    private final SortedList<Match> sortedMatches = new SortedList<>(filteredMatches);
+    private final Map<Integer, Team> teamsById = new HashMap<>();
+    private final Map<Integer, Game> gamesById = new HashMap<>();
+    private final Map<Integer, Tournament> tournamentsById = new HashMap<>();
+    private final ObservableList<Tournament> allTournaments = FXCollections.observableArrayList();
     private Match selectedMatch;
 
     @FXML
@@ -60,8 +80,9 @@ public class MatchesManagementController {
         }
 
         setupTable();
-        loadMatches();
         loadComboBoxes();
+        setupFilters();
+        loadMatches();
     }
 
     private void setupTable() {
@@ -81,19 +102,13 @@ public class MatchesManagementController {
                 cellData.getValue().getScoreTeamA() + " - " + cellData.getValue().getScoreTeamB()));
         
         colGame.setCellValueFactory(cellData -> {
-            try {
-                Game g = gameDAO.findById(cellData.getValue().getGameId());
-                return new SimpleStringProperty(g != null ? g.getName() : "Unknown");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
+            Game game = gamesById.get(cellData.getValue().getGameId());
+            return new SimpleStringProperty(game != null ? game.getName() : "Unknown");
         });
 
         colTournament.setCellValueFactory(cellData -> {
-            try {
-                List<Tournament> list = tournamentDAO.findAll();
-                Tournament t = list.stream().filter(tr -> tr.getTournamentId() == cellData.getValue().getTournamentId())
-                        .findFirst().orElse(null);
-                return new SimpleStringProperty(t != null ? t.getTournamentName() : "No Tournament");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
+            Tournament tournament = tournamentsById.get(cellData.getValue().getTournamentId());
+            return new SimpleStringProperty(tournament != null ? tournament.getTournamentName() : "No Tournament");
         });
 
         colActions.setCellFactory(param -> new TableCell<Match, Void>() {
@@ -116,29 +131,108 @@ public class MatchesManagementController {
         });
     }
 
+    private void setupFilters() {
+        sortComboBox.setItems(FXCollections.observableArrayList("ID Asc", "ID Desc"));
+        sortComboBox.setValue("ID Asc");
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+        sortComboBox.valueProperty().addListener((observable, oldValue, newValue) -> applySort());
+        gameComboBox.valueProperty().addListener((observable, oldValue, newValue) -> updateTournamentOptionsForSelectedGame());
+
+        applyFilters();
+        applySort();
+        matchesTable.setItems(sortedMatches);
+    }
+
     private SimpleStringProperty getTeamName(int teamId) {
-        try {
-            List<Team> teams = teamDAO.findAll();
-            Team t = teams.stream().filter(team -> team.getTeamId() == teamId).findFirst().orElse(null);
-            return new SimpleStringProperty(t != null ? t.getTeamName() : "Unknown");
-        } catch (SQLException e) { return new SimpleStringProperty("Error"); }
+        Team team = teamsById.get(teamId);
+        return new SimpleStringProperty(team != null ? team.getTeamName() : "Unknown");
     }
 
     private void loadMatches() {
         try {
             matchesList.setAll(matchDAO.findAll());
-            matchesTable.setItems(matchesList);
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            showAlert("Error", "Unable to load matches: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     private void loadComboBoxes() {
         try {
-            gameComboBox.setItems(FXCollections.observableArrayList(gameDAO.findAll()));
-            tournamentComboBox.setItems(FXCollections.observableArrayList(tournamentDAO.findAll()));
+            List<Game> games = gameDAO.findAll();
+            gamesById.clear();
+            for (Game game : games) {
+                gamesById.put(game.getGameId(), game);
+            }
+            gameComboBox.setItems(FXCollections.observableArrayList(games));
+
+            List<Tournament> tournaments = tournamentDAO.findAll();
+            tournamentsById.clear();
+            for (Tournament tournament : tournaments) {
+                tournamentsById.put(tournament.getTournamentId(), tournament);
+            }
+            allTournaments.setAll(tournaments);
+            tournamentComboBox.setItems(FXCollections.observableArrayList(allTournaments));
+
             ObservableList<Team> teams = FXCollections.observableArrayList(teamDAO.findAll());
+            teamsById.clear();
+            for (Team team : teams) {
+                teamsById.put(team.getTeamId(), team);
+            }
             teamAComboBox.setItems(teams);
             teamBComboBox.setItems(teams);
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            showAlert("Error", "Unable to load match form data: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    private void applyFilters() {
+        String keyword = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
+        filteredMatches.setPredicate(match -> {
+            if (keyword.isEmpty()) {
+                return true;
+            }
+            Team teamA = teamsById.get(match.getTeamAId());
+            Team teamB = teamsById.get(match.getTeamBId());
+            Game game = gamesById.get(match.getGameId());
+            Tournament tournament = tournamentsById.get(match.getTournamentId());
+            String date = match.getMatchDate() == null ? "" : match.getMatchDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm"));
+            String score = match.getScoreTeamA() + " - " + match.getScoreTeamB();
+
+            return String.valueOf(match.getMatchId()).contains(keyword)
+                    || safe(teamA == null ? match.getTeamAName() : teamA.getTeamName()).contains(keyword)
+                    || safe(teamB == null ? match.getTeamBName() : teamB.getTeamName()).contains(keyword)
+                    || safe(game == null ? "" : game.getName()).contains(keyword)
+                    || safe(tournament == null ? match.getTournamentName() : tournament.getTournamentName()).contains(keyword)
+                    || safe(score).contains(keyword)
+                    || safe(date).contains(keyword);
+        });
+    }
+
+    private void applySort() {
+        Comparator<Match> comparator = Comparator.comparingInt(Match::getMatchId);
+        if ("ID Desc".equals(sortComboBox.getValue())) {
+            comparator = comparator.reversed();
+        }
+        sortedMatches.setComparator(comparator);
+    }
+
+    private void updateTournamentOptionsForSelectedGame() {
+        Game selectedGame = gameComboBox.getValue();
+        if (selectedGame == null) {
+            tournamentComboBox.setItems(FXCollections.observableArrayList(allTournaments));
+            return;
+        }
+
+        ObservableList<Tournament> filtered = allTournaments.filtered(
+                tournament -> tournament.getGameId() == selectedGame.getGameId()
+        );
+        tournamentComboBox.setItems(filtered);
+
+        Tournament selectedTournament = tournamentComboBox.getValue();
+        if (selectedTournament != null && selectedTournament.getGameId() != selectedGame.getGameId()) {
+            tournamentComboBox.setValue(null);
+        }
     }
 
     @FXML private void handleShowAddForm() {
@@ -185,6 +279,10 @@ public class MatchesManagementController {
     @FXML
     private void handleSaveMatch() {
         try {
+            if (!validateForm()) {
+                return;
+            }
+
             Match m = (selectedMatch == null) ? new Match() : selectedMatch;
             m.setGameId(gameComboBox.getValue().getGameId());
             m.setTournamentId(tournamentComboBox.getValue().getTournamentId());
@@ -200,23 +298,104 @@ public class MatchesManagementController {
 
             if (selectedMatch == null) {
                 matchDAO.save(m);
-                matchesList.add(m);
             } else {
                 matchDAO.update(m);
-                matchesTable.refresh();
             }
+            loadMatches();
             hideForm();
-        } catch (Exception e) { showAlert("Error", "Check all fields: " + e.getMessage(), Alert.AlertType.ERROR); }
+        } catch (Exception e) {
+            showAlert("Error", "Check all fields: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
-    private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }
+    private boolean validateForm() {
+        clearErrors();
+        boolean valid = true;
+
+        if (gameComboBox.getValue() == null) {
+            gameErrorLabel.setText("Game is required.");
+            valid = false;
+        }
+        if (tournamentComboBox.getValue() == null) {
+            tournamentErrorLabel.setText("Tournament is required.");
+            valid = false;
+        }
+        if (teamAComboBox.getValue() == null) {
+            teamAErrorLabel.setText("Team A is required.");
+            valid = false;
+        }
+        if (teamBComboBox.getValue() == null) {
+            teamBErrorLabel.setText("Team B is required.");
+            valid = false;
+        }
+        if (teamAComboBox.getValue() != null && teamBComboBox.getValue() != null
+                && teamAComboBox.getValue().getTeamId() == teamBComboBox.getValue().getTeamId()) {
+            teamBErrorLabel.setText("Team B must be different from Team A.");
+            valid = false;
+        }
+        if (!isNonNegativeInteger(scoreAField.getText())) {
+            scoreAErrorLabel.setText("Score A must be a non-negative number.");
+            valid = false;
+        }
+        if (!isNonNegativeInteger(scoreBField.getText())) {
+            scoreBErrorLabel.setText("Score B must be a non-negative number.");
+            valid = false;
+        }
+        if (datePicker.getValue() == null) {
+            dateErrorLabel.setText("Match date is required.");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private boolean isNonNegativeInteger(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            return Integer.parseInt(value.trim()) >= 0;
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+    }
+
+    private void showForm() {
+        clearErrors();
+        formPane.setVisible(true);
+        formPane.setManaged(true);
+    }
+
     @FXML private void handleHideForm() { hideForm(); }
-    private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
+
+    private void hideForm() {
+        clearForm();
+        clearErrors();
+        formPane.setVisible(false);
+        formPane.setManaged(false);
+    }
+
     private void clearForm() {
         scoreAField.setText("0"); scoreBField.setText("0"); datePicker.setValue(null);
         gameComboBox.setValue(null); tournamentComboBox.setValue(null);
         teamAComboBox.setValue(null); teamBComboBox.setValue(null);
+        updateTournamentOptionsForSelectedGame();
     }
+
+    private void clearErrors() {
+        gameErrorLabel.setText("");
+        tournamentErrorLabel.setText("");
+        teamAErrorLabel.setText("");
+        teamBErrorLabel.setText("");
+        scoreAErrorLabel.setText("");
+        scoreBErrorLabel.setText("");
+        dateErrorLabel.setText("");
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.toLowerCase();
+    }
+
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
