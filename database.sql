@@ -146,6 +146,18 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(255) NOT NULL
 );
 
+-- Orders Table (Matches OrderDAO)
+CREATE TABLE IF NOT EXISTS orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    status VARCHAR(50) DEFAULT 'PENDING',
+    order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
 -- Insert Admin User (Password: admin123)
 INSERT INTO users (email, password, roles, username, first_name, last_name, is_active)
 VALUES ('admin@carthagegg.tn', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00GdR00N.N0f2W', '["ROLE_ADMIN"]', 'admin', 'Admin', 'CarthageGG', 1);
