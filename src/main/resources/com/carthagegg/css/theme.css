@@ -123,6 +123,16 @@
     -fx-padding: 12 16;
 }
 
+/* Ensure TextArea content matches when using text-field-dark */
+.text-area.text-field-dark .content {
+    -fx-background-color: #141416;
+    -fx-text-fill: white;
+}
+
+.text-area.text-field-dark:focused .content {
+    -fx-background-color: #141416;
+}
+
 .text-field-dark:focused {
     -fx-border-color: #FFC107;
 }
@@ -214,12 +224,31 @@
     -fx-cursor: hand;
 }
 
-.btn-delete {
-    -fx-background-color: #FF4444;
+.btn-delete:hover {
+    -fx-background-color: #ff6666;
+}
+
+/* === TextArea Fix for Visibility === */
+.text-area {
+    -fx-background-color: #141416;
     -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 4;
-    -fx-cursor: hand;
+    -fx-border-color: #232326;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.text-area .content {
+    -fx-background-color: #141416;
+    -fx-text-fill: white;
+}
+
+.text-area:focused .content {
+    -fx-background-color: #141416;
+    -fx-text-fill: white;
+}
+
+.text-area .viewport {
+    -fx-background-color: transparent;
 }
 
 

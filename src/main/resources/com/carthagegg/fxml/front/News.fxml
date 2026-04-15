@@ -28,10 +28,21 @@
                     <Label text="Stay informed with the latest updates" style="-fx-text-fill: #949499;" />
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <ComboBox fx:id="dateSortCombo" styleClass="text-field-dark" prefWidth="150" prefHeight="40" />
+                    <TextField fx:id="searchField" promptText="Search by title..." styleClass="text-field-dark" prefWidth="250" prefHeight="40" />
+                    <Button onAction="#handleSearch" styleClass="btn-primary" prefHeight="40">
+                        <graphic><FontIcon iconLiteral="fas-search" iconColor="#0a0a0f" iconSize="14"/></graphic>
+                    </Button>
+                </HBox>
             </HBox>
             
             <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
-                <VBox fx:id="newsContainer" spacing="25" alignment="TOP_CENTER" />
+                <FlowPane fx:id="newsContainer" hgap="25" vgap="25" alignment="TOP_LEFT">
+                    <padding>
+                        <Insets top="10" left="10" right="10" bottom="10" />
+                    </padding>
+                </FlowPane>
             </ScrollPane>
         </VBox>
     </center>
