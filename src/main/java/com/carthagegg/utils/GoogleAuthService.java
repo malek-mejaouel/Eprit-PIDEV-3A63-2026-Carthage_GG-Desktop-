@@ -102,7 +102,7 @@ public class GoogleAuthService {
                         } else if (error != null && !error.isBlank()) {
                             authError[0] = error;
                         }
-                        
+
                         exchange.sendResponseHeaders(200, responseText.length());
                         try (OutputStream os = exchange.getResponseBody()) {
                             os.write(responseText.getBytes());
@@ -110,8 +110,11 @@ public class GoogleAuthService {
                         latch.countDown();
                     }
                 });
-                
+
                 server.start();
+
+                String clientId = resolveClientId();
+                String clientSecret = resolveClientSecret();
 
                 String url = AUTH_URL +
                         "?client_id=" + urlEncode(clientId) +
@@ -138,7 +141,7 @@ public class GoogleAuthService {
                     callback.onError("Authentication timed out.");
                     return;
                 }
-                
+
                 if (authError[0] != null) {
                     if ("state_mismatch".equals(authError[0])) {
                         callback.onError("Google Sign-In failed due to an invalid callback state. Please try again.");
@@ -172,26 +175,26 @@ public class GoogleAuthService {
 
                 HttpResponse<String> tokenResponse = client.send(tokenRequest, HttpResponse.BodyHandlers.ofString());
                 JsonObject tokenJson = JsonParser.parseString(tokenResponse.body()).getAsJsonObject();
-                
+
                 if (!tokenJson.has("access_token")) {
                     String desc = tokenJson.has("error_description") ? tokenJson.get("error_description").getAsString() : tokenResponse.body();
                     if (desc != null && desc.toLowerCase().contains("client_secret is missing")) {
                         callback.onError(
                                 "Google token exchange requires a client secret for your current OAuth client. " +
-                                "Set the environment variable CARTHAGEGG_GOOGLE_CLIENT_SECRET when launching the app, " +
-                                "or create a Desktop OAuth client ID in Google Cloud Console (recommended)."
+                                        "Set the environment variable CARTHAGEGG_GOOGLE_CLIENT_SECRET when launching the app, " +
+                                        "or create a Desktop OAuth client ID in Google Cloud Console (recommended)."
                         );
                     } else if (port != PREFERRED_LOCAL_PORT && clientSecret != null && !clientSecret.isBlank()) {
                         callback.onError(
                                 "Google token exchange failed. If you are using a Web OAuth client, configure an authorized redirect URI " +
-                                "that matches exactly: http://127.0.0.1:" + PREFERRED_LOCAL_PORT + CALLBACK_PATH + " and try again."
+                                        "that matches exactly: http://127.0.0.1:" + PREFERRED_LOCAL_PORT + CALLBACK_PATH + " and try again."
                         );
                     } else {
                         callback.onError("Failed to get access token: " + tokenResponse.body());
                     }
                     return;
                 }
-                
+
                 String accessToken = tokenJson.get("access_token").getAsString();
 
                 HttpRequest userInfoRequest = HttpRequest.newBuilder()
