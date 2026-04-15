@@ -117,9 +117,6 @@ public class GoogleAuthService {
                 
                 server.start();
 
-                String clientId = resolveClientId();
-                String clientSecret = resolveClientSecret();
-
                 String url = AUTH_URL +
                         "?client_id=" + urlEncode(clientId) +
                         "&redirect_uri=" + urlEncode(redirectUri) +

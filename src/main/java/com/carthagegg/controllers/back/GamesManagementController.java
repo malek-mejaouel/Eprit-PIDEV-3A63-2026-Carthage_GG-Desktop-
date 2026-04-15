@@ -7,11 +7,14 @@ import com.carthagegg.utils.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
 
 public class GamesManagementController {
@@ -24,14 +27,20 @@ public class GamesManagementController {
     @FXML private TableColumn<Game, Void> colActions;
 
     @FXML private TextField searchField;
+    @FXML private ComboBox<String> sortComboBox;
     @FXML private VBox formPane;
     @FXML private Label formTitle;
     @FXML private TextField nameField;
+    @FXML private Label nameErrorLabel;
     @FXML private TextField genreField;
+    @FXML private Label genreErrorLabel;
     @FXML private TextArea descriptionArea;
+    @FXML private Label descriptionErrorLabel;
 
-    private GameDAO gameDAO = new GameDAO();
-    private ObservableList<Game> gamesList = FXCollections.observableArrayList();
+    private final GameDAO gameDAO = new GameDAO();
+    private final ObservableList<Game> gamesList = FXCollections.observableArrayList();
+    private final FilteredList<Game> filteredGames = new FilteredList<>(gamesList, game -> true);
+    private final SortedList<Game> sortedGames = new SortedList<>(filteredGames);
     private Game selectedGame;
 
     @FXML
@@ -42,8 +51,8 @@ public class GamesManagementController {
         }
 
         setupTable();
+        setupFilters();
         loadGames();
-        setupSearch();
     }
 
     private void setupTable() {
@@ -73,35 +82,52 @@ public class GamesManagementController {
         });
     }
 
+    private void setupFilters() {
+        sortComboBox.setItems(FXCollections.observableArrayList("ID Asc", "ID Desc"));
+        sortComboBox.setValue("ID Asc");
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+        sortComboBox.valueProperty().addListener((observable, oldValue, newValue) -> applySort());
+
+        applyFilters();
+        applySort();
+        gamesTable.setItems(sortedGames);
+    }
+
     private void loadGames() {
         try {
             List<Game> games = gameDAO.findAll();
             gamesList.setAll(games);
-            gamesTable.setItems(gamesList);
         } catch (SQLException e) {
-            e.printStackTrace();
+            showAlert("Error", "Unable to load games: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
-    private void setupSearch() {
-        FilteredList<Game> filteredData = new FilteredList<>(gamesList, p -> true);
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(game -> {
-                if (newValue == null || newValue.isEmpty()) return true;
-                String lowerCaseFilter = newValue.toLowerCase();
-                return game.getName().toLowerCase().contains(lowerCaseFilter) ||
-                       game.getGenre().toLowerCase().contains(lowerCaseFilter);
-            });
+    private void applyFilters() {
+        String keyword = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
+        filteredGames.setPredicate(game -> {
+            if (keyword.isEmpty()) {
+                return true;
+            }
+            return String.valueOf(game.getGameId()).contains(keyword)
+                    || safe(game.getName()).contains(keyword)
+                    || safe(game.getGenre()).contains(keyword)
+                    || safe(game.getDescription()).contains(keyword);
         });
-        gamesTable.setItems(filteredData);
+    }
+
+    private void applySort() {
+        Comparator<Game> comparator = Comparator.comparingInt(Game::getGameId);
+        if ("ID Desc".equals(sortComboBox.getValue())) {
+            comparator = comparator.reversed();
+        }
+        sortedGames.setComparator(comparator);
     }
 
     @FXML private void handleShowAddForm() {
         selectedGame = null;
         formTitle.setText("ADD GAME");
-        nameField.clear();
-        genreField.clear();
-        descriptionArea.clear();
+        clearForm();
         showForm();
     }
 
@@ -134,39 +160,84 @@ public class GamesManagementController {
 
     @FXML
     private void handleSaveGame() {
-        String name = nameField.getText();
-        String genre = genreField.getText();
-        String desc = descriptionArea.getText();
-
-        if (name.isEmpty() || genre.isEmpty()) {
-            showAlert("Error", "Name and Genre are required!", Alert.AlertType.ERROR);
+        if (!validateForm()) {
             return;
         }
 
         try {
+            String name = nameField.getText().trim();
+            String genre = genreField.getText().trim();
+            String desc = descriptionArea.getText().trim();
+
             if (selectedGame == null) {
                 Game g = new Game();
                 g.setName(name);
                 g.setGenre(genre);
                 g.setDescription(desc);
                 gameDAO.save(g);
-                gamesList.add(g);
             } else {
                 selectedGame.setName(name);
                 selectedGame.setGenre(genre);
                 selectedGame.setDescription(desc);
                 gameDAO.update(selectedGame);
-                gamesTable.refresh();
             }
+            loadGames();
             hideForm();
         } catch (SQLException e) {
             showAlert("Error", "Database error: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
-    private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }
+    private boolean validateForm() {
+        clearErrors();
+        boolean valid = true;
+
+        if (nameField.getText() == null || nameField.getText().trim().isEmpty()) {
+            nameErrorLabel.setText("Game name is required.");
+            valid = false;
+        }
+        if (genreField.getText() == null || genreField.getText().trim().isEmpty()) {
+            genreErrorLabel.setText("Genre is required.");
+            valid = false;
+        }
+        if (descriptionArea.getText() == null || descriptionArea.getText().trim().isEmpty()) {
+            descriptionErrorLabel.setText("Description is required.");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private void showForm() {
+        clearErrors();
+        formPane.setVisible(true);
+        formPane.setManaged(true);
+    }
+
     @FXML private void handleHideForm() { hideForm(); }
-    private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
+
+    private void hideForm() {
+        clearForm();
+        clearErrors();
+        formPane.setVisible(false);
+        formPane.setManaged(false);
+    }
+
+    private void clearForm() {
+        nameField.clear();
+        genreField.clear();
+        descriptionArea.clear();
+    }
+
+    private void clearErrors() {
+        nameErrorLabel.setText("");
+        genreErrorLabel.setText("");
+        descriptionErrorLabel.setText("");
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.toLowerCase();
+    }
 
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
