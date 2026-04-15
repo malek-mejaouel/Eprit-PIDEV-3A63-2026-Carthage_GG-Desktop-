@@ -71,9 +71,13 @@ public class SignInController {
                     return;
                 }
 
+                // Check if active
+                if (!user.isActive()) {
+                    showError("Account is inactive");
+                    return;
+                }
+
                 // Successful login
-                userDAO.setActiveStatus(user.getUserId(), true);
-                user.setActive(true);
                 SessionManager.setCurrentUser(user);
 
                 if (rememberMeCheckbox != null && rememberMeCheckbox.isSelected()) {
@@ -135,8 +139,9 @@ public class SignInController {
                             // 2. Fallback: try by email (if they registered manually before)
                             user = userDAO.findByEmail(gUser.email);
                             if (user != null) {
-                                // Link Google ID to existing account (optional, requires a DAO update method)
-                                // For now, we just log them in
+                                // Link Google ID to existing account
+                                user.setGoogleId(gUser.id);
+                                userDAO.linkGoogleId(user.getUserId(), gUser.id);
                             }
                         }
 
@@ -156,8 +161,17 @@ public class SignInController {
                             user.setFirstName(gUser.givenName != null ? gUser.givenName : "");
                             user.setLastName(gUser.familyName != null ? gUser.familyName : "");
                             user.setAvatar(gUser.picture);
+                            user.setActive(true); // Ensure user is marked active in memory
                             
                             userDAO.save(user);
+                        }
+
+                        if (user != null) {
+                            // Ensure user is active if they just signed in via Google
+                            if (!user.isActive()) {
+                                user.setActive(true);
+                                userDAO.activateUser(user.getUserId());
+                            }
                         }
 
                         // Check if banned
@@ -166,9 +180,13 @@ public class SignInController {
                             return;
                         }
 
+                        // Check if active (now redundant but good to keep)
+                        if (!user.isActive()) {
+                            showError("Account is inactive");
+                            return;
+                        }
+
                         // Successful login
-                        userDAO.setActiveStatus(user.getUserId(), true);
-                        user.setActive(true);
                         SessionManager.setCurrentUser(user);
                         
                         if (user.isAdmin()) {
@@ -180,6 +198,13 @@ public class SignInController {
                     } catch (SQLException e) {
                         e.printStackTrace();
                         showError("Database error during Google Login.");
+                        
+                        // Show detailed alert for connection failures
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Connection Error");
+                        alert.setHeaderText("Database connection failed during Google Login");
+                        alert.setContentText("Please ensure MariaDB is running and the database 'carthage_gg' exists.\n\nError: " + e.getMessage());
+                        alert.showAndWait();
                     }
                 });
             }

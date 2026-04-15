@@ -19,8 +19,10 @@
             </Button>
             <Label text="Users Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
             <Region HBox.hgrow="ALWAYS" />
-            <TextField fx:id="searchField" promptText="Search by username or email" styleClass="text-field-dark" prefWidth="300" />
-            <ComboBox fx:id="roleFilter" promptText="Filter by Role" styleClass="text-field-dark" prefWidth="150" />
+            <TextField fx:id="searchField" promptText="Search by username or email" styleClass="text-field-dark" prefWidth="250" />
+            <ComboBox fx:id="roleFilter" promptText="Role" styleClass="text-field-dark" prefWidth="120" />
+            <ComboBox fx:id="activeFilter" promptText="Status" styleClass="text-field-dark" prefWidth="120" />
+            <ComboBox fx:id="sortOrder" promptText="Sort ID" styleClass="text-field-dark" prefWidth="120" />
         </HBox>
     </top>
     
