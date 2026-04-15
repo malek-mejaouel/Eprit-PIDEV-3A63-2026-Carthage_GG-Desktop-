@@ -1,64 +1,77 @@
 package com.carthagegg.dao;
 
 import com.carthagegg.models.Order;
-import com.carthagegg.utils.DatabaseConnection;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
-import java.sql.*;
+import java.io.*;
+import java.lang.reflect.Type;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDAO {
-    private Connection conn;
+    private static final String FILE_PATH = "orders.json";
+    private final Gson gson;
 
     public OrderDAO() {
-        try {
-            this.conn = DatabaseConnection.getInstance();
-        } catch (SQLException e) {
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new com.google.gson.JsonDeserializer<LocalDateTime>() {
+                    @Override
+                    public LocalDateTime deserialize(com.google.gson.JsonElement json, Type typeOfT, com.google.gson.JsonDeserializationContext context) throws com.google.gson.JsonParseException {
+                        return LocalDateTime.parse(json.getAsString());
+                    }
+                })
+                .registerTypeAdapter(LocalDateTime.class, new com.google.gson.JsonSerializer<LocalDateTime>() {
+                    @Override
+                    public com.google.gson.JsonElement serialize(LocalDateTime src, Type typeOfSrc, com.google.gson.JsonSerializationContext context) {
+                        return new com.google.gson.JsonPrimitive(src.toString());
+                    }
+                })
+                .setPrettyPrinting()
+                .create();
+    }
+
+    public List<Order> findAll() {
+        File file = new File(FILE_PATH);
+        if (!file.exists()) return new ArrayList<>();
+
+        try (Reader reader = new FileReader(file)) {
+            Type listType = new TypeToken<ArrayList<Order>>() {}.getType();
+            List<Order> list = gson.fromJson(reader, listType);
+            return list != null ? list : new ArrayList<>();
+        } catch (IOException e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 
-    public List<Order> findAll() throws SQLException {
-        List<Order> list = new ArrayList<>();
-        String sql = "SELECT * FROM orders ORDER BY order_date DESC";
-        try (Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) list.add(mapOrder(rs));
-        }
-        return list;
+    public void save(Order o) {
+        List<Order> list = findAll();
+        int maxId = list.stream().mapToInt(Order::getOrderId).max().orElse(0);
+        o.setOrderId(maxId + 1);
+        o.setOrderDate(LocalDateTime.now());
+        list.add(o);
+        saveToFile(list);
     }
 
-    public void save(Order o) throws SQLException {
-        String sql = "INSERT INTO orders (user_id, product_id, quantity, status, order_date) VALUES (?,?,?,?,NOW())";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, o.getUserId());
-            ps.setInt(2, o.getProductId());
-            ps.setInt(3, o.getQuantity());
-            ps.setString(4, o.getStatus().name());
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) o.setOrderId(rs.getInt(1));
+    public void updateStatus(int orderId, Order.Status status) {
+        List<Order> list = findAll();
+        for (Order o : list) {
+            if (o.getOrderId() == orderId) {
+                o.setStatus(status);
+                break;
             }
         }
+        saveToFile(list);
     }
 
-    public void updateStatus(int orderId, Order.Status status) throws SQLException {
-        String sql = "UPDATE orders SET status=? WHERE order_id=?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status.name());
-            ps.setInt(2, orderId);
-            ps.executeUpdate();
+    private void saveToFile(List<Order> list) {
+        try (Writer writer = new FileWriter(FILE_PATH)) {
+            gson.toJson(list, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    }
-
-    private Order mapOrder(ResultSet rs) throws SQLException {
-        Order o = new Order();
-        o.setOrderId(rs.getInt("order_id"));
-        o.setUserId(rs.getInt("user_id"));
-        o.setProductId(rs.getInt("product_id"));
-        o.setQuantity(rs.getInt("quantity"));
-        o.setStatus(Order.Status.valueOf(rs.getString("status")));
-        o.setOrderDate(rs.getTimestamp("order_date").toLocalDateTime());
-        return o;
     }
 }

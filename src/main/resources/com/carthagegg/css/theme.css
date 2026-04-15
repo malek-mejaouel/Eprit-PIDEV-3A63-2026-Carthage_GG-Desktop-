@@ -16,7 +16,9 @@
 
 .card {
     -fx-background-color: #141416;
+    -fx-background-radius: 12;
     -fx-border-color: #232326;
+    -fx-border-width: 1;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 4);
@@ -214,6 +216,10 @@
     -fx-background: transparent;
 }
 
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
 .scroll-bar:vertical, .scroll-bar:horizontal {
     -fx-background-color: transparent;
 }
@@ -258,6 +264,22 @@
 
 .table-row-cell {
     -fx-background-color: #141416;
+    -fx-border-color: #232326;
+    -fx-border-radius: 3;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #FFC107;
+}
+
+.combo-box {
+    -fx-background-color: #141416;
+    -fx-border-color: #232326;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.combo-box .label {
     -fx-text-fill: white;
     -fx-cell-size: 50;
     -fx-border-color: #232326;
