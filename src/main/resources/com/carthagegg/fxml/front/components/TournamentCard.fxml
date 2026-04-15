@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.carthagegg.controllers.front.components.TournamentCardController"
+      spacing="15" styleClass="card" prefWidth="300" maxWidth="300">
+    <padding>
+        <Insets bottom="20" left="20" right="20" top="20" />
+    </padding>
+    
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label fx:id="gameLabel" text="LEAGUE OF LEGENDS" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+        <Region HBox.hgrow="ALWAYS" />
+        <FontIcon iconLiteral="fas-trophy" iconColor="#FFC107" iconSize="14"/>
+    </HBox>
+    
+    <Label fx:id="titleLabel" text="Carthage Winter Split" wrapText="true" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
+    
+    <VBox spacing="8">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <FontIcon iconLiteral="fas-calendar-day" iconColor="#FFC107" iconSize="12"/>
+            <Label fx:id="dateLabel" text="24 Mar - 30 Mar 2026" style="-fx-text-fill: #FFFFFF; -fx-font-size: 12;" />
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <FontIcon iconLiteral="fas-map-marker-alt" iconColor="#FFC107" iconSize="12"/>
+            <Label fx:id="locationLabel" text="Tunis, Tunisia" style="-fx-text-fill: #FFFFFF; -fx-font-size: 12;" />
+        </HBox>
+    </VBox>
+    
+    <HBox alignment="CENTER_LEFT">
+        <VBox>
+            <Label text="PRIZE POOL" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 9;" />
+            <Label fx:id="prizeLabel" text="5,000 TND" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 16;" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="DETAILS" onAction="#handleViewDetails" styleClass="btn-primary" prefHeight="35" prefWidth="100" />
+    </HBox>
+</VBox>

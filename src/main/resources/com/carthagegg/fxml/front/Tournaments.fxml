@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.TournamentsController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <VBox spacing="30">
+            <padding>
+                <Insets top="40" left="40" right="40" bottom="40" />
+            </padding>
+            
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <VBox>
+                    <Label text="Tournaments" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
+                    <Label text="Join the competition and prove your skills" style="-fx-text-fill: #949499;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField" promptText="Search tournaments..." styleClass="text-field-dark" prefWidth="300" />
+                    <ComboBox fx:id="gameFilter" promptText="All Games" styleClass="text-field-dark" prefWidth="150" />
+                </HBox>
+            </HBox>
+            
+            <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+                <FlowPane fx:id="tournamentsGrid" hgap="20" vgap="20" />
+            </ScrollPane>
+        </VBox>
+    </center>
+    
+</BorderPane>

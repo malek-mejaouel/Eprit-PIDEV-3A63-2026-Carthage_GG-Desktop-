@@ -1,0 +1,187 @@
+package com.carthagegg.controllers.back;
+
+import com.carthagegg.dao.CategoryDAO;
+import com.carthagegg.dao.ProductDAO;
+import com.carthagegg.models.Category;
+import com.carthagegg.models.Product;
+import com.carthagegg.utils.SceneNavigator;
+import com.carthagegg.utils.SessionManager;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
+
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductsManagementController {
+
+    @FXML private TableView<Product> productsTable;
+    @FXML private TableColumn<Product, Integer> colId;
+    @FXML private TableColumn<Product, String> colName;
+    @FXML private TableColumn<Product, BigDecimal> colPrice;
+    @FXML private TableColumn<Product, String> colCategory;
+    @FXML private TableColumn<Product, Integer> colStock;
+    @FXML private TableColumn<Product, Void> colActions;
+
+    @FXML private VBox formPane;
+    @FXML private Label formTitle;
+    @FXML private TextField nameField;
+    @FXML private TextField priceField;
+    @FXML private ComboBox<Category> categoryComboBox;
+    @FXML private TextField stockField;
+    @FXML private TextField imageField;
+
+    private ProductDAO productDAO = new ProductDAO();
+    private CategoryDAO categoryDAO = new CategoryDAO();
+    private ObservableList<Product> productsList = FXCollections.observableArrayList();
+    private Product selectedProduct;
+
+    @FXML
+    public void initialize() {
+        if (!SessionManager.isAdmin()) {
+            SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml");
+            return;
+        }
+
+        setupTable();
+        loadProducts();
+        loadCategories();
+    }
+
+    private void setupTable() {
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
+        
+        colCategory.setCellValueFactory(cellData -> {
+            try {
+                List<Category> cats = categoryDAO.findAll();
+                Category c = cats.stream().filter(cat -> cat.getId() == cellData.getValue().getCategoryId())
+                        .findFirst().orElse(null);
+                return new SimpleStringProperty(c != null ? c.getName() : "Unknown");
+            } catch (SQLException e) {
+                return new SimpleStringProperty("Error");
+            }
+        });
+
+        colActions.setCellFactory(param -> new TableCell<Product, Void>() {
+            private final Button editBtn = new Button("Edit");
+            private final Button deleteBtn = new Button("Delete");
+            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+
+            {
+                editBtn.getStyleClass().add("btn-gold");
+                deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
+                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
+                deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : pane);
+            }
+        });
+    }
+
+    private void loadProducts() {
+        try {
+            productsList.setAll(productDAO.findAll());
+            productsTable.setItems(productsList);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadCategories() {
+        try {
+            categoryComboBox.setItems(FXCollections.observableArrayList(categoryDAO.findAll()));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML private void handleShowAddForm() {
+        selectedProduct = null;
+        formTitle.setText("ADD PRODUCT");
+        clearForm();
+        showForm();
+    }
+
+    private void handleEdit(Product p) {
+        selectedProduct = p;
+        formTitle.setText("EDIT PRODUCT");
+        nameField.setText(p.getName());
+        priceField.setText(p.getPrice().toString());
+        stockField.setText(String.valueOf(p.getStock()));
+        imageField.setText(p.getImage());
+        
+        for (Category c : categoryComboBox.getItems()) {
+            if (c.getId() == p.getCategoryId()) {
+                categoryComboBox.setValue(c);
+                break;
+            }
+        }
+        showForm();
+    }
+
+    private void handleDelete(Product p) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Delete");
+        alert.setHeaderText("Delete product: " + p.getName() + "?");
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    productDAO.delete(p.getId());
+                    productsList.remove(p);
+                } catch (SQLException e) {
+                    showAlert("Error", "Could not delete product", Alert.AlertType.ERROR);
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void handleSaveProduct() {
+        try {
+            Product p = (selectedProduct == null) ? new Product() : selectedProduct;
+            p.setName(nameField.getText());
+            p.setPrice(new BigDecimal(priceField.getText()));
+            p.setCategoryId(categoryComboBox.getValue().getId());
+            p.setStock(Integer.parseInt(stockField.getText()));
+            p.setImage(imageField.getText());
+
+            if (selectedProduct == null) {
+                productDAO.save(p);
+                productsList.add(p);
+            } else {
+                productDAO.update(p);
+                productsTable.refresh();
+            }
+            hideForm();
+        } catch (Exception e) {
+            showAlert("Error", "Check all fields", Alert.AlertType.ERROR);
+        }
+    }
+
+    private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }
+    @FXML private void handleHideForm() { hideForm(); }
+    private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
+    private void clearForm() { nameField.clear(); priceField.setText("0.00"); categoryComboBox.setValue(null); stockField.setText("0"); imageField.clear(); }
+
+    private void showAlert(String title, String content, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    @FXML private void handleNavOrders() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/OrdersManagement.fxml"); }
+    @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml"); }
+}
