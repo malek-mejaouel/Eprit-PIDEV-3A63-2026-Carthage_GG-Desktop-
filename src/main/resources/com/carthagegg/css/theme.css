@@ -127,6 +127,16 @@
     -fx-border-color: #FFC107;
 }
 
+.text-field-error {
+    -fx-border-color: #FF4444 !important;
+}
+
+.label-error {
+    -fx-text-fill: #FF4444;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
 .scroll-pane {
     -fx-background-color: transparent;
     -fx-background: transparent;

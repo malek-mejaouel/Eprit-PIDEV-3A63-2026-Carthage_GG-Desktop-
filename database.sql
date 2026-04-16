@@ -137,7 +137,21 @@ CREATE TABLE IF NOT EXISTS streams (
 CREATE TABLE IF NOT EXISTS locations (
     location_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    address TEXT
+    address TEXT,
+    capacity INT DEFAULT 100,
+    latitude DOUBLE DEFAULT 0.0,
+    longitude DOUBLE DEFAULT 0.0
+);
+
+-- Reservations Table
+CREATE TABLE IF NOT EXISTS reservations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    reservation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    event_id INT,
+    status ENUM('WAITING', 'CONFIRMED', 'CANCELLED') DEFAULT 'WAITING',
+    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
 );
 
 -- Categories (for News/Products)

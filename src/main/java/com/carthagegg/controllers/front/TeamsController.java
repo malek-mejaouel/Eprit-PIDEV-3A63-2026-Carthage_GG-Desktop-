@@ -73,9 +73,17 @@ public class TeamsController {
         Button viewBtn = new Button("VIEW TEAM");
         viewBtn.getStyleClass().add("btn-primary");
         viewBtn.setMaxWidth(Double.MAX_VALUE);
+        viewBtn.setOnAction(e -> handleViewTeam(team));
 
         card.getChildren().addAll(logo, name, viewBtn);
         return card;
+    }
+
+    private void handleViewTeam(Team team) {
+        TeamDetailsController controller = SceneNavigator.navigateTo("/com/carthagegg/fxml/front/TeamDetails.fxml", team);
+        if (controller != null) {
+            controller.setTeam(team);
+        }
     }
 
     @FXML private void handleNavHome() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }
