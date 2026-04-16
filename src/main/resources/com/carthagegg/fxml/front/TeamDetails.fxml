@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.TeamDetailsController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="30">
+                <padding>
+                    <Insets top="40" left="40" right="40" bottom="40" />
+                </padding>
+                
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                        <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+                    </Button>
+                    <VBox>
+                        <Label text="Team Details" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
+                        <Label text="Information about this professional esports team" style="-fx-text-fill: #949499;" />
+                    </VBox>
+                </HBox>
+                
+                <VBox spacing="25" styleClass="card" alignment="CENTER">
+                    <padding>
+                        <Insets top="50" left="30" right="30" bottom="50" />
+                    </padding>
+                    
+                    <ImageView fx:id="teamLogo" fitWidth="200" fitHeight="200" preserveRatio="true" />
+                    
+                    <VBox spacing="10" alignment="CENTER">
+                        <Label fx:id="teamNameLabel" styleClass="neon-label" style="-fx-font-size: 36; -fx-font-weight: bold;" />
+                        <HBox spacing="15" alignment="CENTER">
+                            <FontIcon iconLiteral="fas-calendar-check" iconColor="#71717a" iconSize="16"/>
+                            <Label fx:id="creationDateLabel" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 16;" />
+                        </HBox>
+                    </VBox>
+                    
+                    <Separator style="-fx-opacity: 0.1;" maxWidth="400" />
+                    
+                    <VBox spacing="20" alignment="CENTER">
+                        <Label text="ABOUT THIS TEAM" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 14;" />
+                        <Label text="This team is competing in the CarthageGG esports league. Join them on their journey to the top of the leaderboards!" 
+                               wrapText="true" style="-fx-text-fill: #e4e4e7; -fx-font-size: 16; -fx-line-spacing: 5; -fx-text-alignment: center;" maxWidth="600" />
+                    </VBox>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+    
+</BorderPane>

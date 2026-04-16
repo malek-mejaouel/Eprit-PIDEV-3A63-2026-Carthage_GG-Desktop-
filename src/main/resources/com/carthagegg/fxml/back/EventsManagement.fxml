@@ -36,6 +36,12 @@
                             <Button text="ADD NEW EVENT" onAction="#handleShowAddEventForm" styleClass="btn-primary" prefHeight="40">
                                 <graphic><FontIcon iconLiteral="fas-plus" iconColor="#0a0a0f" iconSize="14"/></graphic>
                             </Button>
+                            <Region HBox.hgrow="ALWAYS" />
+                            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="search-box">
+                                <FontIcon iconLiteral="fas-search" iconColor="#71717a" iconSize="14"/>
+                                <TextField fx:id="eventSearchField" promptText="Search events..." styleClass="search-field" prefWidth="250" />
+                            </HBox>
+                            <ComboBox fx:id="eventFilterLocation" promptText="Filter by Location" styleClass="text-field-dark" prefWidth="180" />
                         </HBox>
                         <TableView fx:id="eventsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
                             <columns>
@@ -61,6 +67,11 @@
                             <Button text="ADD NEW LOCATION" onAction="#handleShowAddLocationForm" styleClass="btn-primary" prefHeight="40">
                                 <graphic><FontIcon iconLiteral="fas-plus" iconColor="#0a0a0f" iconSize="14"/></graphic>
                             </Button>
+                            <Region HBox.hgrow="ALWAYS" />
+                            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="search-box">
+                                <FontIcon iconLiteral="fas-search" iconColor="#71717a" iconSize="14"/>
+                                <TextField fx:id="locationSearchField" promptText="Search locations..." styleClass="search-field" prefWidth="250" />
+                            </HBox>
                         </HBox>
                         <TableView fx:id="locationsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
                             <columns>
@@ -69,6 +80,36 @@
                                 <TableColumn fx:id="colLocAddress" text="Address" prefWidth="300" />
                                 <TableColumn fx:id="colLocCapacity" text="Capacity" prefWidth="100" />
                                 <TableColumn fx:id="colLocActions" text="Actions" prefWidth="180" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- Reservations Tab -->
+                <Tab text="Reservations" closable="false">
+                    <graphic><FontIcon iconLiteral="fas-ticket-alt" iconColor="#00f0ff" iconSize="14"/></graphic>
+                    <VBox spacing="20">
+                        <padding>
+                            <Insets top="20" left="20" right="20" bottom="20" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="20">
+                            <Label text="Event Reservations" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="search-box">
+                                <FontIcon iconLiteral="fas-search" iconColor="#71717a" iconSize="14"/>
+                                <TextField fx:id="reservationSearchField" promptText="Search reservations..." styleClass="search-field" prefWidth="250" />
+                            </HBox>
+                            <ComboBox fx:id="reservationFilterStatus" promptText="Filter by Status" styleClass="text-field-dark" prefWidth="180" />
+                        </HBox>
+                        <TableView fx:id="reservationsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                            <columns>
+                                <TableColumn fx:id="colResId" text="ID" prefWidth="50" />
+                                <TableColumn fx:id="colResName" text="Name" prefWidth="200" />
+                                <TableColumn fx:id="colResPrice" text="Price" prefWidth="100" />
+                                <TableColumn fx:id="colResDate" text="Date" prefWidth="180" />
+                                <TableColumn fx:id="colResEvent" text="Event" prefWidth="200" />
+                                <TableColumn fx:id="colResStatus" text="Status" prefWidth="120" />
+                                <TableColumn fx:id="colResActions" text="Actions" prefWidth="180" />
                             </columns>
                         </TableView>
                     </VBox>
@@ -88,28 +129,34 @@
                 <VBox spacing="5">
                     <Label text="TITLE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="eventTitleField" styleClass="text-field-dark" />
+                    <Label fx:id="eventTitleError" visible="false" managed="false" styleClass="label-error" />
                 </VBox>
                 <VBox spacing="5">
                     <Label text="LOCATION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <ComboBox fx:id="eventLocationComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                    <Label fx:id="eventLocationError" visible="false" managed="false" styleClass="label-error" />
                 </VBox>
                 <HBox spacing="10">
                     <VBox spacing="5" HBox.hgrow="ALWAYS">
                         <Label text="START AT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                         <DatePicker fx:id="eventStartDatePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+                        <Label fx:id="eventStartDateError" visible="false" managed="false" styleClass="label-error" />
                     </VBox>
                     <VBox spacing="5" HBox.hgrow="ALWAYS">
                         <Label text="END AT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                         <DatePicker fx:id="eventEndDatePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+                        <Label fx:id="eventEndDateError" visible="false" managed="false" styleClass="label-error" />
                     </VBox>
                 </HBox>
                 <VBox spacing="5">
                     <Label text="MAX SEATS" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="eventSeatsField" styleClass="text-field-dark" text="50" />
+                    <Label fx:id="eventSeatsError" visible="false" managed="false" styleClass="label-error" />
                 </VBox>
                 <VBox spacing="5">
                     <Label text="DESCRIPTION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextArea fx:id="eventDescriptionArea" prefHeight="100" styleClass="text-field-dark" wrapText="true" />
+                    <Label fx:id="eventDescriptionError" visible="false" managed="false" styleClass="label-error" />
                 </VBox>
                 <HBox spacing="10">
                     <Button text="CANCEL" onAction="#hideEventForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
@@ -125,28 +172,64 @@
                 <VBox spacing="5">
                     <Label text="NAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="locNameField" styleClass="text-field-dark" />
+                    <Label fx:id="locNameError" visible="false" managed="false" styleClass="label-error" />
                 </VBox>
                 <VBox spacing="5">
                     <Label text="ADDRESS" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="locAddressField" styleClass="text-field-dark" />
+                    <Label fx:id="locAddressError" visible="false" managed="false" styleClass="label-error" />
                 </VBox>
                 <VBox spacing="5">
                     <Label text="CAPACITY" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="locCapacityField" styleClass="text-field-dark" text="100" />
+                    <Label fx:id="locCapacityError" visible="false" managed="false" styleClass="label-error" />
                 </VBox>
                 <HBox spacing="10">
                     <VBox spacing="5" HBox.hgrow="ALWAYS">
                         <Label text="LATITUDE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                         <TextField fx:id="locLatField" styleClass="text-field-dark" text="0.0" />
+                        <Label fx:id="locLatError" visible="false" managed="false" styleClass="label-error" />
                     </VBox>
                     <VBox spacing="5" HBox.hgrow="ALWAYS">
                         <Label text="LONGITUDE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                         <TextField fx:id="locLngField" styleClass="text-field-dark" text="0.0" />
+                        <Label fx:id="locLngError" visible="false" managed="false" styleClass="label-error" />
                     </VBox>
                 </HBox>
                 <HBox spacing="10">
                     <Button text="CANCEL" onAction="#hideLocationForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
                     <Button text="SAVE" onAction="#handleSaveLocation" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
+                </HBox>
+            </VBox>
+
+            <VBox fx:id="reservationFormPane" visible="false" managed="false" prefWidth="350" spacing="15" styleClass="card">
+                <padding>
+                    <Insets top="30" left="20" right="20" bottom="20" />
+                </padding>
+                <Label fx:id="reservationFormTitle" text="ADD RESERVATION" styleClass="neon-label" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+                <VBox spacing="5">
+                    <Label text="NAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="resNameField" styleClass="text-field-dark" />
+                    <Label fx:id="resNameError" visible="false" managed="false" styleClass="label-error" />
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="PRICE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <TextField fx:id="resPriceField" styleClass="text-field-dark" />
+                    <Label fx:id="resPriceError" visible="false" managed="false" styleClass="label-error" />
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="EVENT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <ComboBox fx:id="resEventComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                    <Label fx:id="resEventError" visible="false" managed="false" styleClass="label-error" />
+                </VBox>
+                <VBox spacing="5">
+                    <Label text="STATUS" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <ComboBox fx:id="resStatusComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                    <Label fx:id="resStatusError" visible="false" managed="false" styleClass="label-error" />
+                </VBox>
+                <HBox spacing="10">
+                    <Button text="CANCEL" onAction="#hideReservationForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
+                    <Button text="SAVE" onAction="#handleSaveReservation" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
                 </HBox>
             </VBox>
         </StackPane>

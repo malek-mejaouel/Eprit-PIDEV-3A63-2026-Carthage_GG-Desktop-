@@ -7,6 +7,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
@@ -70,8 +71,24 @@ public class EventsController {
 
         content.getChildren().addAll(title, desc);
 
-        row.getChildren().addAll(dateBox, content);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+
+        Button detailsBtn = new Button("DETAILS");
+        detailsBtn.getStyleClass().add("btn-primary");
+        detailsBtn.setPrefHeight(40);
+        detailsBtn.setPrefWidth(120);
+        detailsBtn.setOnAction(e -> handleShowDetails(event));
+
+        row.getChildren().addAll(dateBox, content, spacer, detailsBtn);
         return row;
+    }
+
+    private void handleShowDetails(Event event) {
+        EventDetailsController controller = SceneNavigator.navigateTo("/com/carthagegg/fxml/front/EventDetails.fxml", event);
+        if (controller != null) {
+            controller.setEvent(event);
+        }
     }
 
     @FXML private void handleNavHome() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }
