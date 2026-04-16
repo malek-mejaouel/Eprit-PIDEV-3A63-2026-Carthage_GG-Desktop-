@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.ReclamationsManagementController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0d0d15; -fx-padding: 20;">
+            <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+            </Button>
+            <Label text="Reclamations Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Region HBox.hgrow="ALWAYS" />
+            <ComboBox fx:id="statusFilter" promptText="Filter Status" styleClass="text-field-dark" prefWidth="150" />
+        </HBox>
+    </top>
+    
+    <center>
+        <TableView fx:id="reclamationTable" styleClass="table-view">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="50" />
+                <TableColumn fx:id="colUsername" text="User" prefWidth="120" />
+                <TableColumn fx:id="colTitle" text="Title" prefWidth="200" />
+                <TableColumn fx:id="colDescription" text="Description" prefWidth="400" />
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="120" />
+                <TableColumn fx:id="colActions" text="Actions" prefWidth="250" />
+            </columns>
+        </TableView>
+    </center>
+
+</BorderPane>

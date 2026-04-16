@@ -29,6 +29,8 @@ public class CategoriesManagementController {
     @FXML private Label formTitle;
     @FXML private TextField nameField;
     @FXML private TextArea descriptionArea;
+    @FXML private Label errorLabel;
+    @FXML private ComboBox<String> sortComboBox;
 
     private CategoryDAO categoryDAO = new CategoryDAO();
     private ObservableList<Category> categoriesList = FXCollections.observableArrayList();
@@ -43,6 +45,25 @@ public class CategoriesManagementController {
 
         setupTable();
         loadCategories();
+        setupSort();
+    }
+
+    private void setupSort() {
+        sortComboBox.setItems(FXCollections.observableArrayList(
+            "ID ASC", "ID DESC", "Name ASC", "Name DESC"
+        ));
+        sortComboBox.setOnAction(e -> {
+            String selected = sortComboBox.getValue();
+            if (selected == null) return;
+
+            switch (selected) {
+                case "ID ASC" -> categoriesList.sort((c1, c2) -> Integer.compare(c1.getId(), c2.getId()));
+                case "ID DESC" -> categoriesList.sort((c1, c2) -> Integer.compare(c2.getId(), c1.getId()));
+                case "Name ASC" -> categoriesList.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+                case "Name DESC" -> categoriesList.sort((c1, c2) -> c2.getName().compareToIgnoreCase(c1.getName()));
+            }
+            categoriesTable.refresh();
+        });
     }
 
     private void setupTable() {
@@ -90,6 +111,7 @@ public class CategoriesManagementController {
     @FXML private void handleShowAddForm() {
         selectedCategory = null;
         formTitle.setText("ADD CATEGORY");
+        hideError();
         nameField.clear();
         descriptionArea.clear();
         showForm();
@@ -98,6 +120,7 @@ public class CategoriesManagementController {
     private void handleEdit(Category c) {
         selectedCategory = c;
         formTitle.setText("EDIT CATEGORY");
+        hideError();
         nameField.setText(c.getName());
         descriptionArea.setText(c.getDescription());
         showForm();
@@ -121,11 +144,11 @@ public class CategoriesManagementController {
 
     @FXML
     private void handleSaveCategory() {
-        String name = nameField.getText();
-        String desc = descriptionArea.getText();
+        String name = nameField.getText().trim();
+        String desc = descriptionArea.getText().trim();
 
         if (name.isEmpty()) {
-            showAlert("Error", "Name is required!", Alert.AlertType.ERROR);
+            showError("Category name is required.");
             return;
         }
 
@@ -144,8 +167,20 @@ public class CategoriesManagementController {
             }
             hideForm();
         } catch (SQLException e) {
-            showAlert("Error", "Database error: " + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+            showError("Database Error: Could not save category.");
         }
+    }
+
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+        errorLabel.setManaged(true);
+    }
+
+    private void hideError() {
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
     }
 
     private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }

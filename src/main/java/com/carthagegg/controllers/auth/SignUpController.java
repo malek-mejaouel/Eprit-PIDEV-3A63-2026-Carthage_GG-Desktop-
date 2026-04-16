@@ -21,6 +21,7 @@ public class SignUpController {
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmPasswordField;
     @FXML private ComboBox<String> roleComboBox;
+    @FXML private Label errorLabel;
 
     private UserDAO userDAO = new UserDAO();
     private Gson gson = new Gson();
@@ -31,30 +32,76 @@ public class SignUpController {
         roleComboBox.setValue("Player");
     }
 
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+        errorLabel.setManaged(true);
+    }
+
+    private void clearError() {
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
+    }
+
     @FXML
     private void handleSignUp() {
-        String firstName = firstNameField.getText();
-        String lastName = lastNameField.getText();
-        String username = usernameField.getText();
-        String email = emailField.getText();
+        clearError();
+
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
+        String username = usernameField.getText().trim();
+        String email = emailField.getText().trim();
         String password = passwordField.getText();
         String confirmPassword = confirmPasswordField.getText();
         String role = roleComboBox.getValue();
 
-        if (firstName.isEmpty() || lastName.isEmpty() || username.isEmpty() || 
-            email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-            showAlert("Error", "All fields are required", Alert.AlertType.ERROR);
+        if (firstName.isEmpty()) {
+            showError("First name is required");
+            return;
+        }
+        if (lastName.isEmpty()) {
+            showError("Last name is required");
+            return;
+        }
+        if (username.isEmpty()) {
+            showError("Username is required");
+            return;
+        }
+        if (email.isEmpty()) {
+            showError("Email is required");
+            return;
+        }
+        if (password.isEmpty()) {
+            showError("Password is required");
+            return;
+        }
+        if (confirmPassword.isEmpty()) {
+            showError("Please confirm your password");
+            return;
+        }
+        if (role == null || role.isEmpty()) {
+            showError("Please select a role");
+            return;
+        }
+
+        if (!email.contains("@")) {
+            showError("Please enter a valid email address");
+            return;
+        }
+
+        if (password.length() < 6) {
+            showError("Password must be at least 6 characters long");
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            showAlert("Error", "Passwords do not match", Alert.AlertType.ERROR);
+            showError("Passwords do not match");
             return;
         }
 
         try {
             if (userDAO.findByEmail(email) != null) {
-                showAlert("Error", "Email already registered", Alert.AlertType.ERROR);
+                showError("Email already registered");
                 return;
             }
 
@@ -76,7 +123,7 @@ public class SignUpController {
             SceneNavigator.navigateTo("/com/carthagegg/fxml/auth/SignIn.fxml");
 
         } catch (Exception e) {
-            showAlert("Error", "System error: " + e.getMessage(), Alert.AlertType.ERROR);
+            showError("System error: " + e.getMessage());
             e.printStackTrace();
         }
     }

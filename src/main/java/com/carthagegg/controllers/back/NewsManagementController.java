@@ -38,6 +38,11 @@ public class NewsManagementController {
     @FXML private TextField imageField;
     @FXML private TextArea contentArea;
 
+    @FXML private Label titleErrorLabel;
+    @FXML private Label categoryErrorLabel;
+    @FXML private Label imageErrorLabel;
+    @FXML private Label contentErrorLabel;
+
     private NewsDAO newsDAO = new NewsDAO();
     private CategoryDAO categoryDAO = new CategoryDAO();
     private ObservableList<News> newsList = FXCollections.observableArrayList();
@@ -52,8 +57,55 @@ public class NewsManagementController {
         }
 
         setupTable();
+        seedCategories();
         loadNews();
         loadCategories();
+        setupRealTimeValidation();
+    }
+
+    private void seedCategories() {
+        // Remove "AAAA" if it exists
+        try {
+            Category aaaa = categoryDAO.findByName("AAAA");
+            if (aaaa != null) {
+                categoryDAO.delete(aaaa.getId());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        String[] realCats = {"Tournaments", "Player Update", "Game Update", "New Release", "Hardware", "Esports"};
+        for (String catName : realCats) {
+            try {
+                if (categoryDAO.findByName(catName) == null) {
+                    Category c = new Category();
+                    c.setName(catName);
+                    c.setDescription("News about " + catName);
+                    categoryDAO.save(c);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void setupRealTimeValidation() {
+        titleField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                try {
+                    if (newsDAO.existsByTitle(newVal.trim(), selectedNews != null ? selectedNews.getNewsId() : null)) {
+                        titleErrorLabel.setText("This news already exists");
+                        titleErrorLabel.setVisible(true);
+                        titleErrorLabel.setManaged(true);
+                    } else {
+                        titleErrorLabel.setVisible(false);
+                        titleErrorLabel.setManaged(false);
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void setupTable() {
@@ -118,6 +170,7 @@ public class NewsManagementController {
         categoryComboBox.setValue(null);
         imageField.clear();
         contentArea.clear();
+        clearErrors();
         showForm();
     }
 
@@ -135,6 +188,7 @@ public class NewsManagementController {
                 break;
             }
         }
+        clearErrors();
         showForm();
     }
 
@@ -156,13 +210,52 @@ public class NewsManagementController {
 
     @FXML
     private void handleSaveNews() {
-        String title = titleField.getText();
+        clearErrors();
+        String titleText = titleField.getText() != null ? titleField.getText().trim() : "";
         Category cat = categoryComboBox.getValue();
         String image = imageField.getText();
         String content = contentArea.getText();
 
-        if (title.isEmpty() || cat == null || content.isEmpty()) {
-            showAlert("Error", "All fields are required!", Alert.AlertType.ERROR);
+        boolean isValid = true;
+
+        if (titleText.isEmpty()) {
+            titleErrorLabel.setText("Title is required");
+            titleErrorLabel.setVisible(true);
+            titleErrorLabel.setManaged(true);
+            isValid = false;
+        } else {
+            try {
+                // EXPLICIT CHECK before saving
+                if (newsDAO.existsByTitle(titleText, selectedNews != null ? selectedNews.getNewsId() : null)) {
+                    titleErrorLabel.setText("This news already exists");
+                    titleErrorLabel.setVisible(true);
+                    titleErrorLabel.setManaged(true);
+                    isValid = false;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (cat == null) {
+            categoryErrorLabel.setVisible(true);
+            categoryErrorLabel.setManaged(true);
+            isValid = false;
+        }
+
+        if (image == null || image.trim().isEmpty()) {
+            imageErrorLabel.setVisible(true);
+            imageErrorLabel.setManaged(true);
+            isValid = false;
+        }
+
+        if (content == null || content.trim().length() < 5 || content.trim().length() > 5000) {
+            contentErrorLabel.setVisible(true);
+            contentErrorLabel.setManaged(true);
+            isValid = false;
+        }
+
+        if (!isValid) {
             return;
         }
 
@@ -178,14 +271,14 @@ public class NewsManagementController {
             }
             if (selectedNews == null) {
                 News n = new News();
-                n.setTitle(title);
+                n.setTitle(titleText);
                 n.setCategory(cat.getName());
                 n.setImage(image);
                 n.setContent(content);
                 newsDAO.save(n);
                 newsList.add(n);
             } else {
-                selectedNews.setTitle(title);
+                selectedNews.setTitle(titleText);
                 selectedNews.setCategory(cat.getName());
                 selectedNews.setImage(image);
                 selectedNews.setContent(content);
@@ -216,6 +309,17 @@ public class NewsManagementController {
     private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }
     @FXML private void handleHideForm() { hideForm(); }
     private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
+
+    private void clearErrors() {
+        titleErrorLabel.setVisible(false);
+        titleErrorLabel.setManaged(false);
+        categoryErrorLabel.setVisible(false);
+        categoryErrorLabel.setManaged(false);
+        imageErrorLabel.setVisible(false);
+        imageErrorLabel.setManaged(false);
+        contentErrorLabel.setVisible(false);
+        contentErrorLabel.setManaged(false);
+    }
 
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
