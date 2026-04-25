@@ -40,7 +40,7 @@ public class UserDAO {
     public void save(User user) throws SQLException {
         String sql = "INSERT INTO users (email, password, roles, username, first_name, last_name, google_id, avatar, is_active, created_at, updated_at) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())";
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getEmail());
             ps.setString(2, user.getPassword() != null ? user.getPassword() : ""); // allow empty for google users if they don't have standard password
@@ -53,7 +53,10 @@ public class UserDAO {
             ps.executeUpdate();
             
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) user.setUserId(rs.getInt(1));
+                if (rs.next()) {
+                    user.setUserId(rs.getInt(1));
+                    user.setActive(true); // Since we hardcoded '1' in the INSERT SQL
+                }
             }
         }
     }
@@ -117,7 +120,7 @@ public class UserDAO {
 
     public void update(User user) throws SQLException {
         String sql = "UPDATE users SET username=?, first_name=?, last_name=?, avatar=?, updated_at=NOW() WHERE user_id=?";
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseConnection.getInstance();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getFirstName());
@@ -128,12 +131,30 @@ public class UserDAO {
         }
     }
 
-    public void setActiveStatus(int userId, boolean active) throws SQLException {
-        String sql = "UPDATE users SET is_active = ? WHERE user_id = ?";
+    public void linkGoogleId(int userId, String googleId) throws SQLException {
+        String sql = "UPDATE users SET google_id=?, updated_at=NOW() WHERE user_id=?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBoolean(1, active);
+            ps.setString(1, googleId);
             ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void activateUser(int userId) throws SQLException {
+        String sql = "UPDATE users SET is_active=1, updated_at=NOW() WHERE user_id=?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void delete(int userId) throws SQLException {
+        String sql = "DELETE FROM users WHERE user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
             ps.executeUpdate();
         }
     }
