@@ -27,7 +27,7 @@ public class NewsDetailController {
     @FXML private SidebarController sidebarController;
 
     private static News selectedNews;
-    private CommentController commentController = new CommentController();
+    private CommentController commentController;
 
     public static void setSelectedNews(News news) {
         selectedNews = news;
@@ -38,7 +38,7 @@ public class NewsDetailController {
         if (sidebarController != null) {
             sidebarController.setActiveItem("news");
         }
-
+        
         if (selectedNews != null) {
             displayNews();
         }
@@ -74,7 +74,18 @@ public class NewsDetailController {
 
         // Add comments section
         commentsSectionContainer.getChildren().clear();
-        commentsSectionContainer.getChildren().add(commentController.buildCommentsSection(selectedNews.getNewsId()));
+        
+        // Lazy load the comment section to avoid blocking the UI thread during FXML loading
+        javafx.application.Platform.runLater(() -> {
+            try {
+                if (commentController == null) {
+                    commentController = new CommentController();
+                }
+                commentsSectionContainer.getChildren().add(commentController.buildCommentsSection(selectedNews.getNewsId()));
+            } catch (Throwable t) {
+                System.err.println("Error building comments section: " + t.getMessage());
+            }
+        });
     }
 
     @FXML
