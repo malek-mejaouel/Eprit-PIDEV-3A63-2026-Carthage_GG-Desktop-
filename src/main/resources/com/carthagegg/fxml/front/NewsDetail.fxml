@@ -39,6 +39,10 @@
                         <HBox alignment="CENTER_LEFT" spacing="10">
                             <Label fx:id="categoryLabel" text="CATEGORY" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12; -fx-background-color: rgba(255, 193, 7, 0.1); -fx-padding: 5 10; -fx-background-radius: 4;" />
                             <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="readAloudBtn" onAction="#handleReadAloud" styleClass="btn-secondary" style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 6; -fx-padding: 6 12;">
+                                <graphic><FontIcon iconLiteral="fas-volume-up" iconSize="14" iconColor="white"/></graphic>
+                                <text>Read Aloud</text>
+                            </Button>
                             <Button fx:id="summarizeBtn" onAction="#handleSummarize" styleClass="btn-secondary" style="-fx-background-color: #4f46e5; -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 6; -fx-padding: 6 12;">
                                 <graphic><FontIcon iconLiteral="fas-robot" iconSize="14" iconColor="white"/></graphic>
                                 <text>Summarize with AI</text>

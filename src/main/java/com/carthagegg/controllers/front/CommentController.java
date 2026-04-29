@@ -4,6 +4,7 @@ import com.carthagegg.dao.CommentDAO;
 import com.carthagegg.models.Comment;
 import com.carthagegg.utils.GeminiService;
 import com.carthagegg.utils.GiphyService;
+import com.carthagegg.utils.MicrophoneService;
 import com.carthagegg.utils.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -16,8 +17,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
 import java.sql.SQLException;
+import org.kordamp.ikonli.javafx.FontIcon;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.io.File;
 
 public class CommentController {
 
@@ -128,7 +131,64 @@ public class CommentController {
         errorLabel.setVisible(false);
         errorLabel.setManaged(false);
 
-        HBox composerRow = new HBox(10, input, gifBtn, post);
+        Button micBtn = new Button();
+        FontIcon micIcon = new FontIcon("fas-microphone");
+        micIcon.setIconColor(javafx.scene.paint.Color.WHITE);
+        micIcon.setIconSize(14);
+        micBtn.setGraphic(micIcon);
+        micBtn.getStyleClass().add("btn-secondary");
+        micBtn.setPrefHeight(36);
+        micBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 14;");
+
+        MicrophoneService micService = new MicrophoneService();
+        boolean[] isRecording = {false};
+        File tempAudioFile = new File(System.getProperty("java.io.tmpdir"), "comment_audio_" + System.currentTimeMillis() + ".wav");
+
+        micBtn.setOnAction(e -> {
+            if (isRecording[0]) {
+                // Stop recording
+                micService.stopRecording();
+                isRecording[0] = false;
+                micIcon.setIconLiteral("fas-microphone");
+                micBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 14;");
+                
+                input.setPromptText("Transcribing audio...");
+                input.setDisable(true);
+                
+                geminiService.transcribeAudioAsync(tempAudioFile).thenAccept(transcription -> {
+                    Platform.runLater(() -> {
+                        input.setText((input.getText() + " " + transcription).trim());
+                        input.setDisable(false);
+                        input.setPromptText(parentId == null ? "Write a comment..." : "Write a reply...");
+                    });
+                }).exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        input.setDisable(false);
+                        input.setPromptText(parentId == null ? "Write a comment..." : "Write a reply...");
+                        errorLabel.setText("Error transcribing audio.");
+                        errorLabel.setVisible(true);
+                        errorLabel.setManaged(true);
+                    });
+                    return null;
+                });
+                
+            } else {
+                // Start recording
+                try {
+                    micService.startRecording(tempAudioFile);
+                    isRecording[0] = true;
+                    micIcon.setIconLiteral("fas-stop");
+                    micBtn.setStyle("-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-size: 14;");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    errorLabel.setText("Microphone not available.");
+                    errorLabel.setVisible(true);
+                    errorLabel.setManaged(true);
+                }
+            }
+        });
+
+        HBox composerRow = new HBox(10, input, micBtn, gifBtn, post);
         if (parentId != null) {
             Button cancel = new Button("Cancel");
             cancel.getStyleClass().add("btn-secondary");

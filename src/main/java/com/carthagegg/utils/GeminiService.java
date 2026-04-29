@@ -10,6 +10,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
+
 public class GeminiService {
     private static final String API_KEY = "gsk_" + "h60udlmYOj6hy92yHlSHWGdyb3FYewM8rcdbsW9KUFGziyKOUIzJ";
     private static final String MODEL = "llama-3.3-70b-versatile"; 
@@ -23,6 +27,53 @@ public class GeminiService {
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
         this.gson = new Gson();
+    }
+    
+    public CompletableFuture<String> transcribeAudioAsync(File audioFile) {
+        String boundary = "---Boundary" + System.currentTimeMillis();
+        String CRLF = "\r\n";
+        
+        try {
+            byte[] fileBytes = Files.readAllBytes(audioFile.toPath());
+            
+            StringBuilder top = new StringBuilder();
+            top.append("--").append(boundary).append(CRLF);
+            top.append("Content-Disposition: form-data; name=\"model\"").append(CRLF).append(CRLF);
+            top.append("whisper-large-v3-turbo").append(CRLF);
+            
+            top.append("--").append(boundary).append(CRLF);
+            top.append("Content-Disposition: form-data; name=\"file\"; filename=\"").append(audioFile.getName()).append("\"").append(CRLF);
+            top.append("Content-Type: audio/wav").append(CRLF).append(CRLF);
+            
+            byte[] topBytes = top.toString().getBytes(StandardCharsets.UTF_8);
+            byte[] bottomBytes = (CRLF + "--" + boundary + "--" + CRLF).getBytes(StandardCharsets.UTF_8);
+            
+            byte[] body = new byte[topBytes.length + fileBytes.length + bottomBytes.length];
+            System.arraycopy(topBytes, 0, body, 0, topBytes.length);
+            System.arraycopy(fileBytes, 0, body, topBytes.length, fileBytes.length);
+            System.arraycopy(bottomBytes, 0, body, topBytes.length + fileBytes.length, bottomBytes.length);
+            
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.groq.com/openai/v1/audio/transcriptions"))
+                    .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                    .header("Authorization", "Bearer " + API_KEY)
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+                    .build();
+                    
+            return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(response -> {
+                        if (response.statusCode() != 200) {
+                            System.err.println("Groq STT Error: " + response.body());
+                            throw new RuntimeException("Transcription Error");
+                        }
+                        JsonObject resObj = gson.fromJson(response.body(), JsonObject.class);
+                        return resObj.get("text").getAsString();
+                    });
+        } catch (Exception e) {
+            CompletableFuture<String> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
     }
 
     public CompletableFuture<String> summarizeAsync(String title, String content) {
