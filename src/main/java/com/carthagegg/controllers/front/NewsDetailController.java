@@ -3,7 +3,7 @@ package com.carthagegg.controllers.front;
 import com.carthagegg.dao.NewsDAO;
 import com.carthagegg.models.News;
 import com.carthagegg.services.NewsService;
-import com.carthagegg.utils.GeminiService;
+import com.carthagegg.utils.GroqAiService;
 import com.carthagegg.utils.NewsApiService;
 import com.carthagegg.utils.VoiceService;
 import com.carthagegg.utils.SceneNavigator;
@@ -42,7 +42,7 @@ public class NewsDetailController {
     
     private boolean isReading = false;
     
-    private GeminiService geminiService = new GeminiService();
+    private GroqAiService groqAiService = new GroqAiService();
     private NewsApiService newsApiService = new NewsApiService();
     private NewsDAO newsDAO = new NewsDAO();
 
@@ -202,7 +202,7 @@ public class NewsDetailController {
         summaryText.setText("AI is reading the article and generating a summary...");
 
         // Call Gemini
-        geminiService.summarizeAsync(selectedNews.getTitle(), selectedNews.getContent())
+        groqAiService.summarizeAsync(selectedNews.getTitle(), selectedNews.getContent())
             .thenAccept(summary -> {
                 Platform.runLater(() -> {
                     summaryText.setText(summary);
