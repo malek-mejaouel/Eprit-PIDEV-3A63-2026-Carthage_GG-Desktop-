@@ -38,18 +38,27 @@ public class StripeService {
         }
     }
 
-    public static String createCheckoutSession(Map<Product, Integer> items) throws Exception {
+    public static String createCheckoutSession(Map<Product, Integer> items, double discountPercentage) throws Exception {
         SessionCreateParams.Builder builder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("https://example.com/success") // In a real app, this would be a local callback
+                .setSuccessUrl("https://example.com/success") 
                 .setCancelUrl("https://example.com/cancel");
 
         for (Map.Entry<Product, Integer> entry : items.entrySet()) {
             Product product = entry.getKey();
             int quantity = entry.getValue();
 
-            // Convert price to cents (Stripe expects integers in cents)
-            long amountInCents = product.getPrice().multiply(new BigDecimal(100)).longValue();
+            // Use effective price (sale price if exists)
+            BigDecimal pricePerUnit = product.getEffectivePrice();
+            
+            // Apply coupon discount if any
+            if (discountPercentage > 0) {
+                BigDecimal discount = pricePerUnit.multiply(new BigDecimal(discountPercentage))
+                        .divide(new BigDecimal(100), 2, java.math.RoundingMode.HALF_UP);
+                pricePerUnit = pricePerUnit.subtract(discount);
+            }
+
+            long amountInCents = pricePerUnit.multiply(new BigDecimal(100)).longValue();
 
             builder.addLineItem(
                     SessionCreateParams.LineItem.builder()

@@ -1,5 +1,6 @@
 package com.carthagegg.controllers.front;
 
+import com.carthagegg.dao.OrderDAO;
 import com.carthagegg.dao.ProductDAO;
 import com.carthagegg.models.Product;
 import com.carthagegg.utils.CartManager;
@@ -21,6 +22,7 @@ import javafx.scene.shape.Rectangle;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 public class ShopController {
 
@@ -30,8 +32,10 @@ public class ShopController {
     @FXML private TextField searchField;
 
     private ProductDAO productDAO = new ProductDAO();
+    private OrderDAO orderDAO = new OrderDAO();
     private int cartCount = 0;
     private List<Product> allProducts = new java.util.ArrayList<>();
+    private Map<Integer, Integer> salesCounts = new java.util.HashMap<>();
 
     @FXML
     public void initialize() {
@@ -51,6 +55,7 @@ public class ShopController {
     private void loadProducts() {
         try {
             allProducts = productDAO.findAll();
+            salesCounts = orderDAO.getProductSalesCounts();
             displayProducts(allProducts);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -79,6 +84,9 @@ public class ShopController {
     }
 
     private VBox createProductCard(Product product) {
+        int sales = salesCounts.getOrDefault(product.getId(), 0);
+        boolean isTrending = sales >= 5;
+
         VBox card = new VBox(0);
         card.getStyleClass().add("card");
         card.setPrefWidth(260);
@@ -105,6 +113,17 @@ public class ShopController {
         imgContainer.setClip(clip);
         imgContainer.getChildren().add(img);
 
+        // Trending Badge
+        if (isTrending) {
+            Label trendingBadge = new Label("TRENDING 🔥");
+            trendingBadge.setStyle("-fx-background-color: #ffb800; -fx-text-fill: #0a0a0f; -fx-padding: 5 10; -fx-font-weight: bold; -fx-font-size: 10; -fx-background-radius: 4;");
+            StackPane.setAlignment(trendingBadge, Pos.TOP_RIGHT);
+            StackPane.setMargin(trendingBadge, new Insets(10));
+            imgContainer.getChildren().add(trendingBadge);
+            
+            card.setStyle(card.getStyle() + "-fx-border-color: #ffb800; -fx-border-width: 1;");
+        }
+
         // Content Container
         VBox content = new VBox(12);
         content.setPadding(new Insets(20));
@@ -119,9 +138,21 @@ public class ShopController {
         HBox priceRow = new HBox(10);
         priceRow.setAlignment(Pos.CENTER_LEFT);
         
-        Label price = new Label(product.getPrice() + " USD");
-        price.getStyleClass().add("neon-label");
-        price.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+        VBox priceContainer = new VBox(2);
+        if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            Label oldPrice = new Label(product.getPrice() + " USD");
+            oldPrice.setStyle("-fx-text-fill: #71717a; -fx-font-size: 12; -fx-strikethrough: true;");
+            
+            Label price = new Label(product.getDiscountPrice() + " USD");
+            price.getStyleClass().add("neon-label");
+            price.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+            priceContainer.getChildren().addAll(oldPrice, price);
+        } else {
+            Label price = new Label(product.getPrice() + " USD");
+            price.getStyleClass().add("neon-label");
+            price.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+            priceContainer.getChildren().add(price);
+        }
         
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -131,7 +162,16 @@ public class ShopController {
             "-fx-text-fill: #22c55e; -fx-font-size: 10; -fx-font-weight: bold;" : 
             "-fx-text-fill: #ef4444; -fx-font-size: 10; -fx-font-weight: bold;");
         
-        priceRow.getChildren().addAll(price, spacer, stock);
+        priceRow.getChildren().addAll(priceContainer, spacer, stock);
+
+        // Sale Badge
+        if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            Label saleBadge = new Label("SALE");
+            saleBadge.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 5 10; -fx-font-weight: bold; -fx-font-size: 10; -fx-background-radius: 4;");
+            StackPane.setAlignment(saleBadge, Pos.TOP_LEFT);
+            StackPane.setMargin(saleBadge, new Insets(10));
+            imgContainer.getChildren().add(saleBadge);
+        }
 
         Button buyBtn = new Button(product.getStock() > 0 ? "ADD TO CART" : "OUT OF STOCK");
         buyBtn.getStyleClass().add(product.getStock() > 0 ? "btn-gold" : "btn-disabled");

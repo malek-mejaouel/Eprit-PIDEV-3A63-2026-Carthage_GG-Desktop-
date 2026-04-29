@@ -51,6 +51,23 @@
                     
                     <Separator style="-fx-opacity: 0.1;" />
                     
+                    <VBox spacing="10">
+                        <Label text="Promo Code" style="-fx-text-fill: #949499; -fx-font-size: 12;" />
+                        <HBox spacing="10">
+                            <TextField fx:id="couponField" promptText="Enter code" styleClass="text-field-dark" HBox.hgrow="ALWAYS" />
+                            <Button text="APPLY" onAction="#handleApplyCoupon" styleClass="btn-gold" style="-fx-padding: 5 15;" />
+                        </HBox>
+                        <Label fx:id="couponMessageLabel" style="-fx-font-size: 11;" visible="false" />
+                    </VBox>
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <HBox alignment="CENTER_LEFT" fx:id="discountRow" visible="false" managed="false">
+                        <Label text="Discount" style="-fx-text-fill: #949499;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="discountLabel" text="-0.00 USD" style="-fx-text-fill: #ef4444; -fx-font-weight: bold;" />
+                    </HBox>
+                    
                     <HBox alignment="CENTER_LEFT">
                         <Label text="Subtotal" style="-fx-text-fill: #949499;" />
                         <Region HBox.hgrow="ALWAYS" />

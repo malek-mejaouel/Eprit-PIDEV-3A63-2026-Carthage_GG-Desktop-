@@ -1,7 +1,9 @@
 package com.carthagegg.controllers.front;
 
+import com.carthagegg.dao.CouponDAO;
 import com.carthagegg.dao.OrderDAO;
 import com.carthagegg.dao.ProductDAO;
+import com.carthagegg.models.Coupon;
 import com.carthagegg.models.Order;
 import com.carthagegg.models.Product;
 import com.carthagegg.utils.CartManager;
@@ -18,10 +20,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
 public class CartController {
 
@@ -30,9 +36,16 @@ public class CartController {
     @FXML private Label subtotalLabel;
     @FXML private Label totalLabel;
     @FXML private SidebarController sidebarController;
+    
+    @FXML private TextField couponField;
+    @FXML private Label couponMessageLabel;
+    @FXML private HBox discountRow;
+    @FXML private Label discountLabel;
 
     private OrderDAO orderDAO = new OrderDAO();
     private ProductDAO productDAO = new ProductDAO();
+    private CouponDAO couponDAO = new CouponDAO();
+    private Coupon activeCoupon = null;
 
     @FXML
     public void initialize() {
@@ -147,11 +160,54 @@ public class CartController {
 
     private void updateSummary() {
         int count = CartManager.getTotalItems();
-        String totalStr = CartManager.getTotalPrice().toString() + " USD";
+        BigDecimal subtotal = CartManager.getTotalPrice();
+        BigDecimal total = subtotal;
+
+        if (activeCoupon != null) {
+            BigDecimal discount = subtotal.multiply(new BigDecimal(activeCoupon.getDiscountPercentage()))
+                    .divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+            total = subtotal.subtract(discount);
+            
+            discountRow.setVisible(true);
+            discountRow.setManaged(true);
+            discountLabel.setText("-" + discount + " USD");
+        } else {
+            discountRow.setVisible(false);
+            discountRow.setManaged(false);
+        }
         
         itemCountLabel.setText(count + (count == 1 ? " item" : " items") + " in your cart");
-        subtotalLabel.setText(totalStr);
-        totalLabel.setText(totalStr);
+        subtotalLabel.setText(subtotal + " USD");
+        totalLabel.setText(total + " USD");
+    }
+
+    @FXML private void handleApplyCoupon() {
+        String code = couponField.getText().trim();
+        if (code.isEmpty()) return;
+
+        Optional<Coupon> couponOpt = couponDAO.findByCode(code);
+        if (couponOpt.isPresent()) {
+            Coupon coupon = couponOpt.get();
+            if (coupon.isValid()) {
+                activeCoupon = coupon;
+                couponMessageLabel.setText("Coupon applied: " + coupon.getDiscountPercentage() + "% OFF!");
+                couponMessageLabel.setTextFill(Color.web("#22c55e"));
+                couponMessageLabel.setVisible(true);
+                updateSummary();
+            } else {
+                activeCoupon = null;
+                couponMessageLabel.setText("This coupon has expired.");
+                couponMessageLabel.setTextFill(Color.web("#ef4444"));
+                couponMessageLabel.setVisible(true);
+                updateSummary();
+            }
+        } else {
+            activeCoupon = null;
+            couponMessageLabel.setText("Invalid coupon code.");
+            couponMessageLabel.setTextFill(Color.web("#ef4444"));
+            couponMessageLabel.setVisible(true);
+            updateSummary();
+        }
     }
 
     @FXML private void handleBackToShop() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Shop.fxml"); }
@@ -182,7 +238,8 @@ public class CartController {
 
             // --- Stripe Integration ---
             try {
-                String checkoutUrl = StripeService.createCheckoutSession(items);
+                double discountPct = activeCoupon != null ? activeCoupon.getDiscountPercentage() : 0.0;
+                String checkoutUrl = StripeService.createCheckoutSession(items, discountPct);
                 StripeService.openCheckoutInBrowser(checkoutUrl);
                 
                 // For a desktop app, we usually show a dialog asking if payment was successful
