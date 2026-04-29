@@ -12,6 +12,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -84,17 +87,53 @@ public class StreamsManagementController {
         colTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
         colPlatform.setCellValueFactory(new PropertyValueFactory<>("platform"));
         colChannel.setCellValueFactory(new PropertyValueFactory<>("channelName"));
-        colLive.setCellValueFactory(new PropertyValueFactory<>("live"));
-        colViewers.setCellValueFactory(new PropertyValueFactory<>("viewerCount"));
+        
+        colLive.setCellFactory(param -> new TableCell<Stream, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    Label badge = new Label(item ? "LIVE" : "OFFLINE");
+                    badge.getStyleClass().addAll("badge", item ? "badge-danger" : "badge-neutral");
+                    setGraphic(badge);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
+
+        colViewers.setCellFactory(param -> new TableCell<Stream, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%,d", item));
+                    setStyle("-fx-text-fill: #949499; -fx-font-weight: bold;");
+                }
+            }
+        });
 
         colActions.setCellFactory(param -> new TableCell<Stream, Void>() {
-            private final Button editBtn = new Button("Edit");
-            private final Button deleteBtn = new Button("Delete");
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+            private final Button editBtn = new Button();
+            private final Button deleteBtn = new Button();
+            private final HBox pane = new HBox(12, editBtn, deleteBtn);
 
             {
-                editBtn.getStyleClass().add("btn-gold");
-                deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
+                pane.setAlignment(Pos.CENTER_LEFT);
+                
+                editBtn.setGraphic(new FontIcon("fas-edit"));
+                editBtn.getStyleClass().addAll("btn-icon", "btn-icon-gold");
+                editBtn.setStyle("-fx-font-size: 16px;"); // Increase icon size
+                Tooltip.install(editBtn, new Tooltip("Edit Stream"));
+                
+                deleteBtn.setGraphic(new FontIcon("fas-trash"));
+                deleteBtn.getStyleClass().addAll("btn-icon", "btn-icon-danger");
+                deleteBtn.setStyle("-fx-font-size: 16px;"); // Increase icon size
+                Tooltip.install(deleteBtn, new Tooltip("Delete Stream"));
+                
                 editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
             }

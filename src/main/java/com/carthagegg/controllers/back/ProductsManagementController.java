@@ -16,6 +16,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -89,12 +92,37 @@ public class ProductsManagementController {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         
+        colPrice.setCellFactory(param -> new TableCell<Product, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("$%.2f", item));
+                    setStyle("-fx-text-fill: #FFC107; -fx-font-weight: bold;");
+                }
+            }
+        });
         colPrice.setCellValueFactory(cellData -> {
             Product p = cellData.getValue();
-            // Always return the effective price for display/sorting in this column
             return new javafx.beans.property.SimpleObjectProperty<>(p.getEffectivePrice());
         });
 
+        colStock.setCellFactory(param -> new TableCell<Product, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    Label badge = new Label(item > 0 ? String.valueOf(item) : "OUT OF STOCK");
+                    badge.getStyleClass().addAll("badge", item > 0 ? "badge-success" : "badge-danger");
+                    setGraphic(badge);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
         colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
         
         colCategory.setCellValueFactory(cellData -> {
@@ -109,19 +137,22 @@ public class ProductsManagementController {
         });
 
         colActions.setCellFactory(param -> new TableCell<Product, Void>() {
-            private final Button editBtn = new Button("Edit");
+            private final Button editBtn = new Button();
             private final Button deleteBtn = new Button();
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+            private final HBox pane = new HBox(12, editBtn, deleteBtn);
 
             {
-                editBtn.getStyleClass().add("btn-gold");
+                pane.setAlignment(Pos.CENTER_LEFT);
                 
-                FontIcon trashIcon = new FontIcon("fas-trash-alt");
-                trashIcon.setIconColor(javafx.scene.paint.Color.web("#ef4444"));
-                trashIcon.setIconSize(14);
-                deleteBtn.setGraphic(trashIcon);
-                deleteBtn.setTooltip(new Tooltip("Delete product"));
-                deleteBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                editBtn.setGraphic(new FontIcon("fas-edit"));
+                editBtn.getStyleClass().addAll("btn-icon", "btn-icon-gold");
+                editBtn.setStyle("-fx-font-size: 16px;"); // Increase icon size
+                Tooltip.install(editBtn, new Tooltip("Edit Product"));
+                
+                deleteBtn.setGraphic(new FontIcon("fas-trash"));
+                deleteBtn.getStyleClass().addAll("btn-icon", "btn-icon-danger");
+                deleteBtn.setStyle("-fx-font-size: 16px;"); // Increase icon size
+                Tooltip.install(deleteBtn, new Tooltip("Delete Product"));
                 
                 editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));

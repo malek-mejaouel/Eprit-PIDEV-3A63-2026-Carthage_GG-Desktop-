@@ -242,17 +242,24 @@
     -fx-border-width: 1;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
+    -fx-column-header-background: transparent;
+}
+
+.table-view .filler {
+    -fx-background-color: transparent;
 }
 
 .table-view .column-header-background {
     -fx-background-color: #1a1a1c;
     -fx-background-radius: 12 12 0 0;
-    -fx-padding: 10 0;
+    -fx-padding: 0;
 }
 
 .table-view .column-header {
     -fx-background-color: transparent;
-    -fx-size: 45;
+    -fx-size: 50;
+    -fx-border-color: #232326;
+    -fx-border-width: 0 1 1 0;
 }
 
 .table-view .column-header .label {
@@ -260,6 +267,12 @@
     -fx-font-weight: bold;
     -fx-font-size: 13px;
     -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .table-cell {
+    -fx-border-color: transparent #232326 transparent transparent;
+    -fx-padding: 0 15;
+    -fx-text-fill: white;
 }
 
 .table-row-cell {
@@ -297,6 +310,61 @@
 .table-row-cell:selected {
     -fx-background-color: rgba(255, 193, 7, 0.1);
     -fx-text-fill: #FFC107;
+}
+
+/* === Custom Status Badges === */
+.badge {
+    -fx-padding: 4 10;
+    -fx-background-radius: 20;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.badge-success {
+    -fx-background-color: rgba(0, 200, 83, 0.15);
+    -fx-text-fill: #00C853;
+}
+
+.badge-danger {
+    -fx-background-color: rgba(255, 68, 68, 0.15);
+    -fx-text-fill: #FF4444;
+}
+
+.badge-primary {
+    -fx-background-color: rgba(255, 193, 7, 0.15);
+    -fx-text-fill: #FFC107;
+}
+
+.badge-neutral {
+    -fx-background-color: rgba(148, 148, 153, 0.15);
+    -fx-text-fill: #949499;
+}
+
+.btn-icon {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 8;
+    -fx-background-radius: 8;
+}
+
+.btn-icon:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+}
+
+.btn-icon-gold {
+    -fx-text-fill: #FFC107;
+}
+
+.btn-icon-gold:hover {
+    -fx-background-color: rgba(255, 193, 7, 0.1);
+}
+
+.btn-icon-danger {
+    -fx-text-fill: #FF4444;
+}
+
+.btn-icon-danger:hover {
+    -fx-background-color: rgba(255, 68, 68, 0.1);
 }
 
 .table-cell {
