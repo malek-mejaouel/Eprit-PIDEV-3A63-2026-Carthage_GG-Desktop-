@@ -4,6 +4,7 @@ import com.carthagegg.dao.CategoryDAO;
 import com.carthagegg.dao.ProductDAO;
 import com.carthagegg.models.Category;
 import com.carthagegg.models.Product;
+import com.carthagegg.utils.FileStorage;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.beans.property.SimpleStringProperty;
@@ -13,7 +14,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
@@ -35,6 +40,8 @@ public class ProductsManagementController {
     @FXML private ComboBox<Category> categoryComboBox;
     @FXML private TextField stockField;
     @FXML private TextField imageField;
+    @FXML private Label errorLabel;
+    @FXML private ComboBox<String> sortComboBox;
 
     private ProductDAO productDAO = new ProductDAO();
     private CategoryDAO categoryDAO = new CategoryDAO();
@@ -51,6 +58,27 @@ public class ProductsManagementController {
         setupTable();
         loadProducts();
         loadCategories();
+        setupSort();
+    }
+
+    private void setupSort() {
+        sortComboBox.setItems(FXCollections.observableArrayList(
+            "ID ASC", "ID DESC", "Name ASC", "Name DESC", "Price ASC", "Price DESC"
+        ));
+        sortComboBox.setOnAction(e -> {
+            String selected = sortComboBox.getValue();
+            if (selected == null) return;
+
+            switch (selected) {
+                case "ID ASC" -> productsList.sort((p1, p2) -> Integer.compare(p1.getId(), p2.getId()));
+                case "ID DESC" -> productsList.sort((p1, p2) -> Integer.compare(p2.getId(), p1.getId()));
+                case "Name ASC" -> productsList.sort((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()));
+                case "Name DESC" -> productsList.sort((p1, p2) -> p2.getName().compareToIgnoreCase(p1.getName()));
+                case "Price ASC" -> productsList.sort((p1, p2) -> p1.getPrice().compareTo(p2.getPrice()));
+                case "Price DESC" -> productsList.sort((p1, p2) -> p2.getPrice().compareTo(p1.getPrice()));
+            }
+            productsTable.refresh();
+        });
     }
 
     private void setupTable() {
@@ -72,12 +100,19 @@ public class ProductsManagementController {
 
         colActions.setCellFactory(param -> new TableCell<Product, Void>() {
             private final Button editBtn = new Button("Edit");
-            private final Button deleteBtn = new Button("Delete");
+            private final Button deleteBtn = new Button();
             private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
 
             {
                 editBtn.getStyleClass().add("btn-gold");
-                deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
+                
+                FontIcon trashIcon = new FontIcon("fas-trash-alt");
+                trashIcon.setIconColor(javafx.scene.paint.Color.web("#ef4444"));
+                trashIcon.setIconSize(14);
+                deleteBtn.setGraphic(trashIcon);
+                deleteBtn.setTooltip(new Tooltip("Delete product"));
+                deleteBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                
                 editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
             }
@@ -110,6 +145,7 @@ public class ProductsManagementController {
     @FXML private void handleShowAddForm() {
         selectedProduct = null;
         formTitle.setText("ADD PRODUCT");
+        hideError();
         clearForm();
         showForm();
     }
@@ -117,6 +153,7 @@ public class ProductsManagementController {
     private void handleEdit(Product p) {
         selectedProduct = p;
         formTitle.setText("EDIT PRODUCT");
+        hideError();
         nameField.setText(p.getName());
         priceField.setText(p.getPrice().toString());
         stockField.setText(String.valueOf(p.getStock()));
@@ -148,26 +185,112 @@ public class ProductsManagementController {
     }
 
     @FXML
+    private void handleUploadImage() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Product Image");
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+        );
+        
+        File selectedFile = fileChooser.showOpenDialog(nameField.getScene().getWindow());
+        if (selectedFile != null) {
+            try {
+                String savedPath = FileStorage.saveProductImage(selectedFile);
+                imageField.setText(savedPath);
+                hideError();
+            } catch (IOException e) {
+                e.printStackTrace();
+                showError("Failed to upload image.");
+            }
+        }
+    }
+
+    @FXML
     private void handleSaveProduct() {
+        if (!validateInput()) {
+            return;
+        }
+
         try {
             Product p = (selectedProduct == null) ? new Product() : selectedProduct;
-            p.setName(nameField.getText());
-            p.setPrice(new BigDecimal(priceField.getText()));
+            p.setName(nameField.getText().trim());
+            p.setPrice(new BigDecimal(priceField.getText().trim()));
             p.setCategoryId(categoryComboBox.getValue().getId());
-            p.setStock(Integer.parseInt(stockField.getText()));
-            p.setImage(imageField.getText());
+            p.setStock(Integer.parseInt(stockField.getText().trim()));
+            p.setImage(imageField.getText().trim());
 
             if (selectedProduct == null) {
                 productDAO.save(p);
                 productsList.add(p);
             } else {
                 productDAO.update(p);
-                productsTable.refresh();
+                loadProducts(); 
             }
             hideForm();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showError("Database Error: Could not save product.");
         } catch (Exception e) {
-            showAlert("Error", "Check all fields", Alert.AlertType.ERROR);
+            e.printStackTrace();
+            showError("An unexpected error occurred.");
         }
+    }
+
+    private boolean validateInput() {
+        StringBuilder errorMessage = new StringBuilder();
+
+        if (nameField.getText() == null || nameField.getText().trim().isEmpty()) {
+            errorMessage.append("• Product name is required.\n");
+        }
+
+        if (priceField.getText() == null || priceField.getText().trim().isEmpty()) {
+            errorMessage.append("• Price is required.\n");
+        } else {
+            try {
+                BigDecimal price = new BigDecimal(priceField.getText().trim());
+                if (price.compareTo(BigDecimal.ZERO) <= 0) {
+                    errorMessage.append("• Price must be greater than 0.\n");
+                }
+            } catch (NumberFormatException e) {
+                errorMessage.append("• Price must be a valid number.\n");
+            }
+        }
+
+        if (categoryComboBox.getValue() == null) {
+            errorMessage.append("• Please select a category.\n");
+        }
+
+        if (stockField.getText() == null || stockField.getText().trim().isEmpty()) {
+            errorMessage.append("• Stock quantity is required.\n");
+        } else {
+            try {
+                int stock = Integer.parseInt(stockField.getText().trim());
+                if (stock < 0) {
+                    errorMessage.append("• Stock cannot be negative.\n");
+                }
+            } catch (NumberFormatException e) {
+                errorMessage.append("• Stock must be a valid number.\n");
+            }
+        }
+
+        if (errorMessage.length() > 0) {
+            showError(errorMessage.toString().trim());
+            return false;
+        }
+
+        hideError();
+        return true;
+    }
+
+    private void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+        errorLabel.setManaged(true);
+    }
+
+    private void hideError() {
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
     }
 
     private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }

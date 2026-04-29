@@ -3,20 +3,27 @@ package com.carthagegg.controllers.front;
 import com.carthagegg.dao.MatchDAO;
 import com.carthagegg.models.Match;
 import com.carthagegg.utils.SceneNavigator;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MatchesController {
 
     @FXML private VBox matchesContainer;
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> sortComboBox;
     @FXML private SidebarController sidebarController;
 
-    private MatchDAO matchDAO = new MatchDAO();
+    private final MatchDAO matchDAO = new MatchDAO();
+    private final ObservableList<Match> allMatches = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
@@ -24,18 +31,44 @@ public class MatchesController {
             sidebarController.setActiveItem("matches");
         }
         loadMatches();
+        setupFilters();
     }
 
     private void loadMatches() {
         try {
-            List<Match> matches = matchDAO.findAll();
-            matchesContainer.getChildren().clear();
-            
-            for (Match match : matches) {
-                matchesContainer.getChildren().add(createMatchRow(match));
-            }
+            allMatches.setAll(matchDAO.findAll());
+            refreshMatches();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void setupFilters() {
+        sortComboBox.setItems(FXCollections.observableArrayList("ID Asc", "ID Desc"));
+        sortComboBox.setValue("ID Asc");
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> refreshMatches());
+        sortComboBox.valueProperty().addListener((observable, oldValue, newValue) -> refreshMatches());
+    }
+
+    private void refreshMatches() {
+        String keyword = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
+        Comparator<Match> comparator = Comparator.comparingInt(Match::getMatchId);
+        if ("ID Desc".equals(sortComboBox.getValue())) {
+            comparator = comparator.reversed();
+        }
+
+        List<Match> matches = allMatches.stream()
+                .filter(match -> keyword.isEmpty()
+                        || String.valueOf(match.getMatchId()).contains(keyword)
+                        || safe(match.getTeamAName()).contains(keyword)
+                        || safe(match.getTeamBName()).contains(keyword)
+                        || safe(match.getTournamentName()).contains(keyword))
+                .sorted(comparator)
+                .collect(Collectors.toList());
+
+        matchesContainer.getChildren().clear();
+        for (Match match : matches) {
+            matchesContainer.getChildren().add(createMatchRow(match));
         }
     }
 
@@ -60,14 +93,18 @@ public class MatchesController {
         team2.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
         VBox info = new VBox(5);
-        info.getChildren().addAll(
-            new Label(match.getTournamentName() != null ? match.getTournamentName() : "Exhibition"),
-            new Label(match.getStatus() != null ? match.getStatus() : "SCHEDULED")
-        );
-        info.setStyle("-fx-text-fill: #71717a;");
+        Label tournamentLabel = new Label(match.getTournamentName() != null ? match.getTournamentName() : "Exhibition");
+        tournamentLabel.setStyle("-fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
+        Label statusLabel = new Label(match.getStatus() != null ? match.getStatus() : "SCHEDULED");
+        statusLabel.setStyle("-fx-text-fill: #949499;");
+        info.getChildren().addAll(tournamentLabel, statusLabel);
 
         row.getChildren().addAll(team1, score, team2, info);
         return row;
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.toLowerCase();
     }
 
     @FXML private void handleNavHome() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }

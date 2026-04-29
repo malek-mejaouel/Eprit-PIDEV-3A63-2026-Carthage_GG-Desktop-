@@ -4,19 +4,30 @@ import com.carthagegg.dao.TeamDAO;
 import com.carthagegg.dao.UserDAO;
 import com.carthagegg.models.Team;
 import com.carthagegg.models.User;
+import com.carthagegg.utils.FileStorage;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TeamsManagementController {
 
@@ -27,16 +38,26 @@ public class TeamsManagementController {
     @FXML private TableColumn<Team, LocalDate> colCreationDate;
     @FXML private TableColumn<Team, Void> colActions;
 
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> sortComboBox;
     @FXML private VBox formPane;
     @FXML private Label formTitle;
     @FXML private TextField nameField;
+    @FXML private Label nameErrorLabel;
     @FXML private ComboBox<User> captainComboBox;
+    @FXML private Label captainErrorLabel;
     @FXML private TextField logoField;
+    @FXML private Label logoErrorLabel;
+    @FXML private ImageView logoPreview;
 
-    private TeamDAO teamDAO = new TeamDAO();
-    private UserDAO userDAO = new UserDAO();
-    private ObservableList<Team> teamsList = FXCollections.observableArrayList();
+    private final TeamDAO teamDAO = new TeamDAO();
+    private final UserDAO userDAO = new UserDAO();
+    private final ObservableList<Team> teamsList = FXCollections.observableArrayList();
+    private final FilteredList<Team> filteredTeams = new FilteredList<>(teamsList, team -> true);
+    private final SortedList<Team> sortedTeams = new SortedList<>(filteredTeams);
+    private final Map<Integer, User> usersById = new HashMap<>();
     private Team selectedTeam;
+    private File selectedLogoFile;
 
     @FXML
     public void initialize() {
@@ -46,8 +67,9 @@ public class TeamsManagementController {
         }
 
         setupTable();
-        loadTeams();
         loadCaptains();
+        setupFilters();
+        loadTeams();
     }
 
     private void setupTable() {
@@ -56,14 +78,8 @@ public class TeamsManagementController {
         colCreationDate.setCellValueFactory(new PropertyValueFactory<>("creationDate"));
 
         colCaptain.setCellValueFactory(cellData -> {
-            try {
-                User u = userDAO.findAll().stream()
-                        .filter(user -> user.getUserId() == cellData.getValue().getUserId())
-                        .findFirst().orElse(null);
-                return new SimpleStringProperty(u != null ? u.getUsername() : "Unknown");
-            } catch (SQLException e) {
-                return new SimpleStringProperty("Error");
-            }
+            User user = usersById.get(cellData.getValue().getUserId());
+            return new SimpleStringProperty(user != null ? user.toString() : "Unknown");
         });
 
         colActions.setCellFactory(param -> new TableCell<Team, Void>() {
@@ -86,21 +102,60 @@ public class TeamsManagementController {
         });
     }
 
+    private void setupFilters() {
+        sortComboBox.setItems(FXCollections.observableArrayList("ID Asc", "ID Desc"));
+        sortComboBox.setValue("ID Asc");
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+        sortComboBox.valueProperty().addListener((observable, oldValue, newValue) -> applySort());
+
+        applyFilters();
+        applySort();
+        teamsTable.setItems(sortedTeams);
+    }
+
     private void loadTeams() {
         try {
             teamsList.setAll(teamDAO.findAll());
-            teamsTable.setItems(teamsList);
         } catch (SQLException e) {
-            e.printStackTrace();
+            showAlert("Error", "Unable to load teams: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
     private void loadCaptains() {
         try {
-            captainComboBox.setItems(FXCollections.observableArrayList(userDAO.findAll()));
+            List<User> users = userDAO.findAll();
+            usersById.clear();
+            for (User user : users) {
+                usersById.put(user.getUserId(), user);
+            }
+            captainComboBox.setItems(FXCollections.observableArrayList(users));
         } catch (SQLException e) {
-            e.printStackTrace();
+            showAlert("Error", "Unable to load captains: " + e.getMessage(), Alert.AlertType.ERROR);
         }
+    }
+
+    private void applyFilters() {
+        String keyword = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
+        filteredTeams.setPredicate(team -> {
+            if (keyword.isEmpty()) {
+                return true;
+            }
+            User captain = usersById.get(team.getUserId());
+            return String.valueOf(team.getTeamId()).contains(keyword)
+                    || safe(team.getTeamName()).contains(keyword)
+                    || safe(team.getLogo()).contains(keyword)
+                    || safe(team.getCreationDate() == null ? "" : team.getCreationDate().toString()).contains(keyword)
+                    || safe(captain == null ? "" : captain.toString()).contains(keyword);
+        });
+    }
+
+    private void applySort() {
+        Comparator<Team> comparator = Comparator.comparingInt(Team::getTeamId);
+        if ("ID Desc".equals(sortComboBox.getValue())) {
+            comparator = comparator.reversed();
+        }
+        sortedTeams.setComparator(comparator);
     }
 
     @FXML private void handleShowAddForm() {
@@ -115,6 +170,8 @@ public class TeamsManagementController {
         formTitle.setText("EDIT TEAM");
         nameField.setText(t.getTeamName());
         logoField.setText(t.getLogo());
+        selectedLogoFile = null;
+        loadLogoPreview(t.getLogo());
         
         for (User u : captainComboBox.getItems()) {
             if (u.getUserId() == t.getUserId()) {
@@ -143,39 +200,126 @@ public class TeamsManagementController {
 
     @FXML
     private void handleSaveTeam() {
-        String name = nameField.getText();
-        User captain = captainComboBox.getValue();
-        String logo = logoField.getText();
-
-        if (name.isEmpty() || captain == null) {
-            showAlert("Error", "Name and Captain are required!", Alert.AlertType.ERROR);
+        if (!validateForm()) {
             return;
         }
 
         try {
+            String name = nameField.getText().trim();
+            User captain = captainComboBox.getValue();
+            String logo = selectedTeam != null ? selectedTeam.getLogo() : "";
+
+            if (selectedLogoFile != null) {
+                logo = FileStorage.saveTeamLogo(selectedLogoFile);
+            } else if (logoField.getText() != null && !logoField.getText().trim().isEmpty()) {
+                logo = logoField.getText().trim();
+            }
+
             Team t = (selectedTeam == null) ? new Team() : selectedTeam;
             t.setTeamName(name);
             t.setUserId(captain.getUserId());
             t.setLogo(logo);
+            t.setCreationDate(selectedTeam == null ? LocalDate.now() : selectedTeam.getCreationDate());
             
             if (selectedTeam == null) {
-                t.setCreationDate(LocalDate.now());
                 teamDAO.save(t);
-                teamsList.add(t);
             } else {
                 teamDAO.update(t);
-                teamsTable.refresh();
             }
+            loadTeams();
             hideForm();
+        } catch (IOException e) {
+            showAlert("Error", "Could not save team logo: " + e.getMessage(), Alert.AlertType.ERROR);
         } catch (SQLException e) {
             showAlert("Error", "Database error: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
-    private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }
+    @FXML
+    private void handleBrowseLogo() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Choose Team Logo");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp")
+        );
+        File file = chooser.showOpenDialog(nameField.getScene() != null ? nameField.getScene().getWindow() : null);
+        if (file != null) {
+            selectedLogoFile = file;
+            logoField.setText(file.getAbsolutePath());
+            loadLogoPreview(file.toURI().toString());
+            logoErrorLabel.setText("");
+        }
+    }
+
+    private boolean validateForm() {
+        clearErrors();
+        boolean valid = true;
+
+        if (nameField.getText() == null || nameField.getText().trim().isEmpty()) {
+            nameErrorLabel.setText("Team name is required.");
+            valid = false;
+        }
+        if (captainComboBox.getValue() == null) {
+            captainErrorLabel.setText("Captain is required.");
+            valid = false;
+        }
+        if ((logoField.getText() == null || logoField.getText().trim().isEmpty()) && selectedLogoFile == null) {
+            logoErrorLabel.setText("Team logo image is required.");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private void showForm() {
+        clearErrors();
+        formPane.setVisible(true);
+        formPane.setManaged(true);
+    }
+
     @FXML private void handleHideForm() { hideForm(); }
-    private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
-    private void clearForm() { nameField.clear(); captainComboBox.setValue(null); logoField.clear(); }
+
+    private void hideForm() {
+        clearForm();
+        clearErrors();
+        formPane.setVisible(false);
+        formPane.setManaged(false);
+    }
+
+    private void clearForm() {
+        nameField.clear();
+        captainComboBox.setValue(null);
+        logoField.clear();
+        selectedLogoFile = null;
+        logoPreview.setImage(null);
+    }
+
+    private void clearErrors() {
+        nameErrorLabel.setText("");
+        captainErrorLabel.setText("");
+        logoErrorLabel.setText("");
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.toLowerCase();
+    }
+
+    private void loadLogoPreview(String path) {
+        if (path == null || path.isBlank()) {
+            logoPreview.setImage(null);
+            return;
+        }
+
+        try {
+            String imageUrl = path.startsWith("http://") || path.startsWith("https://") || path.startsWith("file:")
+                    ? path
+                    : java.nio.file.Path.of(path).toUri().toString();
+            logoPreview.setImage(new Image(imageUrl, true));
+        } catch (Exception e) {
+            logoPreview.setImage(null);
+        }
+    }
+
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

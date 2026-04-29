@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.EventDetailsController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="30">
+                <padding>
+                    <Insets top="40" left="40" right="40" bottom="40" />
+                </padding>
+                
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Button onAction="#handleBack" styleClass="btn-gold" prefWidth="40">
+                        <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
+                    </Button>
+                    <VBox>
+                        <Label text="Event Details" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
+                        <Label text="Detailed information about this event and its location" style="-fx-text-fill: #949499;" />
+                    </VBox>
+                </HBox>
+                
+                <VBox spacing="25" styleClass="card">
+                    <padding>
+                        <Insets top="30" left="30" right="30" bottom="30" />
+                    </padding>
+                    
+                    <VBox spacing="10">
+                        <Label fx:id="eventTitleLabel" styleClass="neon-label" style="-fx-font-size: 28; -fx-font-weight: bold;" />
+                        <HBox spacing="15" alignment="CENTER_LEFT">
+                            <HBox spacing="5" alignment="CENTER_LEFT">
+                                <FontIcon iconLiteral="fas-calendar-alt" iconColor="#71717a" iconSize="14"/>
+                                <Label fx:id="eventDateLabel" style="-fx-text-fill: #71717a; -fx-font-weight: bold;" />
+                            </HBox>
+                            <HBox spacing="5" alignment="CENTER_LEFT">
+                                <FontIcon iconLiteral="fas-users" iconColor="#71717a" iconSize="14"/>
+                                <Label fx:id="eventSeatsLabel" style="-fx-text-fill: #71717a; -fx-font-weight: bold;" />
+                            </HBox>
+                        </HBox>
+                    </VBox>
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <VBox spacing="10">
+                        <Label text="EVENT DESCRIPTION" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 14;" />
+                        <Label fx:id="eventDescriptionLabel" wrapText="true" style="-fx-text-fill: #e4e4e7; -fx-font-size: 16; -fx-line-spacing: 5;" />
+                    </VBox>
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <VBox spacing="15">
+                        <Label text="LOCATION INFORMATION" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 14;" />
+                        
+                        <VBox spacing="15" style="-fx-background-color: #1e1e2e; -fx-padding: 20; -fx-background-radius: 12;">
+                            <VBox spacing="5">
+                                <HBox spacing="10" alignment="CENTER_LEFT">
+                                    <FontIcon iconLiteral="fas-map-marker-alt" iconColor="#00f0ff" iconSize="18"/>
+                                    <Label fx:id="locationNameLabel" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20;" />
+                                </HBox>
+                                <Label fx:id="locationAddressLabel" style="-fx-text-fill: #949499; -fx-font-size: 14;" />
+                            </VBox>
+                            
+                            <Label fx:id="locationCapacityLabel" style="-fx-text-fill: #71717a; -fx-font-weight: bold;" />
+                        </VBox>
+                    </VBox>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+    
+</BorderPane>

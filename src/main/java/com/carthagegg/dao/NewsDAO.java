@@ -28,14 +28,58 @@ public class NewsDAO {
     }
 
     public List<News> findAll() throws SQLException {
+        return findAll("DESC");
+    }
+
+    public List<News> findAll(String sortDir) throws SQLException {
         if (titleColumn == null) resolveSchema();
         List<News> list = new ArrayList<>();
-        String sql = "SELECT * FROM news ORDER BY " + (publishedColumn != null ? publishedColumn : idColumn) + " DESC";
+        String dir = "DESC".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
+        String sql = "SELECT * FROM news ORDER BY " + (publishedColumn != null ? publishedColumn : idColumn) + " " + dir;
         try (Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapNews(rs));
         }
         return list;
+    }
+
+    public List<News> findByTitle(String titleQuery) throws SQLException {
+        return findByTitle(titleQuery, "DESC");
+    }
+
+    public List<News> findByTitle(String titleQuery, String sortDir) throws SQLException {
+        if (titleColumn == null) resolveSchema();
+        List<News> list = new ArrayList<>();
+        String dir = "DESC".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
+        String sql = "SELECT * FROM news WHERE " + titleColumn + " LIKE ? ORDER BY " + (publishedColumn != null ? publishedColumn : idColumn) + " " + dir;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%" + titleQuery + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapNews(rs));
+            }
+        }
+        return list;
+    }
+
+    public boolean existsByTitle(String title, Integer excludeId) throws SQLException {
+        if (titleColumn == null) resolveSchema();
+        // Strict case-insensitive and trim check
+        String sql = "SELECT COUNT(*) FROM news WHERE LOWER(TRIM(" + titleColumn + ")) = LOWER(TRIM(?))";
+        if (excludeId != null) {
+            sql += " AND " + idColumn + " != ?";
+        }
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, title);
+            if (excludeId != null) {
+                ps.setInt(2, excludeId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
     }
 
     public void save(News n) throws SQLException {

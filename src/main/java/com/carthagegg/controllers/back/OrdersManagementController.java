@@ -18,7 +18,9 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OrdersManagementController {
 
@@ -38,6 +40,9 @@ public class OrdersManagementController {
     private UserDAO userDAO = new UserDAO();
     private ProductDAO productDAO = new ProductDAO();
     private ObservableList<Order> ordersList = FXCollections.observableArrayList();
+    
+    private Map<Integer, User> userCache = new HashMap<>();
+    private Map<Integer, Product> productCache = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -46,10 +51,20 @@ public class OrdersManagementController {
             return;
         }
 
+        loadCaches();
         setupTable();
         loadOrders();
         statusFilter.setItems(FXCollections.observableArrayList(Order.Status.values()));
         setupStatusFilter();
+    }
+
+    private void loadCaches() {
+        try {
+            userDAO.findAll().forEach(u -> userCache.put(u.getUserId(), u));
+            productDAO.findAll().forEach(p -> productCache.put(p.getId(), p));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setupTable() {
@@ -64,31 +79,22 @@ public class OrdersManagementController {
         colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStatus().name()));
 
         colUser.setCellValueFactory(cellData -> {
-            try {
-                List<User> users = userDAO.findAll();
-                User u = users.stream().filter(user -> user.getUserId() == cellData.getValue().getUserId()).findFirst().orElse(null);
-                return new SimpleStringProperty(u != null ? u.getUsername() : "Unknown");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
+            User u = userCache.get(cellData.getValue().getUserId());
+            return new SimpleStringProperty(u != null ? u.getUsername() : "User #" + cellData.getValue().getUserId());
         });
 
         colProduct.setCellValueFactory(cellData -> {
-            try {
-                List<Product> products = productDAO.findAll();
-                Product p = products.stream().filter(prod -> prod.getId() == cellData.getValue().getProductId()).findFirst().orElse(null);
-                return new SimpleStringProperty(p != null ? p.getName() : "Unknown");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
+            Product p = productCache.get(cellData.getValue().getProductId());
+            return new SimpleStringProperty(p != null ? p.getName() : "Product #" + cellData.getValue().getProductId());
         });
 
         colTotal.setCellValueFactory(cellData -> {
-            try {
-                List<Product> products = productDAO.findAll();
-                Product p = products.stream().filter(prod -> prod.getId() == cellData.getValue().getProductId()).findFirst().orElse(null);
-                if (p != null) {
-                    BigDecimal total = p.getPrice().multiply(new BigDecimal(cellData.getValue().getQuantity()));
-                    return new SimpleStringProperty(total.toString() + " TND");
-                }
-                return new SimpleStringProperty("0.00 TND");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
+            Product p = productCache.get(cellData.getValue().getProductId());
+            if (p != null) {
+                BigDecimal total = p.getPrice().multiply(new BigDecimal(cellData.getValue().getQuantity()));
+                return new SimpleStringProperty(total.toString() + " TND");
+            }
+            return new SimpleStringProperty("0.00 TND");
         });
 
         colActions.setCellFactory(param -> new TableCell<Order, Void>() {
@@ -115,10 +121,8 @@ public class OrdersManagementController {
     }
 
     private void loadOrders() {
-        try {
-            ordersList.setAll(orderDAO.findAll());
-            ordersTable.setItems(ordersList);
-        } catch (SQLException e) { e.printStackTrace(); }
+        ordersList.setAll(orderDAO.findAll());
+        ordersTable.setItems(ordersList);
     }
 
     private void setupStatusFilter() {
@@ -132,16 +136,9 @@ public class OrdersManagementController {
     }
 
     private void handleUpdateStatus(Order order, Order.Status status) {
-        try {
-            orderDAO.updateStatus(order.getOrderId(), status);
-            order.setStatus(status);
-            ordersTable.refresh();
-        } catch (SQLException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Could not update order status: " + e.getMessage());
-            alert.showAndWait();
-        }
+        orderDAO.updateStatus(order.getOrderId(), status);
+        order.setStatus(status);
+        ordersTable.refresh();
     }
 
     @FXML private void handleExportCSV() {
