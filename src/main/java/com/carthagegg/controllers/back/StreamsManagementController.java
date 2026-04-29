@@ -4,6 +4,8 @@ import com.carthagegg.dao.StreamDAO;
 import com.carthagegg.models.Stream;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import com.carthagegg.utils.TwitchService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -28,17 +30,21 @@ public class StreamsManagementController {
     @FXML private VBox formPane;
     @FXML private Label formTitle;
     @FXML private TextField titleField;
+    @FXML private TextArea descriptionField;
     @FXML private ComboBox<String> platformComboBox;
     @FXML private TextField channelField;
     @FXML private TextField ytIdField;
+    @FXML private TextField twitchLinkField;
     @FXML private CheckBox liveCheckBox;
     @FXML private TextField viewersField;
     @FXML private Label errorLabel;
     @FXML private ComboBox<String> sortComboBox;
+    @FXML private Button fetchTwitchBtn;
 
     private StreamDAO streamDAO = new StreamDAO();
     private ObservableList<Stream> streamsList = FXCollections.observableArrayList();
     private Stream selectedStream;
+    private String lastFetchedThumbnail = null;
 
     @FXML
     public void initialize() {
@@ -116,11 +122,52 @@ public class StreamsManagementController {
         showForm();
     }
 
+    @FXML
+    private void handleFetchTwitchInfo() {
+        String link = twitchLinkField.getText().trim();
+        String channelName = TwitchService.extractChannelName(link);
+
+        if (channelName == null) {
+            showError("Invalid Twitch link or username. Format: twitch.tv/channel or username");
+            return;
+        }
+
+        fetchTwitchBtn.setDisable(true);
+        fetchTwitchBtn.setText("Fetching...");
+        hideError();
+
+        TwitchService.getStreamInfo(channelName).thenAccept(data -> {
+            Platform.runLater(() -> {
+                fetchTwitchBtn.setDisable(false);
+                fetchTwitchBtn.setText("FETCH");
+                if (data != null) {
+                    titleField.setText(data.title);
+                    descriptionField.setText(data.description != null ? data.description : "");
+                    channelField.setText(data.channelName);
+                    platformComboBox.setValue("twitch");
+                    liveCheckBox.setSelected(data.isLive);
+                    viewersField.setText(String.valueOf(data.viewerCount));
+                    lastFetchedThumbnail = data.thumbnail;
+                } else {
+                    showError("Could not find Twitch channel: " + channelName);
+                }
+            });
+        }).exceptionally(ex -> {
+            Platform.runLater(() -> {
+                fetchTwitchBtn.setDisable(false);
+                fetchTwitchBtn.setText("FETCH");
+                showError("Error: " + ex.getMessage());
+            });
+            return null;
+        });
+    }
+
     private void handleEdit(Stream s) {
         selectedStream = s;
         formTitle.setText("EDIT STREAM");
         hideError();
         titleField.setText(s.getTitle());
+        descriptionField.setText(s.getDescription());
         platformComboBox.setValue(s.getPlatform());
         channelField.setText(s.getChannelName());
         ytIdField.setText(s.getYoutubeVideoId());
@@ -152,12 +199,17 @@ public class StreamsManagementController {
         try {
             Stream s = (selectedStream == null) ? new Stream() : selectedStream;
             s.setTitle(titleField.getText().trim());
+            s.setDescription(descriptionField.getText().trim());
             s.setPlatform(platformComboBox.getValue());
             s.setChannelName(channelField.getText().trim());
             s.setYoutubeVideoId(ytIdField.getText().trim());
             s.setLive(liveCheckBox.isSelected());
             s.setViewerCount(Integer.parseInt(viewersField.getText().trim()));
             s.setCreatedBy(SessionManager.getCurrentUser().getUserId());
+            
+            if (lastFetchedThumbnail != null) {
+                s.setThumbnail(lastFetchedThumbnail);
+            }
 
             if (selectedStream == null) {
                 streamDAO.save(s);
@@ -225,8 +277,16 @@ public class StreamsManagementController {
     @FXML private void handleHideForm() { hideForm(); }
     private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
     private void clearForm() {
-        titleField.clear(); platformComboBox.setValue(null); channelField.clear();
-        ytIdField.clear(); liveCheckBox.setSelected(false); viewersField.setText("0");
+        titleField.clear();
+        descriptionField.clear();
+        platformComboBox.setValue(null);
+        channelField.clear();
+        ytIdField.clear();
+        twitchLinkField.clear();
+        liveCheckBox.setSelected(false);
+        viewersField.setText("0");
+        lastFetchedThumbnail = null;
+        hideError();
     }
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);

@@ -2,16 +2,14 @@ package com.carthagegg.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import java.io.FileInputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
 public class AIService {
-    private static String GEMINI_API_KEY;
+    private static final String GEMINI_API_KEY = ConfigManager.get("gemini.api.key");
     // We will try these models in order until one works
     private static final String[] MODELS = {
         "gemini-2.5-flash",
@@ -22,24 +20,6 @@ public class AIService {
         "gemini-1.0-pro"
     };
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1/models/%s:generateContent?key=";
-
-    static {
-        try {
-            Properties props = new Properties();
-            // Try to load from project root
-            try (FileInputStream fis = new FileInputStream("config.properties")) {
-                props.load(fis);
-                GEMINI_API_KEY = props.getProperty("gemini.api.key");
-                if (GEMINI_API_KEY != null && !GEMINI_API_KEY.isEmpty()) {
-                    System.out.println("AIService: Gemini API Key loaded successfully.");
-                } else {
-                    System.err.println("AIService: gemini.api.key is empty in config.properties");
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("AIService: Could not load config.properties - " + e.getMessage());
-        }
-    }
 
     public static CompletableFuture<String> generateProductDescription(String productName, String category) {
         if (GEMINI_API_KEY == null || GEMINI_API_KEY.isEmpty()) {

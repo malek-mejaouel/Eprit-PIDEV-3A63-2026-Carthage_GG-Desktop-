@@ -62,8 +62,21 @@
                    maxWidth="Infinity" />
             
             <VBox spacing="5">
+                <Label text="TWITCH STREAM LINK (OPTIONAL)" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <HBox spacing="10">
+                    <TextField fx:id="twitchLinkField" promptText="twitch.tv/channel" styleClass="text-field-dark" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="fetchTwitchBtn" text="FETCH" onAction="#handleFetchTwitchInfo" styleClass="btn-gold" prefHeight="35" />
+                </HBox>
+            </VBox>
+            
+            <VBox spacing="5">
                 <Label text="STREAM TITLE" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="titleField" styleClass="text-field-dark" />
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="DESCRIPTION" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextArea fx:id="descriptionField" styleClass="text-field-dark" prefHeight="80" wrapText="true" />
             </VBox>
             
             <VBox spacing="5">

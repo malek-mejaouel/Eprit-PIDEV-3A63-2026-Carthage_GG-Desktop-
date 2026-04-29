@@ -64,6 +64,18 @@ public class StreamDAO {
         }
     }
 
+    public void updateLiveStats(int streamId, boolean isLive, int viewerCount, String title, String thumbnail) throws SQLException {
+        String sql = "UPDATE streams SET is_live=?, viewer_count=?, title=?, thumbnail=?, updated_at=NOW() WHERE stream_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBoolean(1, isLive);
+            ps.setInt(2, viewerCount);
+            ps.setString(3, title);
+            ps.setString(4, thumbnail);
+            ps.setInt(5, streamId);
+            ps.executeUpdate();
+        }
+    }
+
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM streams WHERE stream_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

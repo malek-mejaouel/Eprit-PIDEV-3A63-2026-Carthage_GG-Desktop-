@@ -1,10 +1,14 @@
 package com.carthagegg.controllers.front;
 
+import com.carthagegg.dao.CategoryDAO;
 import com.carthagegg.dao.OrderDAO;
 import com.carthagegg.dao.ProductDAO;
+import com.carthagegg.models.Category;
 import com.carthagegg.models.Product;
 import com.carthagegg.utils.CartManager;
 import com.carthagegg.utils.SceneNavigator;
+import javafx.animation.FadeTransition;
+import javafx.animation.TranslateTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
@@ -21,10 +25,12 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ShopController {
 
@@ -35,7 +41,7 @@ public class ShopController {
 
     private ProductDAO productDAO = new ProductDAO();
     private OrderDAO orderDAO = new OrderDAO();
-    private com.carthagegg.dao.CategoryDAO categoryDAO = new com.carthagegg.dao.CategoryDAO();
+    private CategoryDAO categoryDAO = new CategoryDAO();
     private int cartCount = 0;
     private List<Product> allProducts = new java.util.ArrayList<>();
     private Map<Integer, Integer> salesCounts = new java.util.HashMap<>();
@@ -49,26 +55,19 @@ public class ShopController {
         cartCount = CartManager.getTotalItems();
         cartCountLabel.setText(String.valueOf(cartCount));
         
-        loadCategories();
-        loadProducts();
+        loadData();
 
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             filterProducts(newValue);
         });
     }
 
-    private void loadCategories() {
-        try {
-            categoryDAO.findAll().forEach(c -> categoryNames.put(c.getId(), c.getName()));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadProducts() {
+    private void loadData() {
         try {
             allProducts = productDAO.findAll();
             salesCounts = orderDAO.getProductSalesCounts();
+            categoryNames = categoryDAO.findAll().stream()
+                    .collect(Collectors.toMap(Category::getId, Category::getName));
             displayProducts(allProducts);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -120,25 +119,26 @@ public class ShopController {
             try { img.setImage(new Image(product.getImage())); } catch (Exception e) {}
         }
         
-        // Hover Overlay (Description & Details)
+        // Hover Overlay
         VBox hoverOverlay = new VBox(10);
         hoverOverlay.setAlignment(Pos.CENTER);
         hoverOverlay.setPadding(new Insets(20));
         hoverOverlay.setStyle("-fx-background-color: rgba(10, 10, 15, 0.9); -fx-background-radius: 12 12 0 0;");
-        hoverOverlay.setOpacity(0); // Hidden by default
+        hoverOverlay.setOpacity(0);
 
         Label overlayTitle = new Label("PRODUCT DETAILS");
-        overlayTitle.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold; -fx-font-size: 12; -fx-letter-spacing: 1;");
+        overlayTitle.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold; -fx-font-size: 12;");
         
-        Label overlayDesc = new Label(product.getDescription() != null ? product.getDescription() : "No description available.");
-         overlayDesc.setStyle("-fx-text-fill: white; -fx-font-size: 12; -fx-text-alignment: center;");
-         overlayDesc.setWrapText(true);
-         overlayDesc.setMaxWidth(220);
- 
-         Label overlayCategory = new Label("Category: " + categoryNames.getOrDefault(product.getCategoryId(), "General"));
-         overlayCategory.setStyle("-fx-text-fill: #ffb800; -fx-font-size: 11; -fx-font-style: italic;");
- 
-         hoverOverlay.getChildren().addAll(overlayTitle, overlayDesc, overlayCategory);
+        Label overlayDesc = new Label(product.getDescription() != null && !product.getDescription().isEmpty() 
+            ? product.getDescription() : "No description available.");
+        overlayDesc.setStyle("-fx-text-fill: white; -fx-font-size: 12; -fx-text-alignment: center;");
+        overlayDesc.setWrapText(true);
+        overlayDesc.setMaxWidth(220);
+
+        Label overlayCategory = new Label("Category: " + categoryNames.getOrDefault(product.getCategoryId(), "General"));
+        overlayCategory.setStyle("-fx-text-fill: #ffb800; -fx-font-size: 11; -fx-font-style: italic;");
+
+        hoverOverlay.getChildren().addAll(overlayTitle, overlayDesc, overlayCategory);
         
         Rectangle clip = new Rectangle(260, 220);
         clip.setArcWidth(24);
@@ -153,8 +153,6 @@ public class ShopController {
             StackPane.setAlignment(trendingBadge, Pos.TOP_RIGHT);
             StackPane.setMargin(trendingBadge, new Insets(10));
             imgContainer.getChildren().add(trendingBadge);
-            
-            card.setStyle(card.getStyle() + "-fx-border-color: #ffb800; -fx-border-width: 1;");
         }
 
         // Content Container
@@ -173,7 +171,7 @@ public class ShopController {
         priceRow.setAlignment(Pos.CENTER_LEFT);
         
         VBox priceContainer = new VBox(2);
-        priceContainer.setMinWidth(100); // Prevent truncation
+        priceContainer.setMinWidth(100);
         if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
             Text oldPrice = new Text(product.getPrice() + " USD");
             oldPrice.setFill(Color.web("#71717a"));
@@ -230,14 +228,35 @@ public class ShopController {
         content.getChildren().addAll(name, priceRow, buyBtn);
         card.getChildren().addAll(imgContainer, content);
         
-        // Hover effects
+        // Hover Transitions
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(300), hoverOverlay);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(300), hoverOverlay);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+
+        TranslateTransition liftUp = new TranslateTransition(Duration.millis(200), card);
+        liftUp.setToY(-8);
+
+        TranslateTransition settleDown = new TranslateTransition(Duration.millis(200), card);
+        settleDown.setToY(0);
+
         card.setOnMouseEntered(e -> {
-            card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: #ffb800; -fx-border-radius: 12; -fx-translate-y: -5; -fx-cursor: hand;");
-            hoverOverlay.setOpacity(1);
+            card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: #ffb800; -fx-border-radius: 12; -fx-cursor: hand; -fx-background-color: #1a1a24;");
+            fadeOut.stop();
+            fadeIn.playFromStart();
+            settleDown.stop();
+            liftUp.playFromStart();
         });
+        
         card.setOnMouseExited(e -> {
-            card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: rgba(255, 184, 0, 0.1); -fx-border-radius: 12; -fx-translate-y: 0;");
-            hoverOverlay.setOpacity(0);
+            card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: rgba(255, 184, 0, 0.1); -fx-border-radius: 12; -fx-background-color: transparent;");
+            fadeIn.stop();
+            fadeOut.playFromStart();
+            liftUp.stop();
+            settleDown.playFromStart();
         });
 
         return card;
