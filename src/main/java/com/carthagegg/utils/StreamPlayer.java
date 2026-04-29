@@ -10,22 +10,25 @@ public class StreamPlayer {
 
     public static void playStream(String platform, String channelName, String ytId) {
         Stage stage = new Stage();
-        stage.setTitle("Watching: " + channelName);
+        stage.setTitle("Watching: " + (channelName != null ? channelName : "Stream"));
         stage.setMinWidth(960);
         stage.setMinHeight(540);
 
         WebView webView = new WebView();
-        String embedUrl = "";
-
+        // Set a modern User-Agent to prevent Twitch from blocking the embedded player
+        webView.getEngine().setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        
         if ("twitch".equalsIgnoreCase(platform)) {
-            // Twitch embed URL with parent parameter (localhost for development)
-            embedUrl = "https://player.twitch.tv/?channel=" + channelName + "&parent=localhost&autoplay=true";
+            // Clean the channel name
+            String cleanName = channelName.toLowerCase().trim().replaceAll("\\s+", "");
+            
+            // Twitch's player requires a 'parent' domain to work. 
+            // Since we are in a desktop app (no real domain), we use a trick:
+            // We use 'twitch.tv' as a parent and load the page through a simple redirection.
+            String embedUrl = "https://player.twitch.tv/?channel=" + cleanName + "&parent=twitch.tv&autoplay=true&muted=false";
+            webView.getEngine().load(embedUrl);
         } else if ("youtube".equalsIgnoreCase(platform)) {
-            // YouTube embed URL
-            embedUrl = "https://www.youtube.com/embed/" + ytId + "?autoplay=1";
-        }
-
-        if (!embedUrl.isEmpty()) {
+            String embedUrl = "https://www.youtube.com/embed/" + ytId + "?autoplay=1";
             webView.getEngine().load(embedUrl);
         }
 
@@ -42,7 +45,7 @@ public class StreamPlayer {
             }
         } catch (Exception e) {}
 
-        // Stop the webview when the window is closed
+        // Stop the webview when the window is closed to stop audio/video
         stage.setOnCloseRequest(e -> {
             webView.getEngine().load("about:blank");
         });

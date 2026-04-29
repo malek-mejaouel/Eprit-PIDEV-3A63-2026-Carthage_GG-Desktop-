@@ -107,7 +107,8 @@ public class TwitchService {
                 }
 
                 JsonObject user = userDataArray.get(0).getAsJsonObject();
-                String displayName = user.get("display_name").getAsString();
+                String loginName = user.get("login").getAsString(); // Technical name (e.g. "shroud")
+                String displayName = user.get("display_name").getAsString(); // Display name (e.g. "Shroud")
                 String description = user.get("description").getAsString();
                 String profileImage = user.get("profile_image_url").getAsString();
 
@@ -116,7 +117,7 @@ public class TwitchService {
                     JsonObject stream = streamDataArray.get(0).getAsJsonObject();
                     return new StreamData(
                             stream.get("title").getAsString(),
-                            displayName,
+                            loginName, // Use login name for technical tasks
                             stream.get("thumbnail_url").getAsString().replace("{width}", "1280").replace("{height}", "720"),
                             true,
                             stream.get("viewer_count").getAsInt(),
@@ -126,7 +127,7 @@ public class TwitchService {
                     // STREAM IS OFFLINE
                     return new StreamData(
                             displayName + "'s Stream",
-                            displayName,
+                            loginName, // Use login name for technical tasks
                             profileImage,
                             false,
                             0,
