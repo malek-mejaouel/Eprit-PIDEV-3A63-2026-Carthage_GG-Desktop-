@@ -18,10 +18,6 @@
                 <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16"/></graphic>
             </Button>
             <Label text="Orders Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
-            <Region HBox.hgrow="ALWAYS" />
-            <Button text="EXPORT TO CSV" onAction="#handleExportCSV" styleClass="btn-gold" prefHeight="40">
-                <graphic><FontIcon iconLiteral="fas-file-csv" iconColor="#0a0a0f" iconSize="14"/></graphic>
-            </Button>
         </HBox>
     </top>
     
@@ -31,18 +27,21 @@
                 <Insets top="20" left="20" right="20" bottom="20" />
             </padding>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <ComboBox fx:id="statusFilter" promptText="Filter by Status" styleClass="text-field-dark" prefWidth="200" />
+                <Button text="REFRESH FROM STRIPE" onAction="#handleRefreshStripe" styleClass="btn-gold">
+                    <graphic><FontIcon iconLiteral="fas-sync" iconSize="14"/></graphic>
+                </Button>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="EXPORT TO CSV" onAction="#handleExportCSV" styleClass="btn-gold" prefHeight="40">
+                    <graphic><FontIcon iconLiteral="fas-file-csv" iconColor="#0a0a0f" iconSize="14"/></graphic>
+                </Button>
             </HBox>
-            <TableView fx:id="ordersTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+            <TableView fx:id="stripeTable" VBox.vgrow="ALWAYS" styleClass="table-view">
                 <columns>
-                    <TableColumn fx:id="colId" text="Order ID" prefWidth="80" />
-                    <TableColumn fx:id="colUser" text="User" prefWidth="150" />
-                    <TableColumn fx:id="colProduct" text="Product" prefWidth="200" />
-                    <TableColumn fx:id="colQuantity" text="Qty" prefWidth="60" />
-                    <TableColumn fx:id="colTotal" text="Total" prefWidth="100" />
-                    <TableColumn fx:id="colDate" text="Date" prefWidth="180" />
-                    <TableColumn fx:id="colStatus" text="Status" prefWidth="120" />
-                    <TableColumn fx:id="colActions" text="Actions" prefWidth="180" />
+                    <TableColumn fx:id="colStripeId" text="Session ID" prefWidth="250" />
+                    <TableColumn fx:id="colStripeCustomer" text="Customer" prefWidth="200" />
+                    <TableColumn fx:id="colStripeAmount" text="Amount" prefWidth="120" />
+                    <TableColumn fx:id="colStripeStatus" text="Status" prefWidth="120" />
+                    <TableColumn fx:id="colStripeUrl" text="Receipt/URL" prefWidth="450" />
                 </columns>
             </TableView>
         </VBox>

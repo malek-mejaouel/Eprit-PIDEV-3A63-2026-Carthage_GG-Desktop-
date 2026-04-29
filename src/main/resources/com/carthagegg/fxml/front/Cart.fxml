@@ -54,7 +54,7 @@
                     <HBox alignment="CENTER_LEFT">
                         <Label text="Subtotal" style="-fx-text-fill: #949499;" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="subtotalLabel" text="0.00 TND" style="-fx-text-fill: white;" />
+                        <Label fx:id="subtotalLabel" text="0.00 USD" style="-fx-text-fill: white;" />
                     </HBox>
                     
                     <HBox alignment="CENTER_LEFT">
@@ -68,7 +68,7 @@
                     <HBox alignment="CENTER_LEFT">
                         <Label text="TOTAL" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="totalLabel" text="0.00 TND" styleClass="neon-label" style="-fx-font-size: 24; -fx-font-weight: bold;" />
+                        <Label fx:id="totalLabel" text="0.00 USD" styleClass="neon-label" style="-fx-font-size: 24; -fx-font-weight: bold;" />
                     </HBox>
                     
                     <Region VBox.vgrow="ALWAYS" />

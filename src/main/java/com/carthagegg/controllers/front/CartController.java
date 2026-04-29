@@ -7,6 +7,7 @@ import com.carthagegg.models.Product;
 import com.carthagegg.utils.CartManager;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import com.carthagegg.utils.StripeService;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -96,7 +97,7 @@ public class CartController {
         VBox info = new VBox(5);
         Label name = new Label(product.getName());
         name.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16;");
-        Label price = new Label(product.getPrice() + " TND");
+        Label price = new Label(product.getPrice() + " USD");
         price.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold;");
         info.getChildren().addAll(name, price);
 
@@ -146,7 +147,7 @@ public class CartController {
 
     private void updateSummary() {
         int count = CartManager.getTotalItems();
-        String totalStr = CartManager.getTotalPrice().toString() + " TND";
+        String totalStr = CartManager.getTotalPrice().toString() + " USD";
         
         itemCountLabel.setText(count + (count == 1 ? " item" : " items") + " in your cart");
         subtotalLabel.setText(totalStr);
@@ -178,6 +179,32 @@ public class CartController {
                     return;
                 }
             }
+
+            // --- Stripe Integration ---
+            try {
+                String checkoutUrl = StripeService.createCheckoutSession(items);
+                StripeService.openCheckoutInBrowser(checkoutUrl);
+                
+                // For a desktop app, we usually show a dialog asking if payment was successful
+                Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmationAlert.setTitle("Payment Confirmation");
+                confirmationAlert.setHeaderText("A checkout page has been opened in your browser.");
+                confirmationAlert.setContentText("Did you complete the payment successfully?");
+                
+                ButtonType yesButton = new ButtonType("Yes, Complete Order", ButtonBar.ButtonData.YES);
+                ButtonType noButton = new ButtonType("No, Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+                confirmationAlert.getButtonTypes().setAll(yesButton, noButton);
+
+                java.util.Optional<ButtonType> result = confirmationAlert.showAndWait();
+                if (result.isEmpty() || result.get() != yesButton) {
+                    return; // User cancelled or payment failed
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                showAlert("Payment Error", "Could not initialize Stripe checkout: " + e.getMessage(), Alert.AlertType.ERROR);
+                return;
+            }
+            // --------------------------
 
             // 1. Update stock in database
             for (Map.Entry<Product, Integer> entry : items.entrySet()) {

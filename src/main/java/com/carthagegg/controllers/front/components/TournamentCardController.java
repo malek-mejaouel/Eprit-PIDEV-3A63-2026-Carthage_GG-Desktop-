@@ -26,7 +26,7 @@ public class TournamentCardController {
         dateLabel.setText(t.getStartDate().format(DateTimeFormatter.ofPattern("dd MMM")) + " - " + 
                          t.getEndDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
         locationLabel.setText(t.getLocation());
-        prizeLabel.setText(t.getPrizePool().toString() + " TND");
+        prizeLabel.setText(t.getPrizePool().toString() + " USD");
 
         try {
             Game g = gameDAO.findById(t.getGameId());

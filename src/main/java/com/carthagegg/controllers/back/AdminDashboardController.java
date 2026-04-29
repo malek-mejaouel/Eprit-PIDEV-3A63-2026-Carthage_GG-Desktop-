@@ -41,7 +41,7 @@ public class AdminDashboardController {
         try {
             totalUsers.setText(String.valueOf(statsDAO.countUsers()));
             totalTournaments.setText(String.valueOf(statsDAO.countTournaments()));
-            totalRevenue.setText(String.format("%.2f TND", statsDAO.getTotalRevenue()));
+            totalRevenue.setText(String.format("%.2f USD", statsDAO.getTotalRevenue()));
         } catch (SQLException e) {
             e.printStackTrace();
         }

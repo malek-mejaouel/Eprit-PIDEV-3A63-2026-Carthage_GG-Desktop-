@@ -119,7 +119,7 @@ public class ShopController {
         HBox priceRow = new HBox(10);
         priceRow.setAlignment(Pos.CENTER_LEFT);
         
-        Label price = new Label(product.getPrice() + " TND");
+        Label price = new Label(product.getPrice() + " USD");
         price.getStyleClass().add("neon-label");
         price.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
         
