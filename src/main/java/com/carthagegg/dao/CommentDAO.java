@@ -77,6 +77,32 @@ public class CommentDAO {
         return filtered;
     }
 
+    public int getCommentCount(int newsId) {
+        String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE news_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newsId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getTotalUpvotes(int newsId) {
+        String sql = "SELECT SUM(upvotes) FROM " + tableName + " WHERE news_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newsId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public void save(Comment c) throws SQLException {
         String contentCol = hasColumn(tableName, "contenu") ? "contenu" : "content";
         String dateCol = hasColumn(tableName, "date_commentaire") ? "date_commentaire" : "created_at";

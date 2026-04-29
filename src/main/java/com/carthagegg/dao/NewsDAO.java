@@ -16,12 +16,67 @@ public class NewsDAO {
     private String contentColumn;
     private String categoryColumn;
     private String publishedColumn;
+    private String viewCountColumn;
+    private String urlColumn;
     private boolean hasImage;
 
     public NewsDAO() {
         try {
             this.conn = DatabaseConnection.getInstance();
             resolveSchema();
+            ensureViewCountColumn();
+            ensureUrlColumn();
+            ensureImageColumn();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void ensureImageColumn() {
+        try {
+            if (!hasImage) {
+                try (Statement st = conn.createStatement()) {
+                    st.executeUpdate("ALTER TABLE news ADD COLUMN image VARCHAR(255)");
+                    hasImage = true;
+                }
+            }
+        } catch (SQLException e) {
+            // Column might already exist
+        }
+    }
+
+    private void ensureViewCountColumn() {
+        try {
+            if (viewCountColumn == null) {
+                try (Statement st = conn.createStatement()) {
+                    st.executeUpdate("ALTER TABLE news ADD COLUMN view_count INT DEFAULT 0");
+                    viewCountColumn = "view_count";
+                }
+            }
+        } catch (SQLException e) {
+            // Column might already exist
+        }
+    }
+
+    private void ensureUrlColumn() {
+        try {
+            if (urlColumn == null) {
+                try (Statement st = conn.createStatement()) {
+                    st.executeUpdate("ALTER TABLE news ADD COLUMN url VARCHAR(500)");
+                    urlColumn = "url";
+                }
+            }
+        } catch (SQLException e) {
+            // Column might already exist
+        }
+    }
+
+    public void incrementViewCount(int newsId) {
+        if (viewCountColumn == null) return;
+        String sql = "UPDATE news SET " + viewCountColumn + " = " + viewCountColumn + " + 1 WHERE " + idColumn + " = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newsId);
+            ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -35,7 +90,11 @@ public class NewsDAO {
         if (titleColumn == null) resolveSchema();
         List<News> list = new ArrayList<>();
         String dir = "DESC".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
-        String sql = "SELECT * FROM news ORDER BY " + (publishedColumn != null ? publishedColumn : idColumn) + " " + dir;
+        
+        // Exclude external news (they have URLs) from regular listings
+        String whereClause = (urlColumn != null) ? "WHERE " + urlColumn + " IS NULL OR " + urlColumn + " = '' " : "";
+        
+        String sql = "SELECT * FROM news " + whereClause + "ORDER BY " + (publishedColumn != null ? publishedColumn : idColumn) + " " + dir;
         try (Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapNews(rs));
@@ -51,7 +110,13 @@ public class NewsDAO {
         if (titleColumn == null) resolveSchema();
         List<News> list = new ArrayList<>();
         String dir = "DESC".equalsIgnoreCase(sortDir) ? "DESC" : "ASC";
-        String sql = "SELECT * FROM news WHERE " + titleColumn + " LIKE ? ORDER BY " + (publishedColumn != null ? publishedColumn : idColumn) + " " + dir;
+        
+        String sql = "SELECT * FROM news WHERE " + titleColumn + " LIKE ?";
+        if (urlColumn != null) {
+            sql += " AND (" + urlColumn + " IS NULL OR " + urlColumn + " = '')";
+        }
+        sql += " ORDER BY " + (publishedColumn != null ? publishedColumn : idColumn) + " " + dir;
+        
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, "%" + titleQuery + "%");
             try (ResultSet rs = ps.executeQuery()) {
@@ -80,6 +145,18 @@ public class NewsDAO {
             }
         }
         return false;
+    }
+
+    public News findByTitleStrict(String title) throws SQLException {
+        if (titleColumn == null) resolveSchema();
+        String sql = "SELECT * FROM news WHERE LOWER(TRIM(" + titleColumn + ")) = LOWER(TRIM(?)) LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, title);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapNews(rs);
+            }
+        }
+        return null;
     }
 
     public void save(News n) throws SQLException {
@@ -116,6 +193,12 @@ public class NewsDAO {
             vals.append(", NOW()");
         }
 
+        if (urlColumn != null && n.getUrl() != null) {
+            cols.append(", ").append(urlColumn);
+            vals.append(", ?");
+            params.add(n.getUrl());
+        }
+
         String sql = "INSERT INTO news (" + cols + ") VALUES (" + vals + ")";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (int i = 0; i < params.size(); i++) {
@@ -150,6 +233,11 @@ public class NewsDAO {
         if (hasImage) {
             sql.append(", image=?");
             params.add(n.getImage());
+        }
+
+        if (urlColumn != null) {
+            sql.append(", ").append(urlColumn).append("=?");
+            params.add(n.getUrl());
         }
 
         sql.append(" WHERE ").append(idColumn).append("=?");
@@ -194,6 +282,13 @@ public class NewsDAO {
 
         String cat = getString(rs, "category_id", "categorie", "category");
         n.setCategory(cat);
+
+        String url = getString(rs, "url");
+        n.setUrl(url);
+
+        if (viewCountColumn != null) {
+            n.setViewCount(rs.getInt(viewCountColumn));
+        }
         return n;
     }
 
@@ -229,6 +324,8 @@ public class NewsDAO {
         contentColumn = cols.contains("content") ? "content" : (cols.contains("contenu") ? "contenu" : null);
         categoryColumn = cols.contains("category_id") ? "category_id" : (cols.contains("categorie") ? "categorie" : (cols.contains("category") ? "category" : null));
         publishedColumn = cols.contains("published_at") ? "published_at" : (cols.contains("date_publication") ? "date_publication" : (cols.contains("created_at") ? "created_at" : null));
+        viewCountColumn = cols.contains("view_count") ? "view_count" : null;
+        urlColumn = cols.contains("url") ? "url" : null;
         hasImage = cols.contains("image");
     }
 

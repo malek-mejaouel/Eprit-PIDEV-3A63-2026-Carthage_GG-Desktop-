@@ -1,7 +1,12 @@
 package com.carthagegg.controllers.front;
 
+import com.carthagegg.dao.NewsDAO;
 import com.carthagegg.models.News;
+import com.carthagegg.services.NewsService;
+import com.carthagegg.utils.GeminiService;
+import com.carthagegg.utils.NewsApiService;
 import com.carthagegg.utils.SceneNavigator;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -10,8 +15,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 
 public class NewsDetailController {
@@ -25,9 +32,18 @@ public class NewsDetailController {
     @FXML private Label contentText;
     @FXML private VBox commentsSectionContainer;
     @FXML private SidebarController sidebarController;
+    
+    // AI Summarization
+    @FXML private Button summarizeBtn;
+    @FXML private VBox summaryBox;
+    @FXML private Label summaryText;
+    private GeminiService geminiService = new GeminiService();
+    private NewsApiService newsApiService = new NewsApiService();
+    private NewsDAO newsDAO = new NewsDAO();
 
     private static News selectedNews;
     private CommentController commentController;
+    private NewsService newsService = new NewsService();
 
     public static void setSelectedNews(News news) {
         selectedNews = news;
@@ -40,7 +56,29 @@ public class NewsDetailController {
         }
         
         if (selectedNews != null) {
+            // Ensure external news is persisted so comments can work
+            ensureNewsExistsInDB();
+            
+            // Increment view count when article is opened
+            newsService.incrementViewCount(selectedNews.getNewsId());
             displayNews();
+        }
+    }
+
+    private void ensureNewsExistsInDB() {
+        if (selectedNews.getNewsId() > 0) return; // Already in DB
+
+        try {
+            News existing = newsDAO.findByTitleStrict(selectedNews.getTitle());
+            if (existing != null) {
+                selectedNews.setNewsId(existing.getNewsId());
+                return;
+            }
+
+            // Save to DB to generate an ID
+            newsDAO.save(selectedNews);
+        } catch (SQLException e) {
+            System.err.println("Error persisting external news: " + e.getMessage());
         }
     }
 
@@ -61,13 +99,33 @@ public class NewsDetailController {
         
         contentText.setText(selectedNews.getContent());
 
+        // For external news, fetch full content automatically
+        if (selectedNews.getUrl() != null && !selectedNews.getUrl().isEmpty()) {
+            contentText.setText("Loading full article content...");
+            newsApiService.fetchFullContentAsync(selectedNews.getUrl(), selectedNews.getTitle())
+                .thenAccept(fullContent -> {
+                    Platform.runLater(() -> {
+                        contentText.setText(fullContent);
+                        selectedNews.setContent(fullContent); // Cache it for this session
+                    });
+                })
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        contentText.setText(selectedNews.getContent() + "\n\n(Note: Unable to load full content from source.)");
+                    });
+                    return null;
+                });
+        }
+
         if (selectedNews.getImage() != null && !selectedNews.getImage().isEmpty()) {
             try {
                 String src = selectedNews.getImage().trim();
-                if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("file:")) {
-                    newsImage.setImage(new Image(src));
+                if (src.startsWith("http://") || src.startsWith("https://")) {
+                    newsImage.setImage(new Image(src, true));
+                } else if (src.startsWith("file:")) {
+                    newsImage.setImage(new Image(src, false));
                 } else {
-                    newsImage.setImage(new Image(Path.of(src).toUri().toString()));
+                    newsImage.setImage(new Image(Path.of(src).toUri().toString(), false));
                 }
             } catch (Exception e) {}
         }
@@ -91,6 +149,38 @@ public class NewsDetailController {
     @FXML
     private void handleBack() {
         SceneNavigator.navigateTo("/com/carthagegg/fxml/front/News.fxml");
+    }
+
+    @FXML
+    private void handleSummarize() {
+        if (selectedNews == null) return;
+
+        // Set loading state
+        summarizeBtn.setDisable(true);
+        FontIcon robotIcon = (FontIcon) summarizeBtn.getGraphic();
+        robotIcon.setIconLiteral("fas-spinner");
+        
+        summaryBox.setVisible(true);
+        summaryBox.setManaged(true);
+        summaryText.setText("AI is reading the article and generating a summary...");
+
+        // Call Gemini
+        geminiService.summarizeAsync(selectedNews.getTitle(), selectedNews.getContent())
+            .thenAccept(summary -> {
+                Platform.runLater(() -> {
+                    summaryText.setText(summary);
+                    robotIcon.setIconLiteral("fas-check");
+                    summarizeBtn.setText("Summarized");
+                });
+            })
+            .exceptionally(ex -> {
+                Platform.runLater(() -> {
+                    summaryText.setText("Sorry, I couldn't summarize this article. Please try again later.");
+                    robotIcon.setIconLiteral("fas-robot");
+                    summarizeBtn.setDisable(false);
+                });
+                return null;
+            });
     }
 
     @FXML private void handleNavHome() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }

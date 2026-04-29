@@ -2,7 +2,10 @@ package com.carthagegg.controllers.front;
 
 import com.carthagegg.dao.NewsDAO;
 import com.carthagegg.models.News;
+import com.carthagegg.services.NewsService;
+import com.carthagegg.utils.NewsApiService;
 import com.carthagegg.utils.SceneNavigator;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -24,54 +27,176 @@ public class NewsController {
     @FXML private SidebarController sidebarController;
     @FXML private TextField searchField;
     @FXML private ComboBox<String> dateSortCombo;
+    @FXML private Button worldNewsBtn;
 
     private NewsDAO newsDAO = new NewsDAO();
+    private NewsService newsService = new NewsService();
     private CommentController commentController = new CommentController();
+    private NewsApiService newsApiService = new NewsApiService();
+
+    private boolean showingWorldNews = false;
 
     @FXML
     public void initialize() {
         if (sidebarController != null) {
             sidebarController.setActiveItem("news");
         }
-        dateSortCombo.getItems().addAll("Latest", "Oldest");
-        dateSortCombo.setValue("Latest");
+        dateSortCombo.getItems().addAll("Hot", "Latest", "Oldest");
+        dateSortCombo.setValue("Hot");
+        
+        dateSortCombo.setOnAction(e -> {
+            if (showingWorldNews) return; // Ignore sorting if on world news
+            if (!searchField.getText().isEmpty()) {
+                handleSearch();
+            } else {
+                loadNews();
+            }
+        });
+        
         loadNews();
     }
 
     @FXML
     private void handleSearch() {
+        showingWorldNews = false; // Reset flag when searching local news
         String query = searchField.getText() != null ? searchField.getText().trim() : "";
-        String sortDir = "Oldest".equals(dateSortCombo.getValue()) ? "ASC" : "DESC";
+        String sortValue = dateSortCombo.getValue();
+        
+        newsContainer.getChildren().clear();
+        Label loading = new Label("Searching news...");
+        loading.setStyle("-fx-text-fill: #FFC107; -fx-font-size: 16;");
+        newsContainer.getChildren().add(loading);
+        
+        new Thread(() -> {
+            try {
+                List<News> newsList;
+                if (query.isEmpty()) {
+                    if ("Hot".equals(sortValue)) {
+                        newsList = newsService.getSortedNewsByScore();
+                    } else {
+                        String sortDir = "Oldest".equals(sortValue) ? "ASC" : "DESC";
+                        newsList = newsDAO.findAll(sortDir);
+                    }
+                } else {
+                    if ("Hot".equals(sortValue)) {
+                        // For Hot + Search, fetch all sorted by score, then filter by title
+                        newsList = newsService.getSortedNewsByScore();
+                        String lowerQuery = query.toLowerCase();
+                        newsList.removeIf(n -> n.getTitle() == null || !n.getTitle().toLowerCase().contains(lowerQuery));
+                    } else {
+                        String sortDir = "Oldest".equals(sortValue) ? "ASC" : "DESC";
+                        newsList = newsDAO.findByTitle(query, sortDir);
+                    }
+                }
+                
+                Platform.runLater(() -> {
+                    newsContainer.getChildren().clear();
+                    
+                    // Filter to only show articles with images
+                    newsList.removeIf(n -> n.getImage() == null || n.getImage().trim().isEmpty());
+                    
+                    if (newsList.isEmpty()) {
+                        Label noNews = new Label("No news found matching your search.");
+                        noNews.setStyle("-fx-text-fill: white; -fx-font-size: 16;");
+                        newsContainer.getChildren().add(noNews);
+                    } else {
+                        for (News news : newsList) {
+                            newsContainer.getChildren().add(createNewsCard(news));
+                        }
+                    }
+                });
+            } catch (SQLException e) {
+                Platform.runLater(() -> {
+                    newsContainer.getChildren().clear();
+                    Label error = new Label("Error loading news.");
+                    error.setStyle("-fx-text-fill: #ef4444; -fx-font-size: 16;");
+                    newsContainer.getChildren().add(error);
+                });
+                e.printStackTrace();
+            }
+        }).start();
+    }
 
-        try {
-            List<News> newsList;
-            if (query.isEmpty()) {
-                newsList = newsDAO.findAll(sortDir);
-            } else {
-                newsList = newsDAO.findByTitle(query, sortDir);
-            }
-            
-            newsContainer.getChildren().clear();
-            for (News news : newsList) {
-                newsContainer.getChildren().add(createNewsCard(news));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    @FXML
+    private void handleFetchWorldNews() {
+        showingWorldNews = true;
+        worldNewsBtn.setDisable(true);
+        worldNewsBtn.setText("Fetching...");
+        
+        newsApiService.fetchEsportsNewsAsync().thenAccept(externalNews -> {
+            Platform.runLater(() -> {
+                newsContainer.getChildren().clear();
+                
+                // Filter to only show articles with images
+                externalNews.removeIf(n -> n.getImage() == null || n.getImage().trim().isEmpty());
+
+                if (externalNews.isEmpty()) {
+                    Label noNews = new Label("No worldwide news found at the moment.");
+                    noNews.setStyle("-fx-text-fill: white; -fx-font-size: 16;");
+                    newsContainer.getChildren().add(noNews);
+                } else {
+                    for (News news : externalNews) {
+                        newsContainer.getChildren().add(createNewsCard(news));
+                    }
+                }
+                worldNewsBtn.setDisable(false);
+                worldNewsBtn.setText("Worldwide Esports News");
+            });
+        }).exceptionally(ex -> {
+            Platform.runLater(() -> {
+                worldNewsBtn.setDisable(false);
+                worldNewsBtn.setText("Worldwide Esports News");
+                ex.printStackTrace();
+            });
+            return null;
+        });
     }
 
     private void loadNews() {
-        String sortDir = "Oldest".equals(dateSortCombo.getValue()) ? "ASC" : "DESC";
-        try {
-            List<News> newsList = newsDAO.findAll(sortDir);
-            newsContainer.getChildren().clear();
+        showingWorldNews = false;
+        String sortValue = dateSortCombo.getValue();
+        
+        newsContainer.getChildren().clear();
+        Label loading = new Label("Loading news...");
+        loading.setStyle("-fx-text-fill: #FFC107; -fx-font-size: 16;");
+        newsContainer.getChildren().add(loading);
+        
+        new Thread(() -> {
+            try {
+                List<News> newsList;
+                if ("Hot".equals(sortValue)) {
+                    newsList = newsService.getSortedNewsByScore();
+                } else {
+                    String sortDir = "Oldest".equals(sortValue) ? "ASC" : "DESC";
+                    newsList = newsDAO.findAll(sortDir);
+                }
+                
+                Platform.runLater(() -> {
+                    newsContainer.getChildren().clear();
+                    
+                    // Filter to only show articles with images
+                    newsList.removeIf(n -> n.getImage() == null || n.getImage().trim().isEmpty());
 
-            for (News news : newsList) {
-                newsContainer.getChildren().add(createNewsCard(news));
+                    if (newsList.isEmpty()) {
+                        Label noNews = new Label("No news available.");
+                        noNews.setStyle("-fx-text-fill: white; -fx-font-size: 16;");
+                        newsContainer.getChildren().add(noNews);
+                    } else {
+                        for (News news : newsList) {
+                            newsContainer.getChildren().add(createNewsCard(news));
+                        }
+                    }
+                });
+            } catch (SQLException e) {
+                Platform.runLater(() -> {
+                    newsContainer.getChildren().clear();
+                    Label error = new Label("Error loading news.");
+                    error.setStyle("-fx-text-fill: #ef4444; -fx-font-size: 16;");
+                    newsContainer.getChildren().add(error);
+                });
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        }).start();
     }
 
     private VBox createNewsCard(News news) {
@@ -96,10 +221,12 @@ public class NewsController {
         if (news.getImage() != null && !news.getImage().isEmpty()) {
             try {
                 String src = news.getImage().trim();
-                if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("file:")) {
-                    img.setImage(new Image(src));
+                if (src.startsWith("http://") || src.startsWith("https://")) {
+                    img.setImage(new Image(src, true)); // load in background to prevent UI freeze
+                } else if (src.startsWith("file:")) {
+                    img.setImage(new Image(src, false)); // load synchronously for instant display
                 } else {
-                    img.setImage(new Image(Path.of(src).toUri().toString()));
+                    img.setImage(new Image(Path.of(src).toUri().toString(), false));
                 }
             } catch (Exception e) {}
         }
