@@ -35,9 +35,11 @@ public class ShopController {
 
     private ProductDAO productDAO = new ProductDAO();
     private OrderDAO orderDAO = new OrderDAO();
+    private com.carthagegg.dao.CategoryDAO categoryDAO = new com.carthagegg.dao.CategoryDAO();
     private int cartCount = 0;
     private List<Product> allProducts = new java.util.ArrayList<>();
     private Map<Integer, Integer> salesCounts = new java.util.HashMap<>();
+    private Map<Integer, String> categoryNames = new java.util.HashMap<>();
 
     @FXML
     public void initialize() {
@@ -47,11 +49,20 @@ public class ShopController {
         cartCount = CartManager.getTotalItems();
         cartCountLabel.setText(String.valueOf(cartCount));
         
+        loadCategories();
         loadProducts();
 
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             filterProducts(newValue);
         });
+    }
+
+    private void loadCategories() {
+        try {
+            categoryDAO.findAll().forEach(c -> categoryNames.put(c.getId(), c.getName()));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadProducts() {
@@ -109,11 +120,31 @@ public class ShopController {
             try { img.setImage(new Image(product.getImage())); } catch (Exception e) {}
         }
         
+        // Hover Overlay (Description & Details)
+        VBox hoverOverlay = new VBox(10);
+        hoverOverlay.setAlignment(Pos.CENTER);
+        hoverOverlay.setPadding(new Insets(20));
+        hoverOverlay.setStyle("-fx-background-color: rgba(10, 10, 15, 0.9); -fx-background-radius: 12 12 0 0;");
+        hoverOverlay.setOpacity(0); // Hidden by default
+
+        Label overlayTitle = new Label("PRODUCT DETAILS");
+        overlayTitle.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold; -fx-font-size: 12; -fx-letter-spacing: 1;");
+        
+        Label overlayDesc = new Label(product.getDescription() != null ? product.getDescription() : "No description available.");
+         overlayDesc.setStyle("-fx-text-fill: white; -fx-font-size: 12; -fx-text-alignment: center;");
+         overlayDesc.setWrapText(true);
+         overlayDesc.setMaxWidth(220);
+ 
+         Label overlayCategory = new Label("Category: " + categoryNames.getOrDefault(product.getCategoryId(), "General"));
+         overlayCategory.setStyle("-fx-text-fill: #ffb800; -fx-font-size: 11; -fx-font-style: italic;");
+ 
+         hoverOverlay.getChildren().addAll(overlayTitle, overlayDesc, overlayCategory);
+        
         Rectangle clip = new Rectangle(260, 220);
         clip.setArcWidth(24);
         clip.setArcHeight(24);
         imgContainer.setClip(clip);
-        imgContainer.getChildren().add(img);
+        imgContainer.getChildren().addAll(img, hoverOverlay);
 
         // Trending Badge
         if (isTrending) {
@@ -136,7 +167,8 @@ public class ShopController {
         name.setWrapText(true);
         name.setPrefHeight(45);
         name.setAlignment(Pos.TOP_LEFT);
-        
+
+        // Price Row
         HBox priceRow = new HBox(10);
         priceRow.setAlignment(Pos.CENTER_LEFT);
         
@@ -199,8 +231,14 @@ public class ShopController {
         card.getChildren().addAll(imgContainer, content);
         
         // Hover effects
-        card.setOnMouseEntered(e -> card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: #ffb800; -fx-border-radius: 12; -fx-translate-y: -5; -fx-cursor: hand;"));
-        card.setOnMouseExited(e -> card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: rgba(255, 184, 0, 0.1); -fx-border-radius: 12; -fx-translate-y: 0;"));
+        card.setOnMouseEntered(e -> {
+            card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: #ffb800; -fx-border-radius: 12; -fx-translate-y: -5; -fx-cursor: hand;");
+            hoverOverlay.setOpacity(1);
+        });
+        card.setOnMouseExited(e -> {
+            card.setStyle("-fx-background-radius: 12; -fx-overflow: hidden; -fx-border-color: rgba(255, 184, 0, 0.1); -fx-border-radius: 12; -fx-translate-y: 0;");
+            hoverOverlay.setOpacity(0);
+        });
 
         return card;
     }

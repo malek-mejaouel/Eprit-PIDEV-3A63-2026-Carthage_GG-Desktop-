@@ -87,6 +87,17 @@
                 <Label text="STOCK" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="stockField" styleClass="text-field-dark" text="0" />
             </VBox>
+
+            <VBox spacing="5" VBox.vgrow="ALWAYS">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="DESCRIPTION" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button onAction="#handleGenerateAIDescription" style="-fx-background-color: transparent; -fx-text-fill: #ffb800; -fx-font-size: 10; -fx-padding: 0; -fx-cursor: hand;" text="✨ Generate with AI">
+                        <graphic><FontIcon iconLiteral="fas-magic" iconSize="10" iconColor="#ffb800"/></graphic>
+                    </Button>
+                </HBox>
+                <TextArea fx:id="descriptionField" styleClass="text-field-dark" prefHeight="100" wrapText="true" promptText="Enter product details..." />
+            </VBox>
             
             <VBox spacing="5">
                 <Label text="IMAGE" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />

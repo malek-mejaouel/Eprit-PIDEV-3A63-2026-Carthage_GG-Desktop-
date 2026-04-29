@@ -22,6 +22,7 @@ public class ProductDAO {
     private void ensureDiscountColumnExists() {
         try (Statement st = conn.createStatement()) {
             st.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_price DECIMAL(10,2) DEFAULT NULL");
+            st.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT DEFAULT NULL");
         } catch (SQLException e) {
             // Column might already exist or DB might not support IF NOT EXISTS in ALTER
         }
@@ -38,14 +39,15 @@ public class ProductDAO {
     }
 
     public void save(Product p) throws SQLException {
-        String sql = "INSERT INTO products (name, price, discount_price, category_id, stock, image) VALUES (?,?,?,?,?,?)";
+        String sql = "INSERT INTO products (name, price, discount_price, description, category_id, stock, image) VALUES (?,?,?,?,?,?,?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.getName());
             ps.setBigDecimal(2, p.getPrice());
             ps.setBigDecimal(3, p.getDiscountPrice());
-            ps.setInt(4, p.getCategoryId());
-            ps.setInt(5, p.getStock());
-            ps.setString(6, p.getImage());
+            ps.setString(4, p.getDescription());
+            ps.setInt(5, p.getCategoryId());
+            ps.setInt(6, p.getStock());
+            ps.setString(7, p.getImage());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) p.setId(rs.getInt(1));
@@ -54,15 +56,16 @@ public class ProductDAO {
     }
 
     public void update(Product p) throws SQLException {
-        String sql = "UPDATE products SET name=?, price=?, discount_price=?, category_id=?, stock=?, image=? WHERE id=?";
+        String sql = "UPDATE products SET name=?, price=?, discount_price=?, description=?, category_id=?, stock=?, image=? WHERE id=?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getName());
             ps.setBigDecimal(2, p.getPrice());
             ps.setBigDecimal(3, p.getDiscountPrice());
-            ps.setInt(4, p.getCategoryId());
-            ps.setInt(5, p.getStock());
-            ps.setString(6, p.getImage());
-            ps.setInt(7, p.getId());
+            ps.setString(4, p.getDescription());
+            ps.setInt(5, p.getCategoryId());
+            ps.setInt(6, p.getStock());
+            ps.setString(7, p.getImage());
+            ps.setInt(8, p.getId());
             ps.executeUpdate();
         }
     }
@@ -81,6 +84,7 @@ public class ProductDAO {
         p.setName(rs.getString("name"));
         p.setPrice(rs.getBigDecimal("price"));
         p.setDiscountPrice(rs.getBigDecimal("discount_price"));
+        p.setDescription(rs.getString("description"));
         p.setCategoryId(rs.getInt("category_id"));
         p.setStock(rs.getInt("stock"));
         p.setImage(rs.getString("image"));

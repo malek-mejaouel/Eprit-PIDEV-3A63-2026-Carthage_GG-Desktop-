@@ -4,9 +4,11 @@ import com.carthagegg.dao.CategoryDAO;
 import com.carthagegg.dao.ProductDAO;
 import com.carthagegg.models.Category;
 import com.carthagegg.models.Product;
+import com.carthagegg.utils.AIService;
 import com.carthagegg.utils.FileStorage;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -38,6 +40,7 @@ public class ProductsManagementController {
     @FXML private TextField nameField;
     @FXML private TextField priceField;
     @FXML private TextField discountPriceField;
+    @FXML private TextArea descriptionField;
     @FXML private ComboBox<Category> categoryComboBox;
     @FXML private TextField stockField;
     @FXML private TextField imageField;
@@ -164,6 +167,7 @@ public class ProductsManagementController {
         nameField.setText(p.getName());
         priceField.setText(p.getPrice().toString());
         discountPriceField.setText(p.getDiscountPrice() != null ? p.getDiscountPrice().toString() : "");
+        descriptionField.setText(p.getDescription() != null ? p.getDescription() : "");
         stockField.setText(String.valueOf(p.getStock()));
         imageField.setText(p.getImage());
         
@@ -214,6 +218,36 @@ public class ProductsManagementController {
     }
 
     @FXML
+    private void handleGenerateAIDescription() {
+        String name = nameField.getText().trim();
+        Category cat = categoryComboBox.getValue();
+
+        if (name.isEmpty() || cat == null) {
+            showError("Please enter a name and select a category first.");
+            return;
+        }
+
+        descriptionField.setPromptText("Generating description...");
+        descriptionField.setDisable(true);
+
+        AIService.generateProductDescription(name, cat.getName())
+                .thenAccept(desc -> {
+                    Platform.runLater(() -> {
+                        descriptionField.setText(desc);
+                        descriptionField.setDisable(false);
+                        hideError();
+                    });
+                })
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        descriptionField.setDisable(false);
+                        showError("AI Error: " + ex.getMessage());
+                    });
+                    return null;
+                });
+    }
+
+    @FXML
     private void handleSaveProduct() {
         if (!validateInput()) {
             return;
@@ -231,6 +265,7 @@ public class ProductsManagementController {
                 p.setDiscountPrice(new BigDecimal(discountText));
             }
 
+            p.setDescription(descriptionField.getText().trim());
             p.setCategoryId(categoryComboBox.getValue().getId());
             p.setStock(Integer.parseInt(stockField.getText().trim()));
             p.setImage(imageField.getText().trim());
@@ -331,6 +366,7 @@ public class ProductsManagementController {
         nameField.clear(); 
         priceField.setText("0.00"); 
         discountPriceField.clear();
+        descriptionField.clear();
         categoryComboBox.setValue(null); 
         stockField.setText("0"); 
         imageField.clear(); 
