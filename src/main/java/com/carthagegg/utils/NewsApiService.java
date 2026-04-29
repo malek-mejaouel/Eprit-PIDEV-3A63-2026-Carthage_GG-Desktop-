@@ -23,14 +23,14 @@ public class NewsApiService {
 
     private final HttpClient httpClient;
     private final Gson gson;
-    private final GroqAiService groqAiService;
+    private final GeminiService geminiService;
 
     public NewsApiService() {
         this.httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
         this.gson = new Gson();
-        this.groqAiService = new GroqAiService();
+        this.geminiService = new GeminiService();
     }
 
     public CompletableFuture<List<News>> fetchEsportsNewsAsync() {

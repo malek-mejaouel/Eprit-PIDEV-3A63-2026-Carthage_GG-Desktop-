@@ -2,7 +2,7 @@ package com.carthagegg.controllers.front;
 
 import com.carthagegg.dao.CommentDAO;
 import com.carthagegg.models.Comment;
-import com.carthagegg.utils.GroqAiService;
+import com.carthagegg.utils.GeminiService;
 import com.carthagegg.utils.GiphyService;
 import com.carthagegg.utils.MicrophoneService;
 import com.carthagegg.utils.SessionManager;
@@ -29,7 +29,7 @@ public class CommentController {
     private VBox listBox;
     private String selectedGifUrl = null;
     private TextField commentInput;
-    private GroqAiService groqAiService = new GroqAiService();
+    private GeminiService geminiService = new GeminiService();
 
     public CommentController() {
         try {
@@ -155,7 +155,7 @@ public class CommentController {
                 input.setPromptText("Transcribing audio...");
                 input.setDisable(true);
                 
-                groqAiService.transcribeAudioAsync(tempAudioFile).thenAccept(transcription -> {
+                geminiService.transcribeAudioAsync(tempAudioFile).thenAccept(transcription -> {
                     Platform.runLater(() -> {
                         input.setText((input.getText() + " " + transcription).trim());
                         input.setDisable(false);
@@ -224,7 +224,7 @@ public class CommentController {
             errorLabel.setVisible(false);
             errorLabel.setManaged(false);
 
-            groqAiService.isContentSafeAsync(content).thenAccept(isSafe -> {
+            geminiService.isContentSafeAsync(content).thenAccept(isSafe -> {
                 Platform.runLater(() -> {
                     if (!isSafe) {
                         errorLabel.setText("Your comment was blocked by AI for containing hateful or racist content.");

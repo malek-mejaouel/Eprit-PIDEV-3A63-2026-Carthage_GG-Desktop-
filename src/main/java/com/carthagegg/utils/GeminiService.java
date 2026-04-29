@@ -14,7 +14,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 
-public class GroqAiService {
+public class GeminiService {
     private static final String API_KEY = "gsk_" + "h60udlmYOj6hy92yHlSHWGdyb3FYewM8rcdbsW9KUFGziyKOUIzJ";
     private static final String MODEL = "llama-3.3-70b-versatile"; 
     private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -22,7 +22,7 @@ public class GroqAiService {
     private final HttpClient httpClient;
     private final Gson gson;
 
-    public GroqAiService() {
+    public GeminiService() {
         this.httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
