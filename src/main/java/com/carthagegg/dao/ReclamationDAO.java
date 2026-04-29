@@ -13,12 +13,13 @@ public class ReclamationDAO {
     }
 
     public void save(Reclamation rec) throws SQLException {
-        String sql = "INSERT INTO reclamation (user_id, title, description, status) VALUES (?, ?, ?, 'pending')";
+        String sql = "INSERT INTO reclamation (user_id, title, description, status, priority) VALUES (?, ?, ?, 'pending', ?)";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rec.getUserId());
             ps.setString(2, rec.getTitle());
             ps.setString(3, rec.getDescription());
+            ps.setString(4, rec.getPriority() != null ? rec.getPriority() : "normal");
             ps.executeUpdate();
             
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -81,6 +82,7 @@ public class ReclamationDAO {
         r.setTitle(rs.getString("title"));
         r.setDescription(rs.getString("description"));
         r.setStatus(rs.getString("status"));
+        r.setPriority(rs.getString("priority"));
         
         Timestamp created = rs.getTimestamp("created_at");
         if (created != null) r.setCreatedAt(created.toLocalDateTime());
