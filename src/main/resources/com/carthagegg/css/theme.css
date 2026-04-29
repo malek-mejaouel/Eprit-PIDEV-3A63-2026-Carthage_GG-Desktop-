@@ -355,16 +355,24 @@
     -fx-text-fill: #FFC107;
 }
 
+.btn-icon-gold .ikonli-font-icon {
+    -fx-icon-color: #FFC107;
+}
+
 .btn-icon-gold:hover {
-    -fx-background-color: rgba(255, 193, 7, 0.1);
+    -fx-background-color: rgba(255, 193, 7, 0.2);
 }
 
 .btn-icon-danger {
     -fx-text-fill: #FF4444;
 }
 
+.btn-icon-danger .ikonli-font-icon {
+    -fx-icon-color: #FF4444;
+}
+
 .btn-icon-danger:hover {
-    -fx-background-color: rgba(255, 68, 68, 0.1);
+    -fx-background-color: rgba(255, 68, 68, 0.2);
 }
 
 .table-cell {

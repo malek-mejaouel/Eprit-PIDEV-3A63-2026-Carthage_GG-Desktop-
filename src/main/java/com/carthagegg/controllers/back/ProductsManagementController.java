@@ -146,12 +146,12 @@ public class ProductsManagementController {
                 
                 editBtn.setGraphic(new FontIcon("fas-edit"));
                 editBtn.getStyleClass().addAll("btn-icon", "btn-icon-gold");
-                editBtn.setStyle("-fx-font-size: 16px;"); // Increase icon size
+                editBtn.setStyle("-fx-font-size: 18px;"); // Increase icon size
                 Tooltip.install(editBtn, new Tooltip("Edit Product"));
                 
                 deleteBtn.setGraphic(new FontIcon("fas-trash"));
                 deleteBtn.getStyleClass().addAll("btn-icon", "btn-icon-danger");
-                deleteBtn.setStyle("-fx-font-size: 16px;"); // Increase icon size
+                deleteBtn.setStyle("-fx-font-size: 18px;"); // Increase icon size
                 Tooltip.install(deleteBtn, new Tooltip("Delete Product"));
                 
                 editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
