@@ -2,6 +2,7 @@ package com.carthagegg.controllers.auth;
 
 import com.carthagegg.dao.UserDAO;
 import com.carthagegg.models.User;
+import com.carthagegg.utils.EmailService;
 import com.carthagegg.utils.SceneNavigator;
 import com.google.gson.Gson;
 import javafx.fxml.FXML;
@@ -118,6 +119,9 @@ public class SignUpController {
             user.setRoles(gson.toJson(roles));
 
             userDAO.save(user);
+
+            // Send welcome email via n8n
+            EmailService.sendWelcomeEmail(user.getEmail(), user.getFirstName() + " " + user.getLastName());
 
             showAlert("Success", "Account created successfully!", Alert.AlertType.INFORMATION);
             SceneNavigator.navigateTo("/com/carthagegg/fxml/auth/SignIn.fxml");
