@@ -11,9 +11,21 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 
 public class OrdersManagementController {
@@ -75,44 +87,95 @@ public class OrdersManagementController {
         }
     }
 
-    @FXML private void handleExportCSV() {
+    @FXML private void handleExportPDF() {
         if (stripeTable.getItems().isEmpty()) {
             showAlert("No Data", "There are no Stripe sessions to export.", Alert.AlertType.WARNING);
             return;
         }
 
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save CSV File");
-        fileChooser.setInitialFileName("stripe_orders.csv");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        fileChooser.setTitle("Save PDF File");
+        fileChooser.setInitialFileName("carthagegg_orders.pdf");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
         
         File file = fileChooser.showSaveDialog(SceneNavigator.getPrimaryStage());
         if (file != null) {
-            try (PrintWriter writer = new PrintWriter(file)) {
-                // Header
-                writer.println("Session ID,Customer,Amount,Status,Receipt/URL");
-                
-                // Data
+            try {
+                PdfWriter writer = new PdfWriter(file);
+                PdfDocument pdf = new PdfDocument(writer);
+                Document document = new Document(pdf, PageSize.A4);
+                document.setMargins(20, 20, 20, 20);
+
+                // Add Logo
+                try {
+                    var logoResource = getClass().getResource("/images/zz.png");
+                    if (logoResource != null) {
+                        String logoPath = logoResource.toExternalForm();
+                        Image logo = new Image(ImageDataFactory.create(logoPath));
+                        logo.setWidth(100);
+                        document.add(logo);
+                    } else {
+                        System.err.println("Logo resource not found: /images/zz.png");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Could not load logo: " + e.getMessage());
+                }
+
+                // Add Header
+                Paragraph header = new Paragraph("CarthageGG - Orders Report")
+                        .setFontSize(24)
+                        .setBold()
+                        .setFontColor(ColorConstants.BLACK)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setMarginBottom(20);
+                document.add(header);
+
+                // Add Table
+                float[] columnWidths = {2, 3, 1, 1, 3};
+                Table table = new Table(UnitValue.createPercentArray(columnWidths));
+                table.setWidth(UnitValue.createPercentValue(100));
+
+                // Table Header
+                String[] headers = {"Session ID", "Customer", "Amount", "Status", "Receipt/URL"};
+                for (String h : headers) {
+                    table.addHeaderCell(new Cell().add(new Paragraph(h != null ? h : "").setBold())
+                            .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                            .setTextAlignment(TextAlignment.CENTER));
+                }
+
+                // Table Data
                 for (Session session : stripeTable.getItems()) {
-                    String customer = (session.getCustomerDetails() != null && session.getCustomerDetails().getEmail() != null) 
-                            ? session.getCustomerDetails().getEmail() 
-                            : (session.getCustomer() != null ? session.getCustomer() : "Guest");
+                    String customer = "Guest";
+                    if (session.getCustomerDetails() != null && session.getCustomerDetails().getEmail() != null) {
+                        customer = session.getCustomerDetails().getEmail();
+                    } else if (session.getCustomer() != null) {
+                        customer = session.getCustomer();
+                    }
                     
                     Long amountTotal = session.getAmountTotal();
-                    String amount = amountTotal != null ? String.format("%.2f", amountTotal / 100.0) : "0.00";
+                    String amount = amountTotal != null ? String.format("%.2f USD", amountTotal / 100.0) : "0.00 USD";
                     String status = session.getPaymentStatus() != null ? session.getPaymentStatus().toUpperCase() : "UNKNOWN";
+                    String sessionId = session.getId() != null ? session.getId() : "N/A";
+                    String sessionUrl = session.getUrl() != null ? session.getUrl() : "N/A";
                     
-                    writer.println(String.format("%s,%s,%s,%s,%s",
-                            session.getId(),
-                            customer,
-                            amount,
-                            status,
-                            session.getUrl()
-                    ));
+                    table.addCell(new Cell().add(new Paragraph(sessionId).setFontSize(8)));
+                    table.addCell(new Cell().add(new Paragraph(customer).setFontSize(10)));
+                    table.addCell(new Cell().add(new Paragraph(amount).setFontSize(10).setTextAlignment(TextAlignment.RIGHT)));
+                    table.addCell(new Cell().add(new Paragraph(status).setFontSize(10).setTextAlignment(TextAlignment.CENTER)));
+                    table.addCell(new Cell().add(new Paragraph(sessionUrl).setFontSize(8).setFontColor(ColorConstants.BLUE)));
                 }
-                
+
+                document.add(table);
+
+                // Footer
+                document.add(new Paragraph("\nGenerated on: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                        .setFontSize(10)
+                        .setItalic()
+                        .setTextAlignment(TextAlignment.RIGHT));
+
+                document.close();
                 showAlert("Success", "Orders exported successfully to " + file.getName(), Alert.AlertType.INFORMATION);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 showAlert("Error", "Could not export orders: " + e.getMessage(), Alert.AlertType.ERROR);
             }

@@ -12,6 +12,9 @@ module com.carthagegg.carthagegg {
     requires com.google.gson;
     requires stripe.java;
     requires java.prefs;
+    requires kernel;
+    requires io;
+    requires layout;
     requires java.desktop;
     requires java.net.http;
     requires jdk.httpserver;

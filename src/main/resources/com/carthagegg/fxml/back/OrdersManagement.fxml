@@ -31,8 +31,8 @@
                     <graphic><FontIcon iconLiteral="fas-sync" iconSize="14"/></graphic>
                 </Button>
                 <Region HBox.hgrow="ALWAYS" />
-                <Button text="EXPORT TO CSV" onAction="#handleExportCSV" styleClass="btn-gold" prefHeight="40">
-                    <graphic><FontIcon iconLiteral="fas-file-csv" iconColor="#0a0a0f" iconSize="14"/></graphic>
+                <Button text="EXPORT TO PDF" onAction="#handleExportPDF" styleClass="btn-gold" prefHeight="40">
+                    <graphic><FontIcon iconLiteral="fas-file-pdf" iconColor="#0a0a0f" iconSize="14"/></graphic>
                 </Button>
             </HBox>
             <TableView fx:id="stripeTable" VBox.vgrow="ALWAYS" styleClass="table-view">
