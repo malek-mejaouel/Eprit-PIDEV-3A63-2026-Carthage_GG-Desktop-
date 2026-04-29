@@ -28,7 +28,10 @@
                     <Label text="Explore top esports teams in the region" style="-fx-text-fill: #949499;" />
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
-                <TextField fx:id="searchField" promptText="Search teams..." styleClass="text-field-dark" prefWidth="300" />
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField" promptText="Search teams..." styleClass="text-field-dark" prefWidth="300" />
+                    <ComboBox fx:id="sortComboBox" promptText="Sort by ID" styleClass="text-field-dark" prefWidth="140" />
+                </HBox>
             </HBox>
             
             <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">

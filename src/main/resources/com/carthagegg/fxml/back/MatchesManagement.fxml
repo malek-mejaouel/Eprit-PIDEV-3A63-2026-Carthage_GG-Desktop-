@@ -30,6 +30,11 @@
             <padding>
                 <Insets top="20" left="20" right="20" bottom="20" />
             </padding>
+
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="searchField" promptText="Search matches..." styleClass="text-field-dark" prefWidth="400" />
+                <ComboBox fx:id="sortComboBox" promptText="Sort by ID" styleClass="text-field-dark" prefWidth="140" />
+            </HBox>
             
             <TableView fx:id="matchesTable" VBox.vgrow="ALWAYS" styleClass="table-view">
                 <columns>
@@ -56,21 +61,25 @@
             <VBox spacing="5">
                 <Label text="GAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <ComboBox fx:id="gameComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                <Label fx:id="gameErrorLabel" styleClass="error-label" />
             </VBox>
             
             <VBox spacing="5">
                 <Label text="TOURNAMENT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <ComboBox fx:id="tournamentComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                <Label fx:id="tournamentErrorLabel" styleClass="error-label" />
             </VBox>
             
             <HBox spacing="10">
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="TEAM A" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <ComboBox fx:id="teamAComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                    <Label fx:id="teamAErrorLabel" styleClass="error-label" />
                 </VBox>
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="TEAM B" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <ComboBox fx:id="teamBComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                    <Label fx:id="teamBErrorLabel" styleClass="error-label" />
                 </VBox>
             </HBox>
             
@@ -78,16 +87,19 @@
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="SCORE A" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="scoreAField" styleClass="text-field-dark" text="0" />
+                    <Label fx:id="scoreAErrorLabel" styleClass="error-label" />
                 </VBox>
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="SCORE B" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="scoreBField" styleClass="text-field-dark" text="0" />
+                    <Label fx:id="scoreBErrorLabel" styleClass="error-label" />
                 </VBox>
             </HBox>
             
             <VBox spacing="5">
                 <Label text="MATCH DATE/TIME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <DatePicker fx:id="datePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+                <Label fx:id="dateErrorLabel" styleClass="error-label" />
             </VBox>
             
             <HBox spacing="10">

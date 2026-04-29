@@ -16,7 +16,9 @@
 
 .card {
     -fx-background-color: #141416;
+    -fx-background-radius: 12;
     -fx-border-color: #232326;
+    -fx-border-width: 1;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 4);
@@ -127,9 +129,95 @@
     -fx-border-color: #FFC107;
 }
 
+.text-area.text-field-dark .content {
+    -fx-background-color: #141416;
+    -fx-background-radius: 8;
+}
+
+.text-area.text-field-dark {
+    -fx-text-fill: #FFFFFF;
+    -fx-prompt-text-fill: #666666;
+}
+
+.combo-box.text-field-dark,
+.date-picker.text-field-dark {
+    -fx-background-color: #141416;
+    -fx-border-color: #232326;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.combo-box.text-field-dark .list-cell,
+.date-picker.text-field-dark .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #FFFFFF;
+}
+
+.combo-box.text-field-dark .arrow-button,
+.date-picker.text-field-dark .arrow-button {
+    -fx-background-color: #232326;
+    -fx-background-radius: 0 8 8 0;
+}
+
+.combo-box.text-field-dark .arrow,
+.date-picker.text-field-dark .arrow {
+    -fx-background-color: #FFC107;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #141416;
+    -fx-border-color: #232326;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #141416;
+    -fx-text-fill: #FFFFFF;
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #232326;
+    -fx-text-fill: #FFC107;
+}
+
+.date-picker-popup {
+    -fx-background-color: #141416;
+}
+
+.date-picker-popup .month-year-pane,
+.date-picker-popup .calendar-grid {
+    -fx-background-color: #141416;
+}
+
+.date-picker-popup .label,
+.date-picker-popup .day-name-cell {
+    -fx-text-fill: #FFFFFF;
+}
+
+.date-picker-popup .day-cell {
+    -fx-background-color: #141416;
+    -fx-text-fill: #FFFFFF;
+}
+
+.date-picker-popup .day-cell:hover,
+.date-picker-popup .selected {
+    -fx-background-color: #FFC107;
+    -fx-text-fill: #0a0a0b;
+}
+
+.error-label {
+    -fx-text-fill: #FF4444;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+
 .scroll-pane {
     -fx-background-color: transparent;
     -fx-background: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
 }
 
 .scroll-bar:vertical, .scroll-bar:horizontal {
@@ -176,6 +264,22 @@
 
 .table-row-cell {
     -fx-background-color: #141416;
+    -fx-border-color: #232326;
+    -fx-border-radius: 3;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #FFC107;
+}
+
+.combo-box {
+    -fx-background-color: #141416;
+    -fx-border-color: #232326;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.combo-box .label {
     -fx-text-fill: white;
     -fx-cell-size: 50;
     -fx-border-color: #232326;
