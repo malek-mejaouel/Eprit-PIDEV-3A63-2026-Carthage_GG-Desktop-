@@ -37,6 +37,7 @@ public class ProductsManagementController {
     @FXML private Label formTitle;
     @FXML private TextField nameField;
     @FXML private TextField priceField;
+    @FXML private TextField discountPriceField;
     @FXML private ComboBox<Category> categoryComboBox;
     @FXML private TextField stockField;
     @FXML private TextField imageField;
@@ -84,7 +85,13 @@ public class ProductsManagementController {
     private void setupTable() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        
+        colPrice.setCellValueFactory(cellData -> {
+            Product p = cellData.getValue();
+            // Always return the effective price for display/sorting in this column
+            return new javafx.beans.property.SimpleObjectProperty<>(p.getEffectivePrice());
+        });
+
         colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
         
         colCategory.setCellValueFactory(cellData -> {
@@ -156,6 +163,7 @@ public class ProductsManagementController {
         hideError();
         nameField.setText(p.getName());
         priceField.setText(p.getPrice().toString());
+        discountPriceField.setText(p.getDiscountPrice() != null ? p.getDiscountPrice().toString() : "");
         stockField.setText(String.valueOf(p.getStock()));
         imageField.setText(p.getImage());
         
@@ -215,6 +223,14 @@ public class ProductsManagementController {
             Product p = (selectedProduct == null) ? new Product() : selectedProduct;
             p.setName(nameField.getText().trim());
             p.setPrice(new BigDecimal(priceField.getText().trim()));
+            
+            String discountText = discountPriceField.getText().trim();
+            if (discountText.isEmpty()) {
+                p.setDiscountPrice(null);
+            } else {
+                p.setDiscountPrice(new BigDecimal(discountText));
+            }
+
             p.setCategoryId(categoryComboBox.getValue().getId());
             p.setStock(Integer.parseInt(stockField.getText().trim()));
             p.setImage(imageField.getText().trim());
@@ -253,6 +269,21 @@ public class ProductsManagementController {
                 }
             } catch (NumberFormatException e) {
                 errorMessage.append("• Price must be a valid number.\n");
+            }
+        }
+
+        String discountText = discountPriceField.getText().trim();
+        if (!discountText.isEmpty()) {
+            try {
+                BigDecimal discountPrice = new BigDecimal(discountText);
+                BigDecimal originalPrice = new BigDecimal(priceField.getText().trim());
+                if (discountPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                    errorMessage.append("• Sale price must be greater than 0.\n");
+                } else if (discountPrice.compareTo(originalPrice) >= 0) {
+                    errorMessage.append("• Sale price must be less than the original price.\n");
+                }
+            } catch (NumberFormatException e) {
+                errorMessage.append("• Sale price must be a valid number.\n");
             }
         }
 
@@ -296,7 +327,14 @@ public class ProductsManagementController {
     private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }
     @FXML private void handleHideForm() { hideForm(); }
     private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
-    private void clearForm() { nameField.clear(); priceField.setText("0.00"); categoryComboBox.setValue(null); stockField.setText("0"); imageField.clear(); }
+    private void clearForm() { 
+        nameField.clear(); 
+        priceField.setText("0.00"); 
+        discountPriceField.clear();
+        categoryComboBox.setValue(null); 
+        stockField.setText("0"); 
+        imageField.clear(); 
+    }
 
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);

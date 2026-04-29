@@ -21,6 +21,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.math.BigDecimal;
@@ -108,11 +109,33 @@ public class CartController {
 
         // Product Info
         VBox info = new VBox(5);
+        info.setMinWidth(250); // Ensure enough space for name and prices
         Label name = new Label(product.getName());
         name.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16;");
-        Label price = new Label(product.getPrice() + " USD");
-        price.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold;");
-        info.getChildren().addAll(name, price);
+        
+        HBox priceContainer = new HBox(12);
+        priceContainer.setAlignment(Pos.CENTER_LEFT);
+        
+        if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            Text oldPrice = new Text(product.getPrice() + " USD");
+            oldPrice.setFill(Color.web("#949499"));
+            oldPrice.setStyle("-fx-font-size: 13;");
+            oldPrice.setStrikethrough(true);
+            oldPrice.setOpacity(0.6);
+            
+            Label price = new Label(product.getDiscountPrice() + " USD");
+            price.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold; -fx-font-size: 18;");
+            price.setMinWidth(Region.USE_PREF_SIZE); // Prevent truncation
+            
+            priceContainer.getChildren().addAll(oldPrice, price);
+        } else {
+            Label price = new Label(product.getPrice() + " USD");
+            price.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold; -fx-font-size: 18;");
+            price.setMinWidth(Region.USE_PREF_SIZE); // Prevent truncation
+            priceContainer.getChildren().add(price);
+        }
+        
+        info.getChildren().addAll(name, priceContainer);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -120,21 +143,28 @@ public class CartController {
         // Quantity Controls
         HBox qtyControls = new HBox(15);
         qtyControls.setAlignment(Pos.CENTER);
+        qtyControls.setStyle("-fx-background-color: #0d0d15; -fx-background-radius: 20; -fx-padding: 5 15;");
         
         Button minusBtn = new Button();
-        minusBtn.setGraphic(new FontIcon("fas-minus"));
-        minusBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #71717a;");
+        FontIcon minusIcon = new FontIcon("fas-minus");
+        minusIcon.setIconSize(12);
+        minusIcon.setIconColor(javafx.scene.paint.Color.web("#ffb800"));
+        minusBtn.setGraphic(minusIcon);
+        minusBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
         minusBtn.setOnAction(e -> {
             CartManager.updateQuantity(product, quantity - 1);
             refreshCart();
         });
 
         Label qtyLabel = new Label(String.valueOf(quantity));
-        qtyLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16;");
+        qtyLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14;");
 
         Button plusBtn = new Button();
-        plusBtn.setGraphic(new FontIcon("fas-plus"));
-        plusBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #71717a;");
+        FontIcon plusIcon = new FontIcon("fas-plus");
+        plusIcon.setIconSize(12);
+        plusIcon.setIconColor(javafx.scene.paint.Color.web("#ffb800"));
+        plusBtn.setGraphic(plusIcon);
+        plusBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
         plusBtn.setOnAction(e -> {
             CartManager.updateQuantity(product, quantity + 1);
             refreshCart();

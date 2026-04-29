@@ -19,6 +19,8 @@ import javafx.geometry.Pos;
 
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
+import javafx.scene.paint.Color;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -139,18 +141,23 @@ public class ShopController {
         priceRow.setAlignment(Pos.CENTER_LEFT);
         
         VBox priceContainer = new VBox(2);
+        priceContainer.setMinWidth(100); // Prevent truncation
         if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
-            Label oldPrice = new Label(product.getPrice() + " USD");
-            oldPrice.setStyle("-fx-text-fill: #71717a; -fx-font-size: 12; -fx-strikethrough: true;");
+            Text oldPrice = new Text(product.getPrice() + " USD");
+            oldPrice.setFill(Color.web("#71717a"));
+            oldPrice.setStyle("-fx-font-size: 12;");
+            oldPrice.setStrikethrough(true);
             
             Label price = new Label(product.getDiscountPrice() + " USD");
             price.getStyleClass().add("neon-label");
             price.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+            price.setMinWidth(Region.USE_PREF_SIZE);
             priceContainer.getChildren().addAll(oldPrice, price);
         } else {
             Label price = new Label(product.getPrice() + " USD");
             price.getStyleClass().add("neon-label");
             price.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+            price.setMinWidth(Region.USE_PREF_SIZE);
             priceContainer.getChildren().add(price);
         }
         

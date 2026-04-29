@@ -72,6 +72,11 @@
                 <Label text="PRICE" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="priceField" styleClass="text-field-dark" text="0.00" />
             </VBox>
+
+            <VBox spacing="5">
+                <Label text="SALE PRICE (OPTIONAL)" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextField fx:id="discountPriceField" styleClass="text-field-dark" promptText="Leave empty if no sale" />
+            </VBox>
             
             <VBox spacing="5">
                 <Label text="CATEGORY" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
