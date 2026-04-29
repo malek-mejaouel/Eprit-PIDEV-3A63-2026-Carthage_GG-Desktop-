@@ -30,6 +30,8 @@ public class VoiceService {
                 String script = 
                     "Add-Type -AssemblyName System.speech; " +
                     "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
+                    "$enVoice = $synth.GetInstalledVoices() | Where-Object { $_.VoiceInfo.Culture -like 'en*' } | Select-Object -First 1; " +
+                    "if ($null -ne $enVoice) { $synth.SelectVoice($enVoice.VoiceInfo.Name) }; " +
                     "$text = Get-Content -Path '" + tempFile.getAbsolutePath() + "' -Encoding UTF8 -Raw; " +
                     "$synth.Speak($text);";
 
