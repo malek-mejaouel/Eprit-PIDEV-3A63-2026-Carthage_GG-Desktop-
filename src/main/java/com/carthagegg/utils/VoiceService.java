@@ -1,6 +1,9 @@
 package com.carthagegg.utils;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class VoiceService {
 
@@ -10,26 +13,43 @@ public class VoiceService {
      * Speaks the given text using Windows PowerShell SpeechSynthesizer.
      * Stops any currently playing speech before starting.
      */
-    public static void speak(String text) {
+    public static void speak(String text, Runnable onComplete) {
         stopSpeaking();
-        if (text == null || text.trim().isEmpty()) return;
+        if (text == null || text.trim().isEmpty()) {
+            if (onComplete != null) onComplete.run();
+            return;
+        }
 
         new Thread(() -> {
+            File tempFile = null;
             try {
-                // Escape characters for PowerShell string
-                String safeText = text.replace("'", "''").replace("\"", " ");
-                // Remove newlines which might break the powershell command
-                safeText = safeText.replace("\n", " ").replace("\r", " ");
+                // Write text to a temporary file to avoid command-line length limits and escaping issues
+                tempFile = File.createTempFile("tts_", ".txt");
+                Files.writeString(tempFile.toPath(), text, StandardCharsets.UTF_8);
 
-                String cmd = "Add-Type -AssemblyName System.speech; " +
-                             "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
-                             "$synth.Speak('" + safeText + "')";
+                String script = 
+                    "Add-Type -AssemblyName System.speech; " +
+                    "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
+                    "$text = Get-Content -Path '" + tempFile.getAbsolutePath() + "' -Encoding UTF8 -Raw; " +
+                    "$synth.Speak($text);";
 
-                ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", cmd);
+                // Encode the powershell command in Base64 to avoid ANY quoting issues in the shell
+                String base64Cmd = Base64.getEncoder().encodeToString(script.getBytes(StandardCharsets.UTF_16LE));
+
+                ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "Bypass", "-NoProfile", "-EncodedCommand", base64Cmd);
                 ttsProcess = pb.start();
                 ttsProcess.waitFor();
+                
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                // Cleanup temp file after speaking
+                if (tempFile != null && tempFile.exists()) {
+                    tempFile.delete();
+                }
+                if (onComplete != null) {
+                    onComplete.run();
+                }
             }
         }).start();
     }

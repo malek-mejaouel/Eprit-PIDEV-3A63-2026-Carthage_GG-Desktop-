@@ -176,7 +176,15 @@ public class NewsDetailController {
             readAloudBtn.setText("Stop Reading");
 
             String textToRead = selectedNews.getTitle() + ". " + contentText.getText();
-            VoiceService.speak(textToRead);
+            VoiceService.speak(textToRead, () -> {
+                Platform.runLater(() -> {
+                    if (isReading) {
+                        isReading = false;
+                        icon.setIconLiteral("fas-volume-up");
+                        readAloudBtn.setText("Read Aloud");
+                    }
+                });
+            });
         }
     }
 
