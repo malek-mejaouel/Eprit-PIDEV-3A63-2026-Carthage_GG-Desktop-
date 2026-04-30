@@ -15,6 +15,7 @@ public class Match {
     private String teamBName;
     private String tournamentName;
     private String status;
+    private boolean isRivalry;
 
     public Match() {}
 
@@ -43,4 +44,7 @@ public class Match {
     public void setTournamentName(String tournamentName) { this.tournamentName = tournamentName; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public boolean isRivalry() { return isRivalry; }
+    public void setRivalry(boolean rivalry) { isRivalry = rivalry; }
 }
