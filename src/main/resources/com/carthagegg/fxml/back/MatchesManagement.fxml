@@ -45,6 +45,7 @@
                     <TableColumn fx:id="colTeamB" text="Team B" prefWidth="150" />
                     <TableColumn fx:id="colGame" text="Game" prefWidth="150" />
                     <TableColumn fx:id="colTournament" text="Tournament" prefWidth="200" />
+                    <TableColumn fx:id="colRivalry" text="Rivalry" prefWidth="80" />
                     <TableColumn fx:id="colActions" text="Actions" prefWidth="180" />
                 </columns>
             </TableView>
@@ -104,8 +105,17 @@
             
             <HBox spacing="10">
                 <Button text="CANCEL" onAction="#handleHideForm" maxWidth="Infinity" HBox.hgrow="ALWAYS" style="-fx-background-color: #1e1e2e; -fx-text-fill: white;" prefHeight="40" />
-                <Button text="SAVE" onAction="#handleSaveMatch" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
+                <Button fx:id="saveButton" text="SAVE" onAction="#handleSaveMatch" maxWidth="Infinity" HBox.hgrow="ALWAYS" styleClass="btn-primary" prefHeight="40" />
             </HBox>
+            
+            <Separator style="-fx-padding: 10 0;" />
+            
+            <VBox spacing="10" alignment="CENTER">
+                <Label text="AI PREDICTION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <Button text="PREDICT MATCH OUTCOME" onAction="#handlePredictOutcome" maxWidth="Infinity" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;" prefHeight="45">
+                    <graphic><FontIcon iconLiteral="fas-robot" iconColor="white" iconSize="14"/></graphic>
+                </Button>
+            </VBox>
         </VBox>
     </right>
     
