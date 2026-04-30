@@ -411,5 +411,6 @@ public class ProductsManagementController {
     }
 
     @FXML private void handleNavOrders() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/OrdersManagement.fxml"); }
+    @FXML private void handleNavCoupons() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/CouponsManagement.fxml"); }
     @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml"); }
 }

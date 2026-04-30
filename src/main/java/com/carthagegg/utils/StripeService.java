@@ -41,8 +41,8 @@ public class StripeService {
     public static String createCheckoutSession(Map<Product, Integer> items, double discountPercentage) throws Exception {
         SessionCreateParams.Builder builder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("https://example.com/success") 
-                .setCancelUrl("https://example.com/cancel");
+                .setSuccessUrl("https://checkout.stripe.com/test/success") 
+                .setCancelUrl("https://checkout.stripe.com/test/cancel");
 
         for (Map.Entry<Product, Integer> entry : items.entrySet()) {
             Product product = entry.getKey();

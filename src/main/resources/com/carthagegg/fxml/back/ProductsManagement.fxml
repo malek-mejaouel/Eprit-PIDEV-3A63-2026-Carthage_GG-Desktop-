@@ -19,6 +19,9 @@
             </Button>
             <Label text="Shop Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
             <Region HBox.hgrow="ALWAYS" />
+            <Button text="MANAGE COUPONS" onAction="#handleNavCoupons" styleClass="btn-gold" prefHeight="40">
+                <graphic><FontIcon iconLiteral="fas-ticket-alt" iconColor="#0a0a0f" iconSize="14"/></graphic>
+            </Button>
             <Button text="VIEW ORDERS" onAction="#handleNavOrders" styleClass="btn-gold" prefHeight="40">
                 <graphic><FontIcon iconLiteral="fas-shopping-bag" iconColor="#0a0a0f" iconSize="14"/></graphic>
             </Button>

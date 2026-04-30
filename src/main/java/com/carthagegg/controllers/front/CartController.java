@@ -294,9 +294,12 @@ public class CartController {
             // --------------------------
 
             // 1. Update stock in database
+            BigDecimal subtotal = BigDecimal.ZERO;
             for (Map.Entry<Product, Integer> entry : items.entrySet()) {
                 Product product = entry.getKey();
                 int quantity = entry.getValue();
+                
+                subtotal = subtotal.add(product.getEffectivePrice().multiply(new BigDecimal(quantity)));
                 
                 product.setStock(product.getStock() - quantity);
                 productDAO.update(product);
@@ -315,9 +318,18 @@ public class CartController {
                 orderDAO.save(order);
             }
 
+            // --- Prepare Data for Receipt ---
+            double discountPct = activeCoupon != null ? activeCoupon.getDiscountPercentage() : 0.0;
+            BigDecimal discount = subtotal.multiply(new BigDecimal(discountPct))
+                    .divide(new BigDecimal(100), 2, java.math.RoundingMode.HALF_UP);
+            BigDecimal total = subtotal.subtract(discount);
+            
+            ReceiptController.setOrderData(new java.util.HashMap<>(items), subtotal, discount, total);
+            // --------------------------------
+
             CartManager.clear();
             refreshCart();
-            showAlert("Order Placed", "Your order has been placed successfully!", Alert.AlertType.INFORMATION);
+            SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Receipt.fxml");
             
         } catch (SQLException e) {
             e.printStackTrace();

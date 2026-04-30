@@ -88,6 +88,7 @@ public class StreamsManagementController {
         colPlatform.setCellValueFactory(new PropertyValueFactory<>("platform"));
         colChannel.setCellValueFactory(new PropertyValueFactory<>("channelName"));
         
+        colLive.setCellValueFactory(new PropertyValueFactory<>("live"));
         colLive.setCellFactory(param -> new TableCell<Stream, Boolean>() {
             @Override
             protected void updateItem(Boolean item, boolean empty) {
@@ -103,6 +104,7 @@ public class StreamsManagementController {
             }
         });
 
+        colViewers.setCellValueFactory(new PropertyValueFactory<>("viewerCount"));
         colViewers.setCellFactory(param -> new TableCell<Stream, Integer>() {
             @Override
             protected void updateItem(Integer item, boolean empty) {

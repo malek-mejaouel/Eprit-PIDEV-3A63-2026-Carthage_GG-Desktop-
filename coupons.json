@@ -1,12 +1,12 @@
 [
   {
-    "code": "WELCOME10",
-    "discountPercentage": 10.0,
-    "expiryDate": "2026-05-29"
-  },
-  {
     "code": "BESTAPP20",
     "discountPercentage": 20.0,
     "expiryDate": "2026-10-29"
+  },
+  {
+    "code": "WELCOME10",
+    "discountPercentage": 10.0,
+    "expiryDate": "2026-04-09"
   }
 ]

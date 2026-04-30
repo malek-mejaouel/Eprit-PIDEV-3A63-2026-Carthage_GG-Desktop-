@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.ReceiptController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <StackPane>
+            <VBox alignment="CENTER" spacing="30" maxWidth="600" styleClass="card">
+                <padding>
+                    <Insets top="50" bottom="50" left="40" right="40" />
+                </padding>
+                
+                <VBox alignment="CENTER" spacing="10">
+                    <StackPane style="-fx-background-color: rgba(0, 200, 83, 0.1); -fx-background-radius: 50; -fx-min-width: 80; -fx-min-height: 80; -fx-max-width: 80; -fx-max-height: 80;">
+                        <FontIcon iconLiteral="fas-check-circle" iconSize="40" iconColor="#00C853"/>
+                    </StackPane>
+                    <Label text="Payment Successful!" style="-fx-text-fill: #00C853; -fx-font-weight: bold; -fx-font-size: 28;" />
+                    <Label text="Thank you for your purchase at CarthageGG" style="-fx-text-fill: #949499; -fx-font-size: 16;" />
+                </VBox>
+                
+                <Separator style="-fx-opacity: 0.1;" />
+                
+                <VBox spacing="20" VBox.vgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Order Receipt" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="orderDateLabel" text="April 30, 2026" style="-fx-text-fill: #949499;" />
+                    </HBox>
+                    
+                    <ScrollPane fitToWidth="true" styleClass="scroll-pane" prefHeight="250" style="-fx-background-color: transparent;">
+                        <VBox fx:id="receiptItemsContainer" spacing="15" />
+                    </ScrollPane>
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <VBox spacing="10">
+                        <HBox>
+                            <Label text="Subtotal" style="-fx-text-fill: #949499;" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="subtotalLabel" text="0.00 USD" style="-fx-text-fill: white;" />
+                        </HBox>
+                        <HBox fx:id="discountRow" visible="false" managed="false">
+                            <Label text="Discount" style="-fx-text-fill: #ef4444;" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="discountLabel" text="-0.00 USD" style="-fx-text-fill: #ef4444;" />
+                        </HBox>
+                        <HBox>
+                            <Label text="TOTAL PAID" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="totalPaidLabel" text="0.00 USD" styleClass="neon-label" style="-fx-font-size: 22; -fx-font-weight: bold;" />
+                        </HBox>
+                    </VBox>
+                </VBox>
+                
+                <HBox spacing="20" alignment="CENTER">
+                    <Button text="CONTINUE SHOPPING" onAction="#handleContinueShopping" styleClass="btn-primary" prefHeight="45" prefWidth="250" style="-fx-font-weight: bold;" />
+                </HBox>
+            </VBox>
+        </StackPane>
+    </center>
+    
+</BorderPane>

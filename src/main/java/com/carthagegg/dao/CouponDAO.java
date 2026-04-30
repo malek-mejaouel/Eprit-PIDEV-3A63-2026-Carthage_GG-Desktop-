@@ -68,7 +68,7 @@ public class CouponDAO {
         saveAll(list);
     }
 
-    private void saveAll(List<Coupon> list) {
+    public void saveAll(List<Coupon> list) {
         try (Writer writer = new FileWriter(FILE_PATH)) {
             gson.toJson(list, writer);
         } catch (IOException e) {
