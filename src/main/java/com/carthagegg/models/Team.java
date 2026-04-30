@@ -8,6 +8,7 @@ public class Team {
     private String logo;
     private LocalDate creationDate;
     private int userId; // Captain
+    private String description;
 
     public Team() {}
 
@@ -21,6 +22,8 @@ public class Team {
     public void setCreationDate(LocalDate creationDate) { this.creationDate = creationDate; }
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     
     @Override
     public String toString() { return teamName; }
