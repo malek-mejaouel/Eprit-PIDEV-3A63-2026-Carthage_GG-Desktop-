@@ -5,7 +5,6 @@ import com.carthagegg.models.News;
 import com.carthagegg.services.NewsService;
 import com.carthagegg.utils.GeminiService;
 import com.carthagegg.utils.NewsApiService;
-import com.carthagegg.utils.VoiceService;
 import com.carthagegg.utils.SceneNavigator;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -38,9 +37,6 @@ public class NewsDetailController {
     @FXML private Button summarizeBtn;
     @FXML private VBox summaryBox;
     @FXML private Label summaryText;
-    @FXML private Button readAloudBtn;
-    
-    private boolean isReading = false;
     
     private GeminiService geminiService = new GeminiService();
     private NewsApiService newsApiService = new NewsApiService();
@@ -153,39 +149,7 @@ public class NewsDetailController {
 
     @FXML
     private void handleBack() {
-        VoiceService.stopSpeaking();
         SceneNavigator.navigateTo("/com/carthagegg/fxml/front/News.fxml");
-    }
-
-    @FXML
-    private void handleReadAloud() {
-        if (selectedNews == null) return;
-
-        FontIcon icon = (FontIcon) readAloudBtn.getGraphic();
-
-        if (isReading) {
-            // Stop reading
-            VoiceService.stopSpeaking();
-            isReading = false;
-            icon.setIconLiteral("fas-volume-up");
-            readAloudBtn.setText("Read Aloud");
-        } else {
-            // Start reading
-            isReading = true;
-            icon.setIconLiteral("fas-volume-mute");
-            readAloudBtn.setText("Stop Reading");
-
-            String textToRead = selectedNews.getTitle() + ". " + contentText.getText();
-            VoiceService.speak(textToRead, () -> {
-                Platform.runLater(() -> {
-                    if (isReading) {
-                        isReading = false;
-                        icon.setIconLiteral("fas-volume-up");
-                        readAloudBtn.setText("Read Aloud");
-                    }
-                });
-            });
-        }
     }
 
     @FXML
@@ -220,12 +184,12 @@ public class NewsDetailController {
             });
     }
 
-    @FXML private void handleNavHome() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }
-    @FXML private void handleNavTournaments() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Tournaments.fxml"); }
-    @FXML private void handleNavTeams() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Teams.fxml"); }
-    @FXML private void handleNavMatches() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Matches.fxml"); }
-    @FXML private void handleNavEvents() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Events.fxml"); }
-    @FXML private void handleNavNews() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/News.fxml"); }
-    @FXML private void handleNavShop() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Shop.fxml"); }
-    @FXML private void handleNavStreams() { VoiceService.stopSpeaking(); SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Streams.fxml"); }
+    @FXML private void handleNavHome() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml"); }
+    @FXML private void handleNavTournaments() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Tournaments.fxml"); }
+    @FXML private void handleNavTeams() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Teams.fxml"); }
+    @FXML private void handleNavMatches() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Matches.fxml"); }
+    @FXML private void handleNavEvents() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Events.fxml"); }
+    @FXML private void handleNavNews() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/News.fxml"); }
+    @FXML private void handleNavShop() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Shop.fxml"); }
+    @FXML private void handleNavStreams() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Streams.fxml"); }
 }

@@ -35,6 +35,8 @@ public class NewsController {
     private NewsApiService newsApiService = new NewsApiService();
 
     private boolean showingWorldNews = false;
+    private List<News> cachedWorldNews = null;
+    private java.util.Map<News, Image> cachedWorldImages = new java.util.HashMap<>();
 
     @FXML
     public void initialize() {
@@ -54,6 +56,28 @@ public class NewsController {
         });
         
         loadNews();
+
+        // Preload world news and images to make them appear instantly
+        newsApiService.fetchEsportsNewsAsync().thenAccept(externalNews -> {
+            externalNews.removeIf(n -> n.getImage() == null || n.getImage().trim().isEmpty());
+            for (News news : externalNews) {
+                try {
+                    String src = news.getImage().trim();
+                    Image img = null;
+                    if (src.startsWith("http://") || src.startsWith("https://")) {
+                        img = new Image(src, true); // start loading in background
+                    } else if (src.startsWith("file:")) {
+                        img = new Image(src, false);
+                    } else {
+                        img = new Image(Path.of(src).toUri().toString(), false);
+                    }
+                    if (img != null) {
+                        cachedWorldImages.put(news, img);
+                    }
+                } catch (Exception e) {}
+            }
+            cachedWorldNews = externalNews;
+        });
     }
 
     @FXML
@@ -120,6 +144,21 @@ public class NewsController {
     @FXML
     private void handleFetchWorldNews() {
         showingWorldNews = true;
+        
+        if (cachedWorldNews != null) {
+            newsContainer.getChildren().clear();
+            if (cachedWorldNews.isEmpty()) {
+                Label noNews = new Label("No worldwide news found at the moment.");
+                noNews.setStyle("-fx-text-fill: white; -fx-font-size: 16;");
+                newsContainer.getChildren().add(noNews);
+            } else {
+                for (News news : cachedWorldNews) {
+                    newsContainer.getChildren().add(createNewsCard(news));
+                }
+            }
+            return;
+        }
+
         worldNewsBtn.setDisable(true);
         worldNewsBtn.setText("Fetching...");
         
@@ -139,6 +178,7 @@ public class NewsController {
                         newsContainer.getChildren().add(createNewsCard(news));
                     }
                 }
+                cachedWorldNews = externalNews;
                 worldNewsBtn.setDisable(false);
                 worldNewsBtn.setText("Worldwide Esports News");
             });
@@ -218,7 +258,9 @@ public class NewsController {
         clip.setArcHeight(24);
         img.setClip(clip);
 
-        if (news.getImage() != null && !news.getImage().isEmpty()) {
+        if (cachedWorldImages.containsKey(news)) {
+            img.setImage(cachedWorldImages.get(news));
+        } else if (news.getImage() != null && !news.getImage().isEmpty()) {
             try {
                 String src = news.getImage().trim();
                 if (src.startsWith("http://") || src.startsWith("https://")) {

@@ -4,7 +4,6 @@ import com.carthagegg.dao.CommentDAO;
 import com.carthagegg.models.Comment;
 import com.carthagegg.utils.GeminiService;
 import com.carthagegg.utils.GiphyService;
-import com.carthagegg.utils.MicrophoneService;
 import com.carthagegg.utils.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -17,10 +16,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
 import java.sql.SQLException;
-import org.kordamp.ikonli.javafx.FontIcon;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.io.File;
 
 public class CommentController {
 
@@ -81,6 +78,56 @@ public class CommentController {
         gifBtn.setPrefHeight(36);
         gifBtn.setStyle("-fx-background-color: #4B0082; -fx-text-fill: white; -fx-font-weight: bold;");
 
+        Button micBtn = new Button();
+        micBtn.getStyleClass().add("btn-secondary");
+        micBtn.setPrefHeight(36);
+        org.kordamp.ikonli.javafx.FontIcon micIcon = new org.kordamp.ikonli.javafx.FontIcon("fas-microphone");
+        micIcon.setIconColor(javafx.scene.paint.Color.WHITE);
+        micBtn.setGraphic(micIcon);
+        micBtn.setStyle("-fx-background-color: #3b82f6; -fx-background-radius: 4;");
+
+        com.carthagegg.utils.AudioRecorder recorder = new com.carthagegg.utils.AudioRecorder();
+        final boolean[] isRecording = {false};
+
+        micBtn.setOnAction(e -> {
+            if (!isRecording[0]) {
+                try {
+                    recorder.startRecording();
+                    isRecording[0] = true;
+                    micIcon.setIconColor(javafx.scene.paint.Color.RED);
+                    micBtn.setStyle("-fx-background-color: #fee2e2; -fx-background-radius: 4;");
+                    input.setPromptText("Listening... Click again to stop.");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                java.io.File wavFile = recorder.stopRecording();
+                isRecording[0] = false;
+                micIcon.setIconColor(javafx.scene.paint.Color.WHITE);
+                micBtn.setStyle("-fx-background-color: #3b82f6; -fx-background-radius: 4;");
+                
+                input.setPromptText("Transcribing audio...");
+                input.setDisable(true);
+                
+                geminiService.transcribeAudioAsync(wavFile).thenAccept(text -> {
+                    Platform.runLater(() -> {
+                        input.setDisable(false);
+                        input.setPromptText(parentId == null ? "Write a comment..." : "Write a reply...");
+                        if (text != null && !text.startsWith("Error")) {
+                            String current = input.getText();
+                            input.setText(current.isEmpty() ? text : current + " " + text);
+                        }
+                    });
+                }).exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        input.setDisable(false);
+                        input.setPromptText(parentId == null ? "Write a comment..." : "Write a reply...");
+                    });
+                    return null;
+                });
+            }
+        });
+
         VBox gifPreviewContainer = new VBox();
         gifPreviewContainer.setVisible(false);
         gifPreviewContainer.setManaged(false);
@@ -130,63 +177,6 @@ public class CommentController {
         errorLabel.setStyle("-fx-text-fill: #ef4444; -fx-font-size: 11;");
         errorLabel.setVisible(false);
         errorLabel.setManaged(false);
-
-        Button micBtn = new Button();
-        FontIcon micIcon = new FontIcon("fas-microphone");
-        micIcon.setIconColor(javafx.scene.paint.Color.WHITE);
-        micIcon.setIconSize(14);
-        micBtn.setGraphic(micIcon);
-        micBtn.getStyleClass().add("btn-secondary");
-        micBtn.setPrefHeight(36);
-        micBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 14;");
-
-        MicrophoneService micService = new MicrophoneService();
-        boolean[] isRecording = {false};
-        File tempAudioFile = new File(System.getProperty("java.io.tmpdir"), "comment_audio_" + System.currentTimeMillis() + ".wav");
-
-        micBtn.setOnAction(e -> {
-            if (isRecording[0]) {
-                // Stop recording
-                micService.stopRecording();
-                isRecording[0] = false;
-                micIcon.setIconLiteral("fas-microphone");
-                micBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 14;");
-                
-                input.setPromptText("Transcribing audio...");
-                input.setDisable(true);
-                
-                geminiService.transcribeAudioAsync(tempAudioFile).thenAccept(transcription -> {
-                    Platform.runLater(() -> {
-                        input.setText((input.getText() + " " + transcription).trim());
-                        input.setDisable(false);
-                        input.setPromptText(parentId == null ? "Write a comment..." : "Write a reply...");
-                    });
-                }).exceptionally(ex -> {
-                    Platform.runLater(() -> {
-                        input.setDisable(false);
-                        input.setPromptText(parentId == null ? "Write a comment..." : "Write a reply...");
-                        errorLabel.setText("Error transcribing audio.");
-                        errorLabel.setVisible(true);
-                        errorLabel.setManaged(true);
-                    });
-                    return null;
-                });
-                
-            } else {
-                // Start recording
-                try {
-                    micService.startRecording(tempAudioFile);
-                    isRecording[0] = true;
-                    micIcon.setIconLiteral("fas-stop");
-                    micBtn.setStyle("-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-size: 14;");
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    errorLabel.setText("Microphone not available.");
-                    errorLabel.setVisible(true);
-                    errorLabel.setManaged(true);
-                }
-            }
-        });
 
         HBox composerRow = new HBox(10, input, micBtn, gifBtn, post);
         if (parentId != null) {

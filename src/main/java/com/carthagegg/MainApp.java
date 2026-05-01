@@ -11,6 +11,7 @@ package com.carthagegg;
  
      @Override 
      public void start(Stage primaryStage) throws Exception { 
+         System.setProperty("http.agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
          SceneNavigator.setPrimaryStage(primaryStage); 
          primaryStage.setTitle("CarthageGG"); 
          primaryStage.setMinWidth(1200); 

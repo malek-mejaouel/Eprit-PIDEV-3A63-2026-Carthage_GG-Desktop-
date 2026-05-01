@@ -19,7 +19,8 @@ import java.util.regex.Pattern;
 
 public class NewsApiService {
     private static final String API_KEY = "1feef38ec0fb4b539dd58273437d09d4";
-    private static final String API_URL = "https://newsapi.org/v2/everything?q=(esports+OR+%22video+games%22+OR+gaming+OR+esport)&language=en&sortBy=publishedAt&apiKey=" + API_KEY;
+    private static final String SEARCH_QUERY = java.net.URLEncoder.encode("(esports OR gaming OR \"video games\" OR laptops OR \"pc gaming\")", java.nio.charset.StandardCharsets.UTF_8);
+    private static final String API_URL = "https://newsapi.org/v2/everything?q=" + SEARCH_QUERY + "&language=en&sortBy=publishedAt&apiKey=" + API_KEY;
 
     private final HttpClient httpClient;
     private final Gson gson;
@@ -67,28 +68,6 @@ public class NewsApiService {
                                 fullPreview = content;
                             }
                             news.setContent(fullPreview);
-
-                            // Filter out unrelated news explicitly
-                            String titleLower = news.getTitle().toLowerCase();
-                            String contentLower = fullPreview.toLowerCase();
-                            String combinedText = titleLower + " " + contentLower;
-                            
-                            if (titleLower.equals("[removed]") || combinedText.contains("melania trump") || combinedText.contains("jimmy kimmel")) {
-                                continue;
-                            }
-                            
-                            String[] gamingKeywords = {"esport", "gaming", "video game", "gamer", "playstation", "xbox", "nintendo", "pc game", "tournament", "league of legends", "valorant", "csgo", "dota"};
-                            boolean isRelevant = false;
-                            for (String kw : gamingKeywords) {
-                                if (combinedText.contains(kw)) {
-                                    isRelevant = true;
-                                    break;
-                                }
-                            }
-                            
-                            if (!isRelevant) {
-                                continue;
-                            }
                             
                             news.setImage(art.get("urlToImage").isJsonNull() ? "" : art.get("urlToImage").getAsString());
                             news.setUrl(art.get("url").isJsonNull() ? "" : art.get("url").getAsString());
