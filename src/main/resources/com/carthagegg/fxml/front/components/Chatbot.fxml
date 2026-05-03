@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.carthagegg.controllers.front.components.ChatbotController"
+           pickOnBounds="false">
+
+    <!-- Chat Window (initially hidden) -->
+    <VBox fx:id="chatWindow" visible="false" managed="false"
+          styleClass="card" prefWidth="350" prefHeight="500"
+          StackPane.alignment="BOTTOM_RIGHT"
+          style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 20, 0, 0, 10);">
+        
+        <padding><Insets top="0" right="0" bottom="0" left="0" /></padding>
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="10" 
+              style="-fx-background-color: #FFC107; -fx-padding: 15; -fx-background-radius: 12 12 0 0;">
+            <FontIcon iconLiteral="fas-robot" iconColor="#0a0a0b" iconSize="20"/>
+            <VBox>
+                <Label text="CarthageGG AI" style="-fx-text-fill: #0a0a0b; -fx-font-weight: bold; -fx-font-size: 14;" />
+                <Label text="Online" style="-fx-text-fill: #0a0a0b; -fx-font-size: 10; -fx-opacity: 0.8;" />
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button onAction="#toggleChat" style="-fx-background-color: transparent; -fx-cursor: hand;">
+                <graphic><FontIcon iconLiteral="fas-times" iconColor="#0a0a0b" iconSize="16"/></graphic>
+            </Button>
+        </HBox>
+
+        <!-- Messages Area -->
+        <ScrollPane fx:id="scrollPane" fitToWidth="true" VBox.vgrow="ALWAYS" 
+                    styleClass="scroll-pane" style="-fx-background-color: #0a0a0b; -fx-padding: 10;">
+            <VBox fx:id="messageList" spacing="10" />
+        </ScrollPane>
+
+        <!-- Input Area -->
+        <HBox spacing="10" style="-fx-background-color: #141416; -fx-padding: 15; -fx-background-radius: 0 0 12 12; -fx-border-color: #232326; -fx-border-width: 1 0 0 0;">
+            <TextField fx:id="inputField" HBox.hgrow="ALWAYS" promptText="Ask about theme, items..." 
+                       styleClass="text-field-dark" onAction="#handleSendMessage" />
+            <Button fx:id="sendBtn" onAction="#handleSendMessage" styleClass="btn-primary" 
+                    style="-fx-padding: 8 15;">
+                <graphic><FontIcon iconLiteral="fas-paper-plane" iconSize="14"/></graphic>
+            </Button>
+        </HBox>
+    </VBox>
+
+    <!-- Floating Toggle Button -->
+    <Button fx:id="toggleBtn" onAction="#toggleChat" 
+            StackPane.alignment="BOTTOM_RIGHT"
+            styleClass="btn-primary"
+            style="-fx-background-radius: 50; -fx-min-width: 60; -fx-min-height: 60; -fx-pref-width: 60; -fx-pref-height: 60; -fx-effect: dropshadow(gaussian, rgba(255, 193, 7, 0.4), 15, 0, 0, 0);">
+        <StackPane.margin>
+            <Insets bottom="20" right="20" />
+        </StackPane.margin>
+        <graphic>
+            <FontIcon fx:id="toggleIcon" iconLiteral="fas-comment-dots" iconSize="24"/>
+        </graphic>
+    </Button>
+
+</StackPane>

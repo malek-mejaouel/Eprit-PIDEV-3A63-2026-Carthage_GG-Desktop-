@@ -21,7 +21,7 @@ public class OrderDAOTest {
     }
 
     @Test
-    @Order(1)
+    @org.junit.jupiter.api.Order(1)
     void testAjouterOrder() {
         Order o = new Order();
         o.setUserId(1); // Assuming user 1 exists
@@ -41,7 +41,7 @@ public class OrderDAOTest {
     }
 
     @Test
-    @Order(2)
+    @org.junit.jupiter.api.Order(2)
     void testModifierOrderStatus() {
         service.updateStatus(idOrderTest, Order.Status.SHIPPED);
         

@@ -29,8 +29,9 @@
                 <TableColumn fx:id="colId" text="ID" prefWidth="50" />
                 <TableColumn fx:id="colUsername" text="User" prefWidth="120" />
                 <TableColumn fx:id="colTitle" text="Title" prefWidth="200" />
-                <TableColumn fx:id="colDescription" text="Description" prefWidth="400" />
+                <TableColumn fx:id="colDescription" text="Description" prefWidth="350" />
                 <TableColumn fx:id="colStatus" text="Status" prefWidth="120" />
+                <TableColumn fx:id="colPriority" text="Priority" prefWidth="100" />
                 <TableColumn fx:id="colActions" text="Actions" prefWidth="250" />
             </columns>
         </TableView>
