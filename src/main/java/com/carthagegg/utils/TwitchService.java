@@ -5,9 +5,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -59,12 +61,17 @@ public class TwitchService {
     }
 
     private static CompletableFuture<StreamData> getStreamInfoInternal(String channelName, boolean retryOnAuthError) {
+        if (channelName == null || channelName.trim().isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String token = getAccessToken();
+                String encodedChannel = URLEncoder.encode(channelName.trim(), StandardCharsets.UTF_8);
                 
                 // 1. Get Stream Info (Check if Live)
-                String streamUrl = "https://api.twitch.tv/helix/streams?user_login=" + channelName;
+                String streamUrl = "https://api.twitch.tv/helix/streams?user_login=" + encodedChannel;
                 HttpRequest streamRequest = HttpRequest.newBuilder()
                         .uri(URI.create(streamUrl))
                         .header("Client-ID", CLIENT_ID)
@@ -80,11 +87,16 @@ public class TwitchService {
                     return getStreamInfoInternal(channelName, false).join();
                 }
 
+                if (streamResponse.statusCode() != 200) {
+                    System.err.println("Twitch API Stream Error (" + streamResponse.statusCode() + "): " + streamResponse.body());
+                    return null;
+                }
+
                 JsonObject streamJson = JsonParser.parseString(streamResponse.body()).getAsJsonObject();
                 JsonArray streamDataArray = streamJson.getAsJsonArray("data");
 
                 // 2. Get User Info (For Description and Profile Image)
-                String userUrl = "https://api.twitch.tv/helix/users?login=" + channelName;
+                String userUrl = "https://api.twitch.tv/helix/users?login=" + encodedChannel;
                 HttpRequest userRequest = HttpRequest.newBuilder()
                         .uri(URI.create(userUrl))
                         .header("Client-ID", CLIENT_ID)
@@ -94,7 +106,7 @@ public class TwitchService {
 
                 HttpResponse<String> userResponse = httpClient.send(userRequest, HttpResponse.BodyHandlers.ofString());
                 if (userResponse.statusCode() != 200) {
-                    System.err.println("Twitch API User Error (" + userResponse.statusCode() + "): " + userResponse.body());
+                    System.err.println("Twitch API User Error (" + userResponse.statusCode() + ") for " + channelName + ": " + userResponse.body());
                     return null;
                 }
                 

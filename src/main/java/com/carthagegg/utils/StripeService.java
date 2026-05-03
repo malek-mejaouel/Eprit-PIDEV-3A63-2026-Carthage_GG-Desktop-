@@ -20,21 +20,12 @@ public class StripeService {
     private static String STRIPE_SECRET_KEY; 
     
     static {
-        try {
-            Properties props = new Properties();
-            // Try to load from project root first
-            try (FileInputStream fis = new FileInputStream("config.properties")) {
-                props.load(fis);
-                STRIPE_SECRET_KEY = props.getProperty("stripe.api.key");
-            }
-            
-            if (STRIPE_SECRET_KEY == null || STRIPE_SECRET_KEY.isEmpty()) {
-                System.err.println("Warning: stripe.api.key not found in config.properties");
-            } else {
-                Stripe.apiKey = STRIPE_SECRET_KEY;
-            }
-        } catch (IOException e) {
-            System.err.println("Error loading config.properties: " + e.getMessage());
+        STRIPE_SECRET_KEY = ConfigManager.get("stripe.api.key");
+        
+        if (STRIPE_SECRET_KEY == null || STRIPE_SECRET_KEY.isEmpty()) {
+            System.err.println("Warning: stripe.api.key not found in configuration!");
+        } else {
+            Stripe.apiKey = STRIPE_SECRET_KEY;
         }
     }
 
