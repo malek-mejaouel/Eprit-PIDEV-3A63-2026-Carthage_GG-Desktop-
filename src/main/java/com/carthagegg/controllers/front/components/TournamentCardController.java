@@ -1,8 +1,10 @@
 package com.carthagegg.controllers.front.components;
 
+import com.carthagegg.controllers.front.TournamentDetailsController;
 import com.carthagegg.dao.GameDAO;
 import com.carthagegg.models.Game;
 import com.carthagegg.models.Tournament;
+import com.carthagegg.utils.SceneNavigator;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 
@@ -26,7 +28,7 @@ public class TournamentCardController {
         dateLabel.setText(t.getStartDate().format(DateTimeFormatter.ofPattern("dd MMM")) + " - " + 
                          t.getEndDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
         locationLabel.setText(t.getLocation());
-        prizeLabel.setText(t.getPrizePool().toString() + " TND");
+        prizeLabel.setText(t.getPrizePool().toString() + " USD");
 
         try {
             Game g = gameDAO.findById(t.getGameId());
@@ -38,7 +40,9 @@ public class TournamentCardController {
 
     @FXML
     private void handleViewDetails() {
-        // Implementation for viewing details
-        System.out.println("Viewing details for: " + tournament.getTournamentName());
+        TournamentDetailsController controller = SceneNavigator.navigateTo("/com/carthagegg/fxml/front/TournamentDetails.fxml", tournament);
+        if (controller != null) {
+            controller.setTournament(tournament);
+        }
     }
 }

@@ -33,6 +33,7 @@
             
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <TextField fx:id="searchField" promptText="Search tournaments..." styleClass="text-field-dark" prefWidth="400" />
+                <ComboBox fx:id="sortComboBox" promptText="Sort by ID" styleClass="text-field-dark" prefWidth="140" />
             </HBox>
             
             <TableView fx:id="tournamentsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
@@ -59,32 +60,38 @@
             <VBox spacing="5">
                 <Label text="TOURNAMENT NAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="nameField" styleClass="text-field-dark" />
+                <Label fx:id="nameErrorLabel" styleClass="error-label" />
             </VBox>
             
             <VBox spacing="5">
                 <Label text="GAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <ComboBox fx:id="gameComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                <Label fx:id="gameErrorLabel" styleClass="error-label" />
             </VBox>
             
             <HBox spacing="10">
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="START DATE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <DatePicker fx:id="startDatePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+                    <Label fx:id="startDateErrorLabel" styleClass="error-label" />
                 </VBox>
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="END DATE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <DatePicker fx:id="endDatePicker" maxWidth="Infinity" styleClass="text-field-dark" />
+                    <Label fx:id="endDateErrorLabel" styleClass="error-label" />
                 </VBox>
             </HBox>
             
             <VBox spacing="5">
-                <Label text="PRIZE POOL (TND)" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <Label text="PRIZE POOL (USD)" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="prizeField" styleClass="text-field-dark" />
+                <Label fx:id="prizeErrorLabel" styleClass="error-label" />
             </VBox>
             
             <VBox spacing="5">
                 <Label text="LOCATION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="locationField" styleClass="text-field-dark" />
+                <Label fx:id="locationErrorLabel" styleClass="error-label" />
             </VBox>
             
             <HBox spacing="10">

@@ -8,6 +8,7 @@ public class Reclamation {
     private String title;
     private String description;
     private String status; // pending, in_progress, resolved
+    private String priority; // normal, high
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -30,6 +31,9 @@ public class Reclamation {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

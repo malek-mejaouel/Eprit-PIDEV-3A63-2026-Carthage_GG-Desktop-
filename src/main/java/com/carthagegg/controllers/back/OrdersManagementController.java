@@ -1,43 +1,41 @@
 package com.carthagegg.controllers.back;
 
-import com.carthagegg.dao.OrderDAO;
-import com.carthagegg.dao.ProductDAO;
-import com.carthagegg.dao.UserDAO;
-import com.carthagegg.models.Order;
-import com.carthagegg.models.Product;
-import com.carthagegg.models.User;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import com.carthagegg.utils.StripeService;
+import com.stripe.model.checkout.Session;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class OrdersManagementController {
 
-    @FXML private TableView<Order> ordersTable;
-    @FXML private TableColumn<Order, Integer> colId;
-    @FXML private TableColumn<Order, String> colUser;
-    @FXML private TableColumn<Order, String> colProduct;
-    @FXML private TableColumn<Order, Integer> colQuantity;
-    @FXML private TableColumn<Order, String> colTotal;
-    @FXML private TableColumn<Order, String> colDate;
-    @FXML private TableColumn<Order, String> colStatus;
-    @FXML private TableColumn<Order, Void> colActions;
-
-    @FXML private ComboBox<Order.Status> statusFilter;
-
-    private OrderDAO orderDAO = new OrderDAO();
-    private UserDAO userDAO = new UserDAO();
-    private ProductDAO productDAO = new ProductDAO();
-    private ObservableList<Order> ordersList = FXCollections.observableArrayList();
+    @FXML private TableView<Session> stripeTable;
+    @FXML private TableColumn<Session, String> colStripeId;
+    @FXML private TableColumn<Session, String> colStripeCustomer;
+    @FXML private TableColumn<Session, String> colStripeAmount;
+    @FXML private TableColumn<Session, String> colStripeStatus;
+    @FXML private TableColumn<Session, String> colStripeUrl;
 
     @FXML
     public void initialize() {
@@ -46,107 +44,150 @@ public class OrdersManagementController {
             return;
         }
 
-        setupTable();
-        loadOrders();
-        statusFilter.setItems(FXCollections.observableArrayList(Order.Status.values()));
-        setupStatusFilter();
+        setupStripeTable();
+        handleRefreshStripe();
     }
 
-    private void setupTable() {
-        colId.setCellValueFactory(new PropertyValueFactory<>("orderId"));
-        colQuantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+    private void setupStripeTable() {
+        colStripeId.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getId()));
         
-        colDate.setCellValueFactory(cellData -> {
-            if (cellData.getValue().getOrderDate() == null) return new SimpleStringProperty("");
-            return new SimpleStringProperty(cellData.getValue().getOrderDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")));
-        });
-
-        colStatus.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStatus().name()));
-
-        colUser.setCellValueFactory(cellData -> {
-            try {
-                List<User> users = userDAO.findAll();
-                User u = users.stream().filter(user -> user.getUserId() == cellData.getValue().getUserId()).findFirst().orElse(null);
-                return new SimpleStringProperty(u != null ? u.getUsername() : "Unknown");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
-        });
-
-        colProduct.setCellValueFactory(cellData -> {
-            try {
-                List<Product> products = productDAO.findAll();
-                Product p = products.stream().filter(prod -> prod.getId() == cellData.getValue().getProductId()).findFirst().orElse(null);
-                return new SimpleStringProperty(p != null ? p.getName() : "Unknown");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
-        });
-
-        colTotal.setCellValueFactory(cellData -> {
-            try {
-                List<Product> products = productDAO.findAll();
-                Product p = products.stream().filter(prod -> prod.getId() == cellData.getValue().getProductId()).findFirst().orElse(null);
-                if (p != null) {
-                    BigDecimal total = p.getPrice().multiply(new BigDecimal(cellData.getValue().getQuantity()));
-                    return new SimpleStringProperty(total.toString() + " TND");
-                }
-                return new SimpleStringProperty("0.00 TND");
-            } catch (SQLException e) { return new SimpleStringProperty("Error"); }
-        });
-
-        colActions.setCellFactory(param -> new TableCell<Order, Void>() {
-            private final ComboBox<Order.Status> statusBox = new ComboBox<>(FXCollections.observableArrayList(Order.Status.values()));
-            {
-                statusBox.getStyleClass().add("text-field-dark");
-                statusBox.setPrefWidth(150);
-                statusBox.setOnAction(e -> {
-                    Order order = getTableView().getItems().get(getIndex());
-                    handleUpdateStatus(order, statusBox.getValue());
-                });
+        colStripeCustomer.setCellValueFactory(cellData -> {
+            Session s = cellData.getValue();
+            if (s.getCustomerDetails() != null && s.getCustomerDetails().getEmail() != null) {
+                return new SimpleStringProperty(s.getCustomerDetails().getEmail());
             }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) setGraphic(null);
-                else {
-                    statusBox.setValue(getTableView().getItems().get(getIndex()).getStatus());
-                    setGraphic(statusBox);
-                }
-            }
+            return new SimpleStringProperty(s.getCustomer() != null ? s.getCustomer() : "Guest");
         });
+
+        colStripeAmount.setCellValueFactory(cellData -> {
+            Long total = cellData.getValue().getAmountTotal();
+            if (total == null) return new SimpleStringProperty("0.00 USD");
+            return new SimpleStringProperty(String.format("%.2f USD", total / 100.0));
+        });
+
+        colStripeStatus.setCellValueFactory(cellData -> {
+            String status = cellData.getValue().getPaymentStatus();
+            return new SimpleStringProperty(status != null ? status.toUpperCase() : "UNKNOWN");
+        });
+
+        colStripeUrl.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getUrl()));
     }
 
-    private void loadOrders() {
+    @FXML private void handleRefreshStripe() {
         try {
-            ordersList.setAll(orderDAO.findAll());
-            ordersTable.setItems(ordersList);
-        } catch (SQLException e) { e.printStackTrace(); }
-    }
-
-    private void setupStatusFilter() {
-        statusFilter.setOnAction(e -> {
-            Order.Status selected = statusFilter.getValue();
-            if (selected == null) ordersTable.setItems(ordersList);
-            else {
-                ordersTable.setItems(ordersList.filtered(order -> order.getStatus() == selected));
-            }
-        });
-    }
-
-    private void handleUpdateStatus(Order order, Order.Status status) {
-        try {
-            orderDAO.updateStatus(order.getOrderId(), status);
-            order.setStatus(status);
-            ordersTable.refresh();
-        } catch (SQLException e) {
+            List<Session> sessions = StripeService.getRecentSessions();
+            stripeTable.setItems(FXCollections.observableArrayList(sessions));
+        } catch (Exception e) {
+            e.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Could not update order status: " + e.getMessage());
+            alert.setTitle("Stripe Error");
+            alert.setHeaderText("Could not fetch sessions from Stripe");
+            alert.setContentText(e.getMessage());
             alert.showAndWait();
         }
     }
 
-    @FXML private void handleExportCSV() {
-        // Implementation for CSV export
-        System.out.println("Exporting orders to CSV...");
+    @FXML private void handleExportPDF() {
+        if (stripeTable.getItems().isEmpty()) {
+            showAlert("No Data", "There are no Stripe sessions to export.", Alert.AlertType.WARNING);
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save PDF File");
+        fileChooser.setInitialFileName("carthagegg_orders.pdf");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        
+        File file = fileChooser.showSaveDialog(SceneNavigator.getPrimaryStage());
+        if (file != null) {
+            try {
+                PdfWriter writer = new PdfWriter(file);
+                PdfDocument pdf = new PdfDocument(writer);
+                Document document = new Document(pdf, PageSize.A4);
+                document.setMargins(20, 20, 20, 20);
+
+                // Add Logo
+                try {
+                    var logoResource = getClass().getResource("/images/zz.png");
+                    if (logoResource != null) {
+                        String logoPath = logoResource.toExternalForm();
+                        Image logo = new Image(ImageDataFactory.create(logoPath));
+                        logo.setWidth(100);
+                        document.add(logo);
+                    } else {
+                        System.err.println("Logo resource not found: /images/zz.png");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Could not load logo: " + e.getMessage());
+                }
+
+                // Add Header
+                Paragraph header = new Paragraph("CarthageGG - Orders Report")
+                        .setFontSize(24)
+                        .setBold()
+                        .setFontColor(ColorConstants.BLACK)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setMarginBottom(20);
+                document.add(header);
+
+                // Add Table
+                float[] columnWidths = {2, 3, 1, 1, 3};
+                Table table = new Table(UnitValue.createPercentArray(columnWidths));
+                table.setWidth(UnitValue.createPercentValue(100));
+
+                // Table Header
+                String[] headers = {"Session ID", "Customer", "Amount", "Status", "Receipt/URL"};
+                for (String h : headers) {
+                    table.addHeaderCell(new Cell().add(new Paragraph(h != null ? h : "").setBold())
+                            .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                            .setTextAlignment(TextAlignment.CENTER));
+                }
+
+                // Table Data
+                for (Session session : stripeTable.getItems()) {
+                    String customer = "Guest";
+                    if (session.getCustomerDetails() != null && session.getCustomerDetails().getEmail() != null) {
+                        customer = session.getCustomerDetails().getEmail();
+                    } else if (session.getCustomer() != null) {
+                        customer = session.getCustomer();
+                    }
+                    
+                    Long amountTotal = session.getAmountTotal();
+                    String amount = amountTotal != null ? String.format("%.2f USD", amountTotal / 100.0) : "0.00 USD";
+                    String status = session.getPaymentStatus() != null ? session.getPaymentStatus().toUpperCase() : "UNKNOWN";
+                    String sessionId = session.getId() != null ? session.getId() : "N/A";
+                    String sessionUrl = session.getUrl() != null ? session.getUrl() : "N/A";
+                    
+                    table.addCell(new Cell().add(new Paragraph(sessionId).setFontSize(8)));
+                    table.addCell(new Cell().add(new Paragraph(customer).setFontSize(10)));
+                    table.addCell(new Cell().add(new Paragraph(amount).setFontSize(10).setTextAlignment(TextAlignment.RIGHT)));
+                    table.addCell(new Cell().add(new Paragraph(status).setFontSize(10).setTextAlignment(TextAlignment.CENTER)));
+                    table.addCell(new Cell().add(new Paragraph(sessionUrl).setFontSize(8).setFontColor(ColorConstants.BLUE)));
+                }
+
+                document.add(table);
+
+                // Footer
+                document.add(new Paragraph("\nGenerated on: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                        .setFontSize(10)
+                        .setItalic()
+                        .setTextAlignment(TextAlignment.RIGHT));
+
+                document.close();
+                showAlert("Success", "Orders exported successfully to " + file.getName(), Alert.AlertType.INFORMATION);
+            } catch (Exception e) {
+                e.printStackTrace();
+                showAlert("Error", "Could not export orders: " + e.getMessage(), Alert.AlertType.ERROR);
+            }
+        }
+    }
+
+    private void showAlert(String title, String content, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/ProductsManagement.fxml"); }

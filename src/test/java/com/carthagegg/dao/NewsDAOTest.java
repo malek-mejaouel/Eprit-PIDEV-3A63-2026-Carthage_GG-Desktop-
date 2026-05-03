@@ -24,16 +24,14 @@ public class NewsDAOTest {
         n.setImage("test.jpg");
         
         service.save(n);
+        idNewsTest = n.getNewsId();
         
         List<News> newsList = service.findAll();
         assertFalse(newsList.isEmpty());
         
-        News lastNews = newsList.get(0); // findAll returns by DESC order
-        idNewsTest = lastNews.getNewsId();
-        
         assertTrue(
             newsList.stream().anyMatch(news -> 
-                news.getTitle().equals("Test Title"))
+                news.getNewsId() == idNewsTest)
         );
     }
 
@@ -64,16 +62,5 @@ public class NewsDAOTest {
         List<News> newsList = service.findAll();
         boolean existe = newsList.stream().anyMatch(n -> n.getNewsId() == idNewsTest);
         assertFalse(existe);
-    }
-
-    @AfterEach
-    void cleanUp() throws SQLException {
-        List<News> newsList = service.findAll();
-        if (!newsList.isEmpty()) {
-            News last = newsList.get(0);
-            if (last.getTitle().equals("Test Title") || last.getTitle().equals("Title Modifie")) {
-                service.delete(last.getNewsId());
-            }
-        }
     }
 }

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.CartController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <VBox spacing="30">
+            <padding>
+                <Insets top="40" left="40" right="40" bottom="40" />
+            </padding>
+            
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Button onAction="#handleBackToShop" styleClass="btn-gold" prefWidth="40">
+                    <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="16" iconColor="#0a0a0f"/></graphic>
+                </Button>
+                <VBox>
+                    <Label text="Shopping Cart" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
+                    <Label fx:id="itemCountLabel" text="0 items in your cart" style="-fx-text-fill: #949499;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="CLEAR CART" onAction="#handleClearCart" style="-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-border-color: #ef4444; -fx-border-radius: 4; -fx-padding: 8 15;">
+                    <graphic><FontIcon iconLiteral="fas-trash-alt" iconSize="14" iconColor="#ef4444"/></graphic>
+                </Button>
+            </HBox>
+            
+            <HBox spacing="30" VBox.vgrow="ALWAYS">
+                <!-- Cart Items List -->
+                <ScrollPane fitToWidth="true" styleClass="scroll-pane" HBox.hgrow="ALWAYS">
+                    <VBox fx:id="cartItemsContainer" spacing="15" />
+                </ScrollPane>
+                
+                <!-- Order Summary -->
+                <VBox fx:id="summaryCard" prefWidth="350" spacing="20" styleClass="card" maxHeight="400">
+                    <padding>
+                        <Insets top="30" left="25" right="25" bottom="30" />
+                    </padding>
+                    <Label text="Order Summary" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20;" />
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <VBox spacing="10">
+                        <Label text="Promo Code" style="-fx-text-fill: #949499; -fx-font-size: 12;" />
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <TextField fx:id="couponField" promptText="Enter code" styleClass="text-field-dark" HBox.hgrow="ALWAYS" prefHeight="40" />
+                            <Button text="APPLY" onAction="#handleApplyCoupon" styleClass="btn-gold" prefHeight="40" prefWidth="90" style="-fx-font-weight: bold; -fx-font-size: 13; -fx-background-color: #ffb800; -fx-text-fill: #0a0a0f; -fx-background-radius: 4;" />
+                        </HBox>
+                        <Label fx:id="couponMessageLabel" style="-fx-font-size: 11;" visible="false" />
+                    </VBox>
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <HBox alignment="CENTER_LEFT" fx:id="discountRow" visible="false" managed="false">
+                        <Label text="Discount" style="-fx-text-fill: #949499;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="discountLabel" text="-0.00 USD" style="-fx-text-fill: #ef4444; -fx-font-weight: bold;" />
+                    </HBox>
+                    
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Subtotal" style="-fx-text-fill: #949499;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="subtotalLabel" text="0.00 USD" style="-fx-text-fill: white;" />
+                    </HBox>
+                    
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Shipping" style="-fx-text-fill: #949499;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label text="FREE" style="-fx-text-fill: #22c55e; -fx-font-weight: bold;" />
+                    </HBox>
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="TOTAL" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="totalLabel" text="0.00 USD" styleClass="neon-label" style="-fx-font-size: 24; -fx-font-weight: bold;" />
+                    </HBox>
+                    
+                    <Region VBox.vgrow="ALWAYS" />
+                    
+                    <Button text="PROCEED TO CHECKOUT" onAction="#handleCheckout" maxWidth="Infinity" styleClass="btn-primary" prefHeight="50" style="-fx-font-weight: bold; -fx-font-size: 14;" />
+                </VBox>
+            </HBox>
+        </VBox>
+    </center>
+    
+</BorderPane>
