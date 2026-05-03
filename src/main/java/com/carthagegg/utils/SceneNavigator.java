@@ -33,6 +33,23 @@ public class SceneNavigator {
             
             T controller = loader.getController();
             
+            // Wrap in StackPane to add Chatbot if it's a front-end page
+            if (fxmlPath.contains("/front/") && !fxmlPath.contains("/components/")) {
+                try {
+                    java.net.URL chatResource = SceneNavigator.class.getResource("/com/carthagegg/fxml/front/components/Chatbot.fxml");
+                    if (chatResource != null) {
+                        FXMLLoader chatLoader = new FXMLLoader(chatResource);
+                        javafx.scene.Node chatbot = chatLoader.load();
+                        
+                        javafx.scene.layout.StackPane wrapper = new javafx.scene.layout.StackPane();
+                        wrapper.getChildren().addAll(root, chatbot);
+                        root = wrapper;
+                    }
+                } catch (IOException e) {
+                    System.err.println("Could not load chatbot: " + e.getMessage());
+                }
+            }
+
             if (root instanceof Region region) {
                 region.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             }

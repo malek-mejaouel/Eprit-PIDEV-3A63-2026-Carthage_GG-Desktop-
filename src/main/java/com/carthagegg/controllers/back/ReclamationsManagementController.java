@@ -4,6 +4,9 @@ import com.carthagegg.dao.ReclamationDAO;
 import com.carthagegg.dao.ReclamationMessageDAO;
 import com.carthagegg.models.Reclamation;
 import com.carthagegg.models.ReclamationMessage;
+import com.carthagegg.dao.UserDAO;
+import com.carthagegg.models.User;
+import com.carthagegg.utils.ImageGenerator;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.application.Platform;
@@ -37,6 +40,7 @@ public class ReclamationsManagementController {
 
     private ReclamationDAO reclamationDAO = new ReclamationDAO();
     private ReclamationMessageDAO messageDAO = new ReclamationMessageDAO();
+    private UserDAO userDAO = new UserDAO();
     private ObservableList<Reclamation> reclamationList = FXCollections.observableArrayList();
 
     @FXML
@@ -207,6 +211,10 @@ public class ReclamationsManagementController {
         sendBtn.setStyle("-fx-background-color: #00f0ff; -fx-text-fill: black;");
         sendBtn.setMaxWidth(Double.MAX_VALUE);
 
+        Button genBadgeBtn = new Button("Generate Verification Badge");
+        genBadgeBtn.setStyle("-fx-background-color: #fbbf24; -fx-text-fill: black; -fx-font-weight: bold;");
+        genBadgeBtn.setMaxWidth(Double.MAX_VALUE);
+
         Runnable refreshMessages = () -> {
             try {
                 List<ReclamationMessage> messages = messageDAO.findByReclamationId(r.getId());
@@ -256,12 +264,50 @@ public class ReclamationsManagementController {
             }
         });
 
-        chatBox.getChildren().addAll(new Label("Ticket: " + r.getTitle()), scrollPane, inputField, sendBtn);
+        genBadgeBtn.setOnAction(e -> {
+            try {
+                User targetUser = userDAO.findById(r.getUserId());
+                if (targetUser != null) {
+                    String role = formatRoles(targetUser.getRoles());
+                    String path = ImageGenerator.generateCertification(targetUser.getEmail(), role);
+                    
+                    if (path != null) {
+                        // Automatically send a message to the user with the badge path
+                        ReclamationMessage msg = new ReclamationMessage();
+                        msg.setReclamationId(r.getId());
+                        msg.setSenderId(SessionManager.getCurrentUser().getUserId());
+                        msg.setMessage("Hello! I have generated your verification badge. You can download it here and upload it to your profile to verify your account:\n" + path);
+                        messageDAO.save(msg);
+                        
+                        refreshMessages.run();
+                        
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Badge Generated");
+                        alert.setHeaderText("Verification badge successfully generated!");
+                        alert.setContentText("The user has been notified in the chat with the file path.");
+                        alert.showAndWait();
+                    }
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        chatBox.getChildren().addAll(new Label("Ticket: " + r.getTitle()), scrollPane, inputField, sendBtn, genBadgeBtn);
         
-        Scene scene = new Scene(chatBox, 400, 550);
+        Scene scene = new Scene(chatBox, 400, 600);
         stage.setScene(scene);
         refreshMessages.run();
         stage.show();
+    }
+
+    private String formatRoles(String rolesJson) {
+        if (rolesJson == null || rolesJson.isEmpty()) return "USER";
+        return rolesJson.replace("[", "")
+                       .replace("]", "")
+                       .replace("\"", "")
+                       .replace("ROLE_", "")
+                       .replace(",", ", ");
     }
 
     @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml"); }

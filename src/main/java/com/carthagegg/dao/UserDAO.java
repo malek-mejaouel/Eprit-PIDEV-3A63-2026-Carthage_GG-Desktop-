@@ -49,6 +49,18 @@ public class UserDAO {
         return null;
     }
 
+    public User findById(int userId) throws SQLException {
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapUser(rs);
+            }
+        }
+        return null;
+    }
+
     public void save(User user) throws SQLException {
         String sql = "INSERT INTO users (email, password, roles, username, first_name, last_name, google_id, discord_id, avatar, is_active, created_at, updated_at) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())";
@@ -179,6 +191,16 @@ public class UserDAO {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void verifyUser(int userId, String badge) throws SQLException {
+        String sql = "UPDATE users SET is_verified=1, verified_role_badge=?, verification_date=NOW(), updated_at=NOW() WHERE user_id=?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, badge);
+            ps.setInt(2, userId);
             ps.executeUpdate();
         }
     }
