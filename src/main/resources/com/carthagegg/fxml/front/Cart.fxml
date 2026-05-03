@@ -51,10 +51,27 @@
                     
                     <Separator style="-fx-opacity: 0.1;" />
                     
+                    <VBox spacing="10">
+                        <Label text="Promo Code" style="-fx-text-fill: #949499; -fx-font-size: 12;" />
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <TextField fx:id="couponField" promptText="Enter code" styleClass="text-field-dark" HBox.hgrow="ALWAYS" prefHeight="40" />
+                            <Button text="APPLY" onAction="#handleApplyCoupon" styleClass="btn-gold" prefHeight="40" prefWidth="90" style="-fx-font-weight: bold; -fx-font-size: 13; -fx-background-color: #ffb800; -fx-text-fill: #0a0a0f; -fx-background-radius: 4;" />
+                        </HBox>
+                        <Label fx:id="couponMessageLabel" style="-fx-font-size: 11;" visible="false" />
+                    </VBox>
+                    
+                    <Separator style="-fx-opacity: 0.1;" />
+                    
+                    <HBox alignment="CENTER_LEFT" fx:id="discountRow" visible="false" managed="false">
+                        <Label text="Discount" style="-fx-text-fill: #949499;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="discountLabel" text="-0.00 USD" style="-fx-text-fill: #ef4444; -fx-font-weight: bold;" />
+                    </HBox>
+                    
                     <HBox alignment="CENTER_LEFT">
                         <Label text="Subtotal" style="-fx-text-fill: #949499;" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="subtotalLabel" text="0.00 TND" style="-fx-text-fill: white;" />
+                        <Label fx:id="subtotalLabel" text="0.00 USD" style="-fx-text-fill: white;" />
                     </HBox>
                     
                     <HBox alignment="CENTER_LEFT">
@@ -68,7 +85,7 @@
                     <HBox alignment="CENTER_LEFT">
                         <Label text="TOTAL" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="totalLabel" text="0.00 TND" styleClass="neon-label" style="-fx-font-size: 24; -fx-font-weight: bold;" />
+                        <Label fx:id="totalLabel" text="0.00 USD" styleClass="neon-label" style="-fx-font-size: 24; -fx-font-weight: bold;" />
                     </HBox>
                     
                     <Region VBox.vgrow="ALWAYS" />

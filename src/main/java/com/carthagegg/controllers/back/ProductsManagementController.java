@@ -4,9 +4,11 @@ import com.carthagegg.dao.CategoryDAO;
 import com.carthagegg.dao.ProductDAO;
 import com.carthagegg.models.Category;
 import com.carthagegg.models.Product;
+import com.carthagegg.utils.AIService;
 import com.carthagegg.utils.FileStorage;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +16,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -37,6 +42,8 @@ public class ProductsManagementController {
     @FXML private Label formTitle;
     @FXML private TextField nameField;
     @FXML private TextField priceField;
+    @FXML private TextField discountPriceField;
+    @FXML private TextArea descriptionField;
     @FXML private ComboBox<Category> categoryComboBox;
     @FXML private TextField stockField;
     @FXML private TextField imageField;
@@ -84,7 +91,38 @@ public class ProductsManagementController {
     private void setupTable() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        
+        colPrice.setCellFactory(param -> new TableCell<Product, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("$%.2f", item));
+                    setStyle("-fx-text-fill: #FFC107; -fx-font-weight: bold;");
+                }
+            }
+        });
+        colPrice.setCellValueFactory(cellData -> {
+            Product p = cellData.getValue();
+            return new javafx.beans.property.SimpleObjectProperty<>(p.getEffectivePrice());
+        });
+
+        colStock.setCellFactory(param -> new TableCell<Product, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    Label badge = new Label(item > 0 ? String.valueOf(item) : "OUT OF STOCK");
+                    badge.getStyleClass().addAll("badge", item > 0 ? "badge-success" : "badge-danger");
+                    setGraphic(badge);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
         colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
         
         colCategory.setCellValueFactory(cellData -> {
@@ -99,19 +137,22 @@ public class ProductsManagementController {
         });
 
         colActions.setCellFactory(param -> new TableCell<Product, Void>() {
-            private final Button editBtn = new Button("Edit");
+            private final Button editBtn = new Button();
             private final Button deleteBtn = new Button();
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+            private final HBox pane = new HBox(12, editBtn, deleteBtn);
 
             {
-                editBtn.getStyleClass().add("btn-gold");
+                pane.setAlignment(Pos.CENTER_LEFT);
                 
-                FontIcon trashIcon = new FontIcon("fas-trash-alt");
-                trashIcon.setIconColor(javafx.scene.paint.Color.web("#ef4444"));
-                trashIcon.setIconSize(14);
-                deleteBtn.setGraphic(trashIcon);
-                deleteBtn.setTooltip(new Tooltip("Delete product"));
-                deleteBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                editBtn.setGraphic(new FontIcon("fas-edit"));
+                editBtn.getStyleClass().addAll("btn-icon", "btn-icon-gold");
+                editBtn.setStyle("-fx-font-size: 18px;"); // Increase icon size
+                Tooltip.install(editBtn, new Tooltip("Edit Product"));
+                
+                deleteBtn.setGraphic(new FontIcon("fas-trash"));
+                deleteBtn.getStyleClass().addAll("btn-icon", "btn-icon-danger");
+                deleteBtn.setStyle("-fx-font-size: 18px;"); // Increase icon size
+                Tooltip.install(deleteBtn, new Tooltip("Delete Product"));
                 
                 editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
@@ -156,6 +197,8 @@ public class ProductsManagementController {
         hideError();
         nameField.setText(p.getName());
         priceField.setText(p.getPrice().toString());
+        discountPriceField.setText(p.getDiscountPrice() != null ? p.getDiscountPrice().toString() : "");
+        descriptionField.setText(p.getDescription() != null ? p.getDescription() : "");
         stockField.setText(String.valueOf(p.getStock()));
         imageField.setText(p.getImage());
         
@@ -206,6 +249,36 @@ public class ProductsManagementController {
     }
 
     @FXML
+    private void handleGenerateAIDescription() {
+        String name = nameField.getText().trim();
+        Category cat = categoryComboBox.getValue();
+
+        if (name.isEmpty() || cat == null) {
+            showError("Please enter a name and select a category first.");
+            return;
+        }
+
+        descriptionField.setPromptText("Generating description...");
+        descriptionField.setDisable(true);
+
+        AIService.generateProductDescription(name, cat.getName())
+                .thenAccept(desc -> {
+                    Platform.runLater(() -> {
+                        descriptionField.setText(desc);
+                        descriptionField.setDisable(false);
+                        hideError();
+                    });
+                })
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        descriptionField.setDisable(false);
+                        showError("AI Error: " + ex.getMessage());
+                    });
+                    return null;
+                });
+    }
+
+    @FXML
     private void handleSaveProduct() {
         if (!validateInput()) {
             return;
@@ -215,6 +288,15 @@ public class ProductsManagementController {
             Product p = (selectedProduct == null) ? new Product() : selectedProduct;
             p.setName(nameField.getText().trim());
             p.setPrice(new BigDecimal(priceField.getText().trim()));
+            
+            String discountText = discountPriceField.getText().trim();
+            if (discountText.isEmpty()) {
+                p.setDiscountPrice(null);
+            } else {
+                p.setDiscountPrice(new BigDecimal(discountText));
+            }
+
+            p.setDescription(descriptionField.getText().trim());
             p.setCategoryId(categoryComboBox.getValue().getId());
             p.setStock(Integer.parseInt(stockField.getText().trim()));
             p.setImage(imageField.getText().trim());
@@ -253,6 +335,21 @@ public class ProductsManagementController {
                 }
             } catch (NumberFormatException e) {
                 errorMessage.append("• Price must be a valid number.\n");
+            }
+        }
+
+        String discountText = discountPriceField.getText().trim();
+        if (!discountText.isEmpty()) {
+            try {
+                BigDecimal discountPrice = new BigDecimal(discountText);
+                BigDecimal originalPrice = new BigDecimal(priceField.getText().trim());
+                if (discountPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                    errorMessage.append("• Sale price must be greater than 0.\n");
+                } else if (discountPrice.compareTo(originalPrice) >= 0) {
+                    errorMessage.append("• Sale price must be less than the original price.\n");
+                }
+            } catch (NumberFormatException e) {
+                errorMessage.append("• Sale price must be a valid number.\n");
             }
         }
 
@@ -296,7 +393,15 @@ public class ProductsManagementController {
     private void showForm() { formPane.setVisible(true); formPane.setManaged(true); }
     @FXML private void handleHideForm() { hideForm(); }
     private void hideForm() { formPane.setVisible(false); formPane.setManaged(false); }
-    private void clearForm() { nameField.clear(); priceField.setText("0.00"); categoryComboBox.setValue(null); stockField.setText("0"); imageField.clear(); }
+    private void clearForm() { 
+        nameField.clear(); 
+        priceField.setText("0.00"); 
+        discountPriceField.clear();
+        descriptionField.clear();
+        categoryComboBox.setValue(null); 
+        stockField.setText("0"); 
+        imageField.clear(); 
+    }
 
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
@@ -306,5 +411,6 @@ public class ProductsManagementController {
     }
 
     @FXML private void handleNavOrders() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/OrdersManagement.fxml"); }
+    @FXML private void handleNavCoupons() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/CouponsManagement.fxml"); }
     @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml"); }
 }

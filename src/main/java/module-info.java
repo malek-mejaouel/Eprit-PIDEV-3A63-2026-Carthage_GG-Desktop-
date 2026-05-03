@@ -10,7 +10,11 @@ module com.carthagegg.carthagegg {
     requires org.kordamp.ikonli.fontawesome5;
     requires AnimateFX;
     requires com.google.gson;
+    requires stripe.java;
     requires java.prefs;
+    requires kernel;
+    requires io;
+    requires layout;
     requires java.desktop;
     requires java.net.http;
     requires jdk.httpserver;
