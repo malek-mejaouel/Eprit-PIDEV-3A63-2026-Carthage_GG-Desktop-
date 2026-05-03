@@ -161,7 +161,7 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.carthagegg.carthagegg/com.carthagegg.MainApp</mainClass>
+                            <mainClass>com.carthagegg.MainApp</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

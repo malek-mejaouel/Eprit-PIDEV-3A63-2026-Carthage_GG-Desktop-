@@ -1,6 +1,7 @@
 module com.carthagegg.carthagegg {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.graphics;
     requires javafx.web;
     requires java.sql;
     requires org.mariadb.jdbc;
@@ -24,6 +25,7 @@ module com.carthagegg.carthagegg {
     opens com.carthagegg.controllers.front to javafx.fxml;
     opens com.carthagegg.controllers.front.components to javafx.fxml;
     opens com.carthagegg.controllers.back to javafx.fxml;
+    opens com.carthagegg.utils to javafx.fxml;
     opens com.carthagegg.models to com.google.gson, javafx.base;
 
     exports com.carthagegg;
