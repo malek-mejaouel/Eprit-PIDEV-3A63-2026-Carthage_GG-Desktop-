@@ -1,6 +1,7 @@
 package com.carthagegg.controllers.front;
 
 import com.carthagegg.models.User;
+import com.carthagegg.dao.EventDAO;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.fxml.FXML;
@@ -17,17 +18,24 @@ public class ProfileController {
     @FXML private Label rolesLabel;
     @FXML private SidebarController sidebarController;
 
+    private EventDAO eventDAO;
+
     @FXML
     public void initialize() {
         if (sidebarController != null) {
             sidebarController.setActiveItem("profile");
         }
+
+        // Initialize DAO
+        eventDAO = new EventDAO();
+
+        // Load user profile
         User user = SessionManager.getCurrentUser();
         if (user != null) {
             usernameLabel.setText(user.getUsername());
             emailLabel.setText(user.getEmail());
             fullNameLabel.setText(user.getFirstName() + " " + user.getLastName());
-            rolesLabel.setText(formatRoles(user.getRoles()));
+            rolesLabel.setText(user.getRoles());
             
             if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
                 try {
@@ -54,6 +62,14 @@ public class ProfileController {
         }
     }
 
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     private String formatRoles(String rolesJson) {
         if (rolesJson == null || rolesJson.isEmpty()) return "USER";
         return rolesJson.replace("[", "")
@@ -74,3 +90,8 @@ public class ProfileController {
 
     @FXML private void handleNavEditProfile() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/EditProfile.fxml"); }
 }
+
+
+
+
+

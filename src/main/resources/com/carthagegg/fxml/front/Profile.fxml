@@ -18,34 +18,37 @@
     </left>
     
     <center>
-        <VBox alignment="CENTER" spacing="30">
-            <padding>
-                <Insets top="40" left="40" right="40" bottom="40" />
-            </padding>
-            
-            <VBox alignment="CENTER" spacing="20" styleClass="card" maxWidth="600" prefHeight="500">
-                <padding><Insets top="40" right="40" bottom="40" left="40" /></padding>
-                
-                <ImageView fx:id="avatarView" fitHeight="150" fitWidth="150" pickOnBounds="true" preserveRatio="true" />
-                
-                <VBox alignment="CENTER" spacing="10">
-                    <Label fx:id="usernameLabel" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
-                    <Label fx:id="emailLabel" style="-fx-text-fill: #949499; -fx-font-size: 18;" />
+        <ScrollPane fitToWidth="true" fitToHeight="true">
+            <VBox alignment="TOP_CENTER" spacing="30">
+                <padding>
+                    <Insets top="40" left="40" right="40" bottom="40" />
+                </padding>
+
+                <!-- Profile Card -->
+                <VBox alignment="CENTER" spacing="20" styleClass="card" maxWidth="600" prefHeight="500">
+                    <padding><Insets top="40" right="40" bottom="40" left="40" /></padding>
+
+                    <ImageView fx:id="avatarView" fitHeight="150" fitWidth="150" pickOnBounds="true" preserveRatio="true" />
+
+                    <VBox alignment="CENTER" spacing="10">
+                        <Label fx:id="usernameLabel" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
+                        <Label fx:id="emailLabel" style="-fx-text-fill: #949499; -fx-font-size: 18;" />
+                    </VBox>
+
+                    <Separator opacity="0.1" />
+
+                    <GridPane hgap="20" vgap="15" alignment="CENTER">
+                        <Label text="FULL NAME:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-text-fill: #949499; -fx-font-weight: bold;" />
+                        <Label fx:id="fullNameLabel" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-text-fill: white;" />
+
+                        <Label text="ROLES:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-text-fill: #949499; -fx-font-weight: bold;" />
+                        <Label fx:id="rolesLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-text-fill: #FFC107;" />
+                    </GridPane>
+
+                    <Button text="EDIT PROFILE" onAction="#handleNavEditProfile" styleClass="btn-primary" prefWidth="200" />
                 </VBox>
-                
-                <Separator opacity="0.1" />
-                
-                <GridPane hgap="20" vgap="15" alignment="CENTER">
-                    <Label text="FULL NAME:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-text-fill: #949499; -fx-font-weight: bold;" />
-                    <Label fx:id="fullNameLabel" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-text-fill: white;" />
-                    
-                    <Label text="ROLES:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-text-fill: #949499; -fx-font-weight: bold;" />
-                    <Label fx:id="rolesLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-text-fill: #FFC107;" />
-                </GridPane>
-                
-                <Button text="EDIT PROFILE" onAction="#handleNavEditProfile" styleClass="btn-primary" prefWidth="200" />
             </VBox>
-        </VBox>
+        </ScrollPane>
     </center>
     
 </BorderPane>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.back.QRCodeScannerController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+
+    <center>
+        <VBox spacing="20" alignment="TOP_CENTER" style="-fx-padding: 40;">
+
+            <!-- Header -->
+            <VBox spacing="10" alignment="CENTER">
+                <Label text="QR Code Scanner" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
+                <Label text="Scan reservation QR codes to validate entries" style="-fx-text-fill: #949499; -fx-font-size: 14;" />
+            </VBox>
+
+            <!-- Scanner Card -->
+            <VBox spacing="15" style="-fx-border-color: #FFC107; -fx-border-width: 2; -fx-background-color: #1a1a2e; -fx-padding: 30; -fx-background-radius: 12;" VBox.vgrow="ALWAYS">
+
+                <!-- Input Field -->
+                <VBox spacing="5">
+                    <Label text="Scan QR Code" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 14;" />
+                    <HBox spacing="10">
+                        <TextField fx:id="qrCodeInputField"
+                                   promptText="Scan QR code here or enter reservation ID..."
+                                   style="-fx-font-size: 16; -fx-padding: 10; -fx-control-inner-background: #16213e; -fx-text-fill: white;"
+                                   prefHeight="45" HBox.hgrow="ALWAYS"/>
+                        <Button text="Upload PDF" onAction="#handleUploadPDF"
+                                style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 12; -fx-padding: 10 20;"
+                                prefWidth="120" prefHeight="45">
+                            <graphic><FontIcon iconLiteral="fas-file-pdf" iconSize="18" iconColor="white"/></graphic>
+                        </Button>
+                    </HBox>
+                </VBox>
+
+                <!-- Result Label -->
+                <Label fx:id="resultLabel" text="" style="-fx-font-size: 14; -fx-font-weight: bold;" />
+
+                <!-- Confirmation Badge -->
+                <HBox fx:id="confirmationBadge" spacing="10" alignment="CENTER" style="-fx-background-color: #10b981; -fx-padding: 15; -fx-background-radius: 8; -fx-border-color: #059669; -fx-border-width: 2;" visible="false">
+                    <FontIcon iconLiteral="fas-check-circle" iconSize="32" iconColor="white" />
+                    <VBox spacing="0">
+                        <Label text="✓ RÉSERVATION CONFIRMÉE" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
+                        <Label text="Accès accordé à l'événement" style="-fx-text-fill: #d1fae5; -fx-font-size: 12;" />
+                    </VBox>
+                </HBox>
+
+                <!-- Reservation Details -->
+                <VBox fx:id="resultContainer" spacing="10" style="-fx-background-color: #262a3a; -fx-padding: 20; -fx-background-radius: 8;">
+
+                    <HBox spacing="20">
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="RESERVATION ID" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                            <Label fx:id="reservationIdLabel" style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;" />
+                        </VBox>
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="STATUS" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                            <Label fx:id="reservationStatusLabel" style="-fx-text-fill: white; -fx-font-size: 14;" />
+                        </VBox>
+                    </HBox>
+
+                    <Separator style="-fx-opacity: 0.2;" />
+
+                    <VBox spacing="5">
+                        <Label text="GUEST NAME" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                        <Label fx:id="reservationNameLabel" style="-fx-text-fill: white; -fx-font-size: 16;" />
+                    </VBox>
+
+                    <HBox spacing="20">
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="NUMBER OF SEATS" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                            <Label fx:id="reservationSeatsLabel" style="-fx-text-fill: white; -fx-font-size: 14;" />
+                        </VBox>
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="EVENT ID" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                            <Label fx:id="reservationEventLabel" style="-fx-text-fill: white; -fx-font-size: 14;" />
+                        </VBox>
+                    </HBox>
+
+                    <Separator style="-fx-opacity: 0.2;" />
+
+                    <!-- Action Buttons -->
+                    <HBox spacing="15" alignment="CENTER">
+                        <Button fx:id="validateButton" text="Validate Entry" onAction="#handleValidateReservation"
+                                styleClass="btn-primary" prefWidth="200" prefHeight="45">
+                            <graphic><FontIcon iconLiteral="fas-check-circle" iconSize="18"/></graphic>
+                        </Button>
+                        <Button text="Send Email" onAction="#handleSendEmail"
+                                style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 14; -fx-padding: 10 20;"
+                                prefWidth="200" prefHeight="45">
+                            <graphic><FontIcon iconLiteral="fas-envelope" iconSize="18" iconColor="white"/></graphic>
+                        </Button>
+                        <Button text="Reject Entry" onAction="#handleCancelReservation"
+                                style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 14; -fx-padding: 10 20;"
+                                prefWidth="200" prefHeight="45">
+                            <graphic><FontIcon iconLiteral="fas-times-circle" iconSize="18" iconColor="white"/></graphic>
+                        </Button>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <!-- Footer Info -->
+            <VBox spacing="5" alignment="CENTER">
+                <Label text="Instructions:" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                <Label text="1. Position QR code scanner in front of the QR code on the ticket" style="-fx-text-fill: #71717a; -fx-font-size: 11;" />
+                <Label text="2. Press Enter or wait for automatic scan completion" style="-fx-text-fill: #71717a; -fx-font-size: 11;" />
+                <Label text="3. Review reservation details and click 'Validate Entry' to confirm" style="-fx-text-fill: #71717a; -fx-font-size: 11;" />
+            </VBox>
+
+            <Button text="Back to Admin Dashboard" onAction="#handleBack" styleClass="btn-gold" prefWidth="200" prefHeight="40" />
+        </VBox>
+    </center>
+</BorderPane>
+

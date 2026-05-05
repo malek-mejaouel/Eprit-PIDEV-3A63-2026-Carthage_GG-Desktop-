@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="CarthageGG Run" type="MavenRunConfiguration" factoryName="Maven">
+    <MavenSettings>
+      <option name="myGeneralSettings" />
+      <option name="myRunnerSettings" />
+      <option name="myDokkaSettings" />
+      <option name="myFormat" value="MAT" />
+    </MavenSettings>
+    <method v="2" />
+    <option name="name" value="CarthageGG Run" />
+    <option name="nameIsGenerated" value="false" />
+    <option name="elementToName" />
+    <option name="generatedName" value="CarthageGG Run" />
+    <option name="isShowConsoleOnStdErr" value="false" />
+    <option name="isShowConsoleOnStdOut" value="false" />
+    <option name="isModuleSDKNotConfirmed" value="true" />
+    <option name="myRunnerParameters" value="javafx:run" />
+    <option name="myProgramParameters" value="" />
+    <option name="workingDirPath" value="$PROJECT_DIR$" />
+    <option name="isAlternativeJrePathEnabled" value="false" />
+    <option name="alternativeJrePath" value="" />
+    <option name="passParentEnvs" value="true" />
+    <option name="isPassParentEnvs" value="true" />
+    <option name="runMavenInBackground" value="true" />
+    <option name="mavenHome" value="$PROJECT_DIR$/mvnw" />
+    <option name="mavenHomePath" value="$PROJECT_DIR$" />
+    <option name="mavenExePath" value="" />
+    <option name="jrePath" value="" />
+    <option name="vmOptions" value="" />
+    <option name="envs">
+      <map />
+    </option>
+    <option name="passParentEnvs" value="true" />
+    <method v="2" />
+  </configuration>
+</component>
+

@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.scene.web.WebView?>
 <?import javafx.geometry.Insets?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
@@ -62,20 +63,63 @@
                     <Separator style="-fx-opacity: 0.1;" />
                     
                     <VBox spacing="15">
-                        <Label text="LOCATION INFORMATION" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 14;" />
-                        
-                        <VBox spacing="15" style="-fx-background-color: #1e1e2e; -fx-padding: 20; -fx-background-radius: 12;">
-                            <VBox spacing="5">
-                                <HBox spacing="10" alignment="CENTER_LEFT">
-                                    <FontIcon iconLiteral="fas-map-marker-alt" iconColor="#00f0ff" iconSize="18"/>
-                                    <Label fx:id="locationNameLabel" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20;" />
-                                </HBox>
-                                <Label fx:id="locationAddressLabel" style="-fx-text-fill: #949499; -fx-font-size: 14;" />
-                            </VBox>
-                            
-                            <Label fx:id="locationCapacityLabel" style="-fx-text-fill: #71717a; -fx-font-weight: bold;" />
-                        </VBox>
+                         <Label text="LOCATION INFORMATION" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 14;" />
+
+                         <VBox spacing="15" style="-fx-background-color: #1e1e2e; -fx-padding: 20; -fx-background-radius: 12;">
+                             <VBox spacing="5">
+                                 <HBox spacing="10" alignment="CENTER_LEFT">
+                                     <FontIcon iconLiteral="fas-map-marker-alt" iconColor="#00f0ff" iconSize="18"/>
+                                     <Label fx:id="locationNameLabel" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20;" />
+                                 </HBox>
+                                 <Label fx:id="locationAddressLabel" style="-fx-text-fill: #949499; -fx-font-size: 14;" />
+                             </VBox>
+
+                             <Label fx:id="locationCapacityLabel" style="-fx-text-fill: #71717a; -fx-font-weight: bold;" />
+
+                             <WebView fx:id="mapWebView" prefHeight="300" style="-fx-background-radius: 12;" />
+                         </VBox>
                     </VBox>
+
+                    <Separator style="-fx-opacity: 0.1;" />
+
+                    <!-- RESERVATION FORM SECTION -->
+                    <VBox spacing="20">
+                        <Label text="MAKE YOUR RESERVATION" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 14;" />
+
+                        <!-- Full Name -->
+                        <VBox spacing="8">
+                            <Label text="FULL NAME" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 12;" />
+                            <TextField fx:id="fullNameField" promptText="Enter your full name" styleClass="text-field" />
+                        </VBox>
+
+                        <!-- Number of Seats -->
+                        <HBox spacing="20">
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="NUMBER OF SEATS" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 12;" />
+                                <TextField fx:id="seatsField" promptText="1" styleClass="text-field" />
+                            </VBox>
+
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="PRICE PER SEAT (TND)" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 12;" />
+                                <TextField fx:id="priceField" promptText="0.00" styleClass="text-field" />
+                            </VBox>
+                        </HBox>
+
+                        <!-- Total Price -->
+                        <VBox spacing="8">
+                            <Label text="TOTAL PRICE (TND)" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 12;" />
+                            <TextField fx:id="totalPriceField" promptText="0.00" editable="false" styleClass="text-field" style="-fx-text-fill: #00f0ff; -fx-font-weight: bold;" />
+                        </VBox>
+
+                        <!-- Buttons -->
+                        <HBox spacing="15" alignment="CENTER">
+                            <Button fx:id="reserveButton" text="Reserve Now" styleClass="btn-primary" prefWidth="200" prefHeight="45">
+                                <graphic><FontIcon iconLiteral="fas-ticket-alt" iconSize="18"/></graphic>
+                            </Button>
+                            <Button fx:id="cancelButton" text="Cancel" styleClass="btn-secondary" prefWidth="150" prefHeight="45" />
+                        </HBox>
+                    </VBox>
+
                 </VBox>
             </VBox>
         </ScrollPane>

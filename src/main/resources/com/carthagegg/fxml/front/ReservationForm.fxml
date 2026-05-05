@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import com.carthagegg.models.Reservation?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.ReservationFormController"
+            style="-fx-background-color: #0f0f1e;">
+
+    <top>
+        <VBox spacing="10" style="-fx-alignment: center; -fx-padding: 20;">
+            <FontIcon iconLiteral="fas-ticket-alt" iconColor="#00f0ff" iconSize="32"/>
+            <Label text="Make a Reservation" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
+            <Label text="Reserve your spot for this event" style="-fx-text-fill: #949499;" />
+        </VBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="20" style="-fx-padding: 20;">
+                <!-- Reservation ID (Read-only) -->
+                <VBox spacing="15">
+                    <Label text="ID" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                    <TextField fx:id="reservationIdField" promptText="Auto-generated" editable="false" styleClass="text-field" />
+                </VBox>
+
+                <!-- Full Name -->
+                <VBox spacing="15">
+                    <Label text="FULL_NAME" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                    <TextField fx:id="fullNameField" promptText="Enter your full name" styleClass="text-field" />
+                </VBox>
+
+                <!-- Price -->
+                <VBox spacing="15">
+                    <Label text="PRICE" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <TextField fx:id="priceField" promptText="0.00" styleClass="text-field" prefWidth="150" />
+                        <Label text="TND" style="-fx-text-fill: #949499; -fx-font-weight: bold;" />
+                    </HBox>
+                </VBox>
+
+                <!-- Number of Seats -->
+                <VBox spacing="15">
+                    <Label text="SEATS" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                    <TextField fx:id="seatsField" promptText="1" styleClass="text-field" />
+                </VBox>
+
+                <!-- Created At (Read-only) -->
+                <VBox spacing="15">
+                    <Label text="CREATED_AT" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                    <TextField fx:id="createdAtField" promptText="Auto-generated" editable="false" styleClass="text-field" />
+                </VBox>
+
+                <!-- Event ID (Read-only) -->
+                <VBox spacing="15">
+                    <Label text="EVENT_ID" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                    <TextField fx:id="eventIdField" promptText="Auto-filled" editable="false" styleClass="text-field" />
+                </VBox>
+
+
+                <!-- Event Details Display -->
+                <VBox spacing="15">
+                    <Label text="EVENT DETAILS" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12;" />
+                    <VBox spacing="5" style="-fx-background-color: #1e1e2e; -fx-padding: 15; -fx-background-radius: 8;">
+                        <Label fx:id="eventTitleLabel" style="-fx-text-fill: white; -fx-font-weight: bold;" />
+                        <Label fx:id="eventDateLabel" style="-fx-text-fill: #949499;" />
+                        <Label fx:id="availableSeatsLabel" style="-fx-text-fill: #71717a;" />
+                    </VBox>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="15" style="-fx-padding: 20; -fx-alignment: center-right;">
+            <Button fx:id="reserveButton" text="Reserve Now" style="-fx-padding: 10 30; -fx-font-size: 14; -fx-background-color: #00f0ff; -fx-text-fill: black; -fx-font-weight: bold;" />
+            <Button fx:id="cancelButton" text="Cancel" style="-fx-padding: 10 30; -fx-font-size: 14; -fx-background-color: #424242; -fx-text-fill: white;" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

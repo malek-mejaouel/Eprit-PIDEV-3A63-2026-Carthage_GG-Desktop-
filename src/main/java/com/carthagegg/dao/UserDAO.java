@@ -120,7 +120,7 @@ public class UserDAO {
 
     public void update(User user) throws SQLException {
         String sql = "UPDATE users SET username=?, first_name=?, last_name=?, avatar=?, updated_at=NOW() WHERE user_id=?";
-        try (Connection conn = DatabaseConnection.getInstance();
+        try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getFirstName());
@@ -139,6 +139,20 @@ public class UserDAO {
             ps.setInt(2, userId);
             ps.executeUpdate();
         }
+    }
+
+    public User findById(int userId) throws SQLException {
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUser(rs);
+                }
+            }
+        }
+        return null;
     }
 
     public void activateUser(int userId) throws SQLException {
