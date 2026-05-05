@@ -37,3 +37,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Local configuration
+src/main/resources/config.properties
+config.properties

@@ -8,6 +8,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MatchDAO {
+    
+    static {
+        // Run database migration to ensure is_rivalry exists
+        try (java.sql.Connection conn = com.carthagegg.utils.DatabaseConnection.getInstance();
+             java.sql.Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE matches ADD COLUMN IF NOT EXISTS is_rivalry BOOLEAN DEFAULT FALSE");
+        } catch (Exception e) {
+            // Ignore if column already exists or IF NOT EXISTS not supported
+            try (java.sql.Connection conn = com.carthagegg.utils.DatabaseConnection.getInstance();
+                 java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE matches ADD COLUMN is_rivalry BOOLEAN DEFAULT FALSE");
+            } catch (Exception ex) {
+                // Already exists or other error
+            }
+        }
+    }
+
     private Connection conn;
 
     public MatchDAO() {
@@ -20,7 +37,7 @@ public class MatchDAO {
 
     public List<Match> findAll() throws SQLException {
         List<Match> list = new ArrayList<>();
-        String sqlWithJoins = "SELECT m.*, t1.team_name as team_a_name, t2.team_name as team_b_name, tr.tournament_name " +
+        String sqlWithJoins = "SELECT m.*, t1.team_name as team_a_name, t2.team_name as team_b_name, tr.tournament_name, m.is_rivalry " +
                               "FROM matches m " +
                               "LEFT JOIN teams t1 ON m.team_a_id = t1.team_id " +
                               "LEFT JOIN teams t2 ON m.team_b_id = t2.team_id " +
@@ -40,7 +57,10 @@ public class MatchDAO {
     }
 
     public void save(Match m) throws SQLException {
-        String sql = "INSERT INTO matches (match_date, score_team_a, score_team_b, tournament_id, game_id, team_a_id, team_b_id) VALUES (?,?,?,?,?,?,?)";
+        if (m.getTeamAId() == m.getTeamBId()) {
+            throw new IllegalArgumentException("A match cannot have the same team on both sides.");
+        }
+        String sql = "INSERT INTO matches (match_date, score_team_a, score_team_b, tournament_id, game_id, team_a_id, team_b_id, is_rivalry) VALUES (?,?,?,?,?,?,?,?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (m.getMatchDate() != null) {
                 ps.setTimestamp(1, Timestamp.valueOf(m.getMatchDate()));
@@ -53,15 +73,20 @@ public class MatchDAO {
             ps.setInt(5, m.getGameId());
             ps.setInt(6, m.getTeamAId());
             ps.setInt(7, m.getTeamBId());
+            ps.setBoolean(8, m.isRivalry());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) m.setMatchId(rs.getInt(1));
             }
         }
+        checkAndUpdateRivalry(m.getTeamAId(), m.getTeamBId());
     }
 
     public void update(Match m) throws SQLException {
-        String sql = "UPDATE matches SET match_date=?, score_team_a=?, score_team_b=?, tournament_id=?, game_id=?, team_a_id=?, team_b_id=? WHERE match_id=?";
+        if (m.getTeamAId() == m.getTeamBId()) {
+            throw new IllegalArgumentException("A match cannot have the same team on both sides.");
+        }
+        String sql = "UPDATE matches SET match_date=?, score_team_a=?, score_team_b=?, tournament_id=?, game_id=?, team_a_id=?, team_b_id=?, is_rivalry=? WHERE match_id=?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             if (m.getMatchDate() != null) {
                 ps.setTimestamp(1, Timestamp.valueOf(m.getMatchDate()));
@@ -74,7 +99,28 @@ public class MatchDAO {
             ps.setInt(5, m.getGameId());
             ps.setInt(6, m.getTeamAId());
             ps.setInt(7, m.getTeamBId());
-            ps.setInt(8, m.getMatchId());
+            ps.setBoolean(8, m.isRivalry());
+            ps.setInt(9, m.getMatchId());
+            ps.executeUpdate();
+        }
+        checkAndUpdateRivalry(m.getTeamAId(), m.getTeamBId());
+    }
+
+    private void checkAndUpdateRivalry(int teamAId, int teamBId) throws SQLException {
+        com.carthagegg.utils.RivalryDetector detector = new com.carthagegg.utils.RivalryDetector();
+        if (detector.isRivalry(teamAId, teamBId)) {
+            updateRivalryFlag(teamAId, teamBId, true);
+        }
+    }
+
+    private void updateRivalryFlag(int teamAId, int teamBId, boolean isRivalry) throws SQLException {
+        String sql = "UPDATE matches SET is_rivalry = ? WHERE (team_a_id = ? AND team_b_id = ?) OR (team_a_id = ? AND team_b_id = ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBoolean(1, isRivalry);
+            ps.setInt(2, teamAId);
+            ps.setInt(3, teamBId);
+            ps.setInt(4, teamBId);
+            ps.setInt(5, teamAId);
             ps.executeUpdate();
         }
     }
@@ -103,6 +149,13 @@ public class MatchDAO {
         m.setTeamAId(rs.getInt("team_a_id"));
         m.setTeamBId(rs.getInt("team_b_id"));
         
+        try {
+            m.setRivalry(rs.getBoolean("is_rivalry"));
+        } catch (SQLException e) {
+            // Column might be missing if migration hasn't run yet
+            m.setRivalry(false);
+        }
+        
         // Try to map joined columns if they exist
         try {
             m.setTeamAName(rs.getString("team_a_name"));
@@ -113,5 +166,45 @@ public class MatchDAO {
         }
         
         return m;
+    }
+
+    public List<Match> findByTeams(int teamAId, int teamBId) throws SQLException {
+        List<Match> list = new ArrayList<>();
+        String sql = "SELECT m.*, t1.team_name as team_a_name, t2.team_name as team_b_name, tr.tournament_name " +
+                     "FROM matches m " +
+                     "LEFT JOIN teams t1 ON m.team_a_id = t1.team_id " +
+                     "LEFT JOIN teams t2 ON m.team_b_id = t2.team_id " +
+                     "LEFT JOIN tournaments tr ON m.tournament_id = tr.tournament_id " +
+                     "WHERE (m.team_a_id = ? AND m.team_b_id = ?) OR (m.team_a_id = ? AND m.team_b_id = ?) " +
+                     "ORDER BY m.match_date DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, teamAId);
+            ps.setInt(2, teamBId);
+            ps.setInt(3, teamBId);
+            ps.setInt(4, teamAId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapMatch(rs));
+            }
+        }
+        return list;
+    }
+
+    public List<Match> findByTeam(int teamId) throws SQLException {
+        List<Match> list = new ArrayList<>();
+        String sql = "SELECT m.*, t1.team_name as team_a_name, t2.team_name as team_b_name, tr.tournament_name " +
+                     "FROM matches m " +
+                     "LEFT JOIN teams t1 ON m.team_a_id = t1.team_id " +
+                     "LEFT JOIN teams t2 ON m.team_b_id = t2.team_id " +
+                     "LEFT JOIN tournaments tr ON m.tournament_id = tr.tournament_id " +
+                     "WHERE m.team_a_id = ? OR m.team_b_id = ? " +
+                     "ORDER BY m.match_date DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, teamId);
+            ps.setInt(2, teamId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapMatch(rs));
+            }
+        }
+        return list;
     }
 }

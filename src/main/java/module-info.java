@@ -14,6 +14,7 @@ module com.carthagegg.carthagegg {
     requires java.desktop;
     requires java.net.http;
     requires jdk.httpserver;
+    requires okhttp3;
 
     opens com.carthagegg to javafx.fxml;
     opens com.carthagegg.controllers.auth to javafx.fxml;

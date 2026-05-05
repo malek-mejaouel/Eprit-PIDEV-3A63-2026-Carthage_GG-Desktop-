@@ -17,6 +17,7 @@ public class SidebarController {
     @FXML private Button navTournaments;
     @FXML private Button navTeams;
     @FXML private Button navMatches;
+    @FXML private Button navLeaderboard;
     @FXML private Button navEvents;
     @FXML private Button navNews;
     @FXML private Button navShop;
@@ -46,6 +47,7 @@ public class SidebarController {
         resetStyle(navTournaments);
         resetStyle(navTeams);
         resetStyle(navMatches);
+        resetStyle(navLeaderboard);
         resetStyle(navEvents);
         resetStyle(navNews);
         resetStyle(navShop);
@@ -59,6 +61,7 @@ public class SidebarController {
             case "tournaments": setActive(navTournaments); break;
             case "teams": setActive(navTeams); break;
             case "matches": setActive(navMatches); break;
+            case "leaderboard": setActive(navLeaderboard); break;
             case "events": setActive(navEvents); break;
             case "news": setActive(navNews); break;
             case "shop": setActive(navShop); break;
@@ -93,6 +96,7 @@ public class SidebarController {
     @FXML private void handleNavTournaments() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Tournaments.fxml"); }
     @FXML private void handleNavTeams() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Teams.fxml"); }
     @FXML private void handleNavMatches() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Matches.fxml"); }
+    @FXML private void handleNavLeaderboard() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Leaderboard.fxml"); }
     @FXML private void handleNavEvents() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Events.fxml"); }
     @FXML private void handleNavNews() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/News.fxml"); }
     @FXML private void handleNavShop() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Shop.fxml"); }

@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS matches (
     game_id INT,
     team_a_id INT,
     team_b_id INT,
+    is_rivalry BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (tournament_id) REFERENCES tournaments(tournament_id),
     FOREIGN KEY (game_id) REFERENCES games(game_id),
     FOREIGN KEY (team_a_id) REFERENCES teams(team_id),
@@ -149,3 +150,6 @@ CREATE TABLE IF NOT EXISTS categories (
 -- Insert Admin User (Password: admin123)
 INSERT INTO users (email, password, roles, username, first_name, last_name, is_active)
 VALUES ('admin@carthagegg.tn', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00GdR00N.N0f2W', '["ROLE_ADMIN"]', 'admin', 'Admin', 'CarthageGG', 1);
+
+-- Updates for Rivalry Detection
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS is_rivalry BOOLEAN DEFAULT FALSE;

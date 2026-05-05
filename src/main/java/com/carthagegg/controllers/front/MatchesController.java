@@ -92,6 +92,23 @@ public class MatchesController {
         team2.setPrefWidth(200);
         team2.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
+        Label rivalryBadge = new Label("");
+        if (match.isRivalry()) {
+            rivalryBadge.setText("🔥");
+            rivalryBadge.setStyle("-fx-font-size: 26px;");
+            rivalryBadge.setEffect(new javafx.scene.effect.DropShadow(10, javafx.scene.paint.Color.ORANGERED));
+            com.carthagegg.utils.RivalryDetector detector = new com.carthagegg.utils.RivalryDetector();
+            String summary = detector.getRivalrySummary(
+                match.getTeamAId(), 
+                match.getTeamBId(), 
+                match.getTeamAName() != null ? match.getTeamAName() : "Team A", 
+                match.getTeamBName() != null ? match.getTeamBName() : "Team B"
+            );
+            Tooltip tooltip = new Tooltip(summary);
+            tooltip.setShowDelay(javafx.util.Duration.millis(100));
+            Tooltip.install(rivalryBadge, tooltip);
+        }
+
         VBox info = new VBox(5);
         Label tournamentLabel = new Label(match.getTournamentName() != null ? match.getTournamentName() : "Exhibition");
         tournamentLabel.setStyle("-fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
@@ -99,7 +116,7 @@ public class MatchesController {
         statusLabel.setStyle("-fx-text-fill: #949499;");
         info.getChildren().addAll(tournamentLabel, statusLabel);
 
-        row.getChildren().addAll(team1, score, team2, info);
+        row.getChildren().addAll(team1, score, team2, rivalryBadge, info);
         return row;
     }
 

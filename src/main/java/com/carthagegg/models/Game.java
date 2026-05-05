@@ -5,6 +5,8 @@ public class Game {
     private String name;
     private String genre;
     private String description;
+    private String developer;
+    private int releaseYear;
 
     public Game() {}
 
@@ -16,6 +18,10 @@ public class Game {
     public void setGenre(String genre) { this.genre = genre; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getDeveloper() { return developer; }
+    public void setDeveloper(String developer) { this.developer = developer; }
+    public int getReleaseYear() { return releaseYear; }
+    public void setReleaseYear(int releaseYear) { this.releaseYear = releaseYear; }
     
     @Override
     public String toString() { return name; }
