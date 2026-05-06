@@ -38,8 +38,8 @@ public class GoogleAuthService {
         }
     }
 
-    private static final String DEFAULT_CLIENT_ID = config.getProperty("google.client.id", "");
-    private static final String DEFAULT_CLIENT_SECRET = config.getProperty("google.client.secret", "");
+    private static final String DEFAULT_CLIENT_ID = config.getProperty("google.client_id", "");
+    private static final String DEFAULT_CLIENT_SECRET = config.getProperty("google.client_secret", "");
     private static final String ENV_CLIENT_ID = "CARTHAGEGG_GOOGLE_CLIENT_ID";
     private static final String ENV_CLIENT_SECRET = "CARTHAGEGG_GOOGLE_CLIENT_SECRET";
     private static final int PREFERRED_LOCAL_PORT = 5317;

@@ -3,6 +3,7 @@ package com.carthagegg.controllers.front;
 import com.carthagegg.dao.StreamDAO;
 import com.carthagegg.models.Stream;
 import com.carthagegg.utils.SceneNavigator;
+import com.carthagegg.utils.StreamPlayer;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
@@ -73,6 +74,7 @@ public class StreamsController {
         Button watchBtn = new Button("WATCH NOW");
         watchBtn.getStyleClass().add("btn-primary");
         watchBtn.setMaxWidth(Double.MAX_VALUE);
+        watchBtn.setOnAction(e -> StreamPlayer.playStream(stream.getPlatform(), stream.getChannelName(), stream.getYoutubeVideoId()));
 
         card.getChildren().addAll(thumbnail, title, liveInfo, watchBtn);
         return card;

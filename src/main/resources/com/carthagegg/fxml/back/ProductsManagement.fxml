@@ -19,6 +19,9 @@
             </Button>
             <Label text="Shop Management" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;" />
             <Region HBox.hgrow="ALWAYS" />
+            <Button text="MANAGE COUPONS" onAction="#handleNavCoupons" styleClass="btn-gold" prefHeight="40">
+                <graphic><FontIcon iconLiteral="fas-ticket-alt" iconColor="#0a0a0f" iconSize="14"/></graphic>
+            </Button>
             <Button text="VIEW ORDERS" onAction="#handleNavOrders" styleClass="btn-gold" prefHeight="40">
                 <graphic><FontIcon iconLiteral="fas-shopping-bag" iconColor="#0a0a0f" iconSize="14"/></graphic>
             </Button>
@@ -40,6 +43,9 @@
             </HBox>
 
             <TableView fx:id="productsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                </columnResizePolicy>
                 <columns>
                     <TableColumn fx:id="colId" text="ID" prefWidth="50" />
                     <TableColumn fx:id="colName" text="Name" prefWidth="250" />
@@ -72,6 +78,11 @@
                 <Label text="PRICE" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="priceField" styleClass="text-field-dark" text="0.00" />
             </VBox>
+
+            <VBox spacing="5">
+                <Label text="SALE PRICE (OPTIONAL)" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextField fx:id="discountPriceField" styleClass="text-field-dark" promptText="Leave empty if no sale" />
+            </VBox>
             
             <VBox spacing="5">
                 <Label text="CATEGORY" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
@@ -81,6 +92,17 @@
             <VBox spacing="5">
                 <Label text="STOCK" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="stockField" styleClass="text-field-dark" text="0" />
+            </VBox>
+
+            <VBox spacing="5" VBox.vgrow="ALWAYS">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="DESCRIPTION" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button onAction="#handleGenerateAIDescription" style="-fx-background-color: transparent; -fx-text-fill: #ffb800; -fx-font-size: 10; -fx-padding: 0; -fx-cursor: hand;" text="✨ Generate with AI">
+                        <graphic><FontIcon iconLiteral="fas-magic" iconSize="10" iconColor="#ffb800"/></graphic>
+                    </Button>
+                </HBox>
+                <TextArea fx:id="descriptionField" styleClass="text-field-dark" prefHeight="100" wrapText="true" promptText="Enter product details..." />
             </VBox>
             
             <VBox spacing="5">

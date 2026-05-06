@@ -10,9 +10,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public class UsersManagementController {
 
@@ -82,21 +85,40 @@ public class UsersManagementController {
         // Actions column with buttons
         colActions.setCellFactory(param -> new TableCell<User, Void>() {
             private final Button deleteBtn = new Button("Delete");
-            private final HBox pane = new HBox(5, deleteBtn);
+            private final Button banBtn = new Button("Ban");
+            private final HBox pane = new HBox(5, banBtn, deleteBtn);
 
             {
                 deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
+                banBtn.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white;");
                 
                 deleteBtn.setOnAction(event -> {
                     User user = getTableView().getItems().get(getIndex());
                     handleDeleteUser(user);
+                });
+
+                banBtn.setOnAction(event -> {
+                    User user = getTableView().getItems().get(getIndex());
+                    handleBanUser(user);
                 });
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : pane);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    User user = getTableView().getItems().get(getIndex());
+                    if (user.getBannedUntil() != null && user.getBannedUntil().isAfter(LocalDateTime.now())) {
+                        banBtn.setText("Unban");
+                        banBtn.setStyle("-fx-background-color: #10b981; -fx-text-fill: white;");
+                    } else {
+                        banBtn.setText("Ban");
+                        banBtn.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white;");
+                    }
+                    setGraphic(pane);
+                }
             }
         });
     }
@@ -193,6 +215,72 @@ public class UsersManagementController {
                     error.setHeaderText("Could not delete user");
                     error.setContentText("Database error: " + e.getMessage());
                     error.show();
+                }
+            }
+        });
+    }
+
+    private void handleBanUser(User user) {
+        if (user.getBannedUntil() != null && user.getBannedUntil().isAfter(LocalDateTime.now())) {
+            // Unban logic
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirm Unban");
+            alert.setHeaderText("Unban user " + user.getUsername() + "?");
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    try {
+                        userDAO.banUser(user.getUserId(), LocalDateTime.now().minusDays(1), "Unbanned by admin");
+                        loadUsers(); // Refresh
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            return;
+        }
+
+        // Ban logic with Dialog
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Ban User: " + user.getUsername());
+        dialog.setHeaderText("Specify ban duration and reason");
+
+        ButtonType banButtonType = new ButtonType("Ban", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(banButtonType, ButtonType.CANCEL);
+
+        VBox content = new VBox(10);
+        ComboBox<String> durationBox = new ComboBox<>(FXCollections.observableArrayList(
+            "1 Hour", "24 Hours", "3 Days", "7 Days", "30 Days", "Permanent"
+        ));
+        durationBox.setValue("24 Hours");
+        
+        TextArea reasonArea = new TextArea();
+        reasonArea.setPromptText("Reason for ban...");
+        reasonArea.setPrefRowCount(3);
+
+        content.getChildren().addAll(new Label("Duration:"), durationBox, new Label("Reason:"), reasonArea);
+        dialog.getDialogPane().setContent(content);
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == banButtonType) {
+                String duration = durationBox.getValue();
+                String reason = reasonArea.getText().trim();
+                if (reason.isEmpty()) reason = "No reason provided";
+
+                LocalDateTime until = switch (duration) {
+                    case "1 Hour" -> LocalDateTime.now().plusHours(1);
+                    case "24 Hours" -> LocalDateTime.now().plusDays(1);
+                    case "3 Days" -> LocalDateTime.now().plusDays(3);
+                    case "7 Days" -> LocalDateTime.now().plusDays(7);
+                    case "30 Days" -> LocalDateTime.now().plusDays(30);
+                    case "Permanent" -> LocalDateTime.now().plusYears(100);
+                    default -> LocalDateTime.now().plusDays(1);
+                };
+
+                try {
+                    userDAO.banUser(user.getUserId(), until, reason);
+                    loadUsers(); // Refresh
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
         });

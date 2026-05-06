@@ -6,6 +6,8 @@ public class Product {
     private int id;
     private String name;
     private BigDecimal price;
+    private BigDecimal discountPrice;
+    private String description;
     private int categoryId;
     private int stock;
     private String image;
@@ -18,6 +20,13 @@ public class Product {
     public void setName(String name) { this.name = name; }
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+    public BigDecimal getDiscountPrice() { return discountPrice; }
+    public void setDiscountPrice(BigDecimal discountPrice) { this.discountPrice = discountPrice; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public BigDecimal getEffectivePrice() {
+        return (discountPrice != null && discountPrice.compareTo(BigDecimal.ZERO) > 0) ? discountPrice : price;
+    }
     public int getCategoryId() { return categoryId; }
     public void setCategoryId(int categoryId) { this.categoryId = categoryId; }
     public int getStock() { return stock; }

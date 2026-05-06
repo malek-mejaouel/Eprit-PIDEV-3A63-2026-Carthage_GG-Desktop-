@@ -12,6 +12,7 @@ public class User {
     private String lastName;
     private String avatar;
     private String googleId;
+    private String discordId;
     private boolean active;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
@@ -52,6 +53,9 @@ public class User {
 
     public String getGoogleId() { return googleId; }
     public void setGoogleId(String googleId) { this.googleId = googleId; }
+
+    public String getDiscordId() { return discordId; }
+    public void setDiscordId(String discordId) { this.discordId = discordId; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

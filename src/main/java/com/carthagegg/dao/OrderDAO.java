@@ -9,7 +9,9 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OrderDAO {
     private static final String FILE_PATH = "orders.json";
@@ -45,6 +47,15 @@ public class OrderDAO {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    public Map<Integer, Integer> getProductSalesCounts() {
+        List<Order> orders = findAll();
+        Map<Integer, Integer> counts = new HashMap<>();
+        for (Order o : orders) {
+            counts.put(o.getProductId(), counts.getOrDefault(o.getProductId(), 0) + o.getQuantity());
+        }
+        return counts;
     }
 
     public void save(Order o) {

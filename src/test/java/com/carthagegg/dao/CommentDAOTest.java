@@ -25,16 +25,14 @@ public class CommentDAOTest {
         c.setDownvotes(0);
         
         service.save(c);
+        idCommentTest = c.getCommentaireId();
         
         List<Comment> comments = service.findAll();
         assertFalse(comments.isEmpty());
         
-        Comment lastComment = comments.get(0); // findAll returns by DESC order
-        idCommentTest = lastComment.getCommentaireId();
-        
         assertTrue(
             comments.stream().anyMatch(comm -> 
-                comm.getContenu().equals("Test Comment Content"))
+                comm.getCommentaireId() == idCommentTest)
         );
     }
 
@@ -62,16 +60,5 @@ public class CommentDAOTest {
         List<Comment> comments = service.findAll();
         boolean existe = comments.stream().anyMatch(c -> c.getCommentaireId() == idCommentTest);
         assertFalse(existe);
-    }
-
-    @AfterEach
-    void cleanUp() throws SQLException {
-        List<Comment> comments = service.findAll();
-        if (!comments.isEmpty()) {
-            Comment last = comments.get(0);
-            if (last.getContenu().equals("Test Comment Content") || last.getContenu().equals("Commentaire Modifie")) {
-                service.delete(last.getCommentaireId());
-            }
-        }
     }
 }

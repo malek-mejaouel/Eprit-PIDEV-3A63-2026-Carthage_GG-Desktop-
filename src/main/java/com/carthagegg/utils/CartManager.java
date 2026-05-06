@@ -35,7 +35,7 @@ public class CartManager {
 
     public static BigDecimal getTotalPrice() {
         return cartItems.entrySet().stream()
-                .map(entry -> entry.getKey().getPrice().multiply(new BigDecimal(entry.getValue())))
+                .map(entry -> entry.getKey().getEffectivePrice().multiply(new BigDecimal(entry.getValue())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

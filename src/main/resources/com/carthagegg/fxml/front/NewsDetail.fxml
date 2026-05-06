@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.image.ImageView?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -37,9 +36,24 @@
                     </padding>
                     
                     <VBox spacing="15" alignment="TOP_LEFT">
-                        <Label fx:id="categoryLabel" text="CATEGORY" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12; -fx-background-color: rgba(255, 193, 7, 0.1); -fx-padding: 5 10; -fx-background-radius: 4;" />
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label fx:id="categoryLabel" text="CATEGORY" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 12; -fx-background-color: rgba(255, 193, 7, 0.1); -fx-padding: 5 10; -fx-background-radius: 4;" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="summarizeBtn" onAction="#handleSummarize" styleClass="btn-secondary" style="-fx-background-color: #4f46e5; -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 6; -fx-padding: 6 12;">
+                                <graphic><FontIcon iconLiteral="fas-robot" iconSize="14" iconColor="white"/></graphic>
+                                <text>Summarize with AI</text>
+                            </Button>
+                        </HBox>
                         <Label fx:id="titleLabel" text="Title of the News" wrapText="true" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 36;" />
                         <Label fx:id="dateLabel" text="Published on date" style="-fx-text-fill: #949499; -fx-font-size: 14;" />
+                    </VBox>
+
+                    <VBox fx:id="summaryBox" spacing="15" style="-fx-background-color: #1a1a24; -fx-padding: 20; -fx-background-radius: 12; -fx-border-color: #4f46e5; -fx-border-width: 1; -fx-border-radius: 12;" visible="false" managed="false">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <FontIcon iconLiteral="fas-magic" iconSize="18" iconColor="#4f46e5"/>
+                            <Label text="AI Summary" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18;" />
+                        </HBox>
+                        <Label fx:id="summaryText" text="Generating summary..." wrapText="true" style="-fx-text-fill: #e4e4e7; -fx-font-size: 15; -fx-line-spacing: 1.4;" />
                     </VBox>
 
                     <ImageView fx:id="newsImage" fitWidth="800" preserveRatio="true" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 20, 0, 0, 10);">

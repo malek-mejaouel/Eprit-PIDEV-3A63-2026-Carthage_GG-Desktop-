@@ -13,9 +13,25 @@ public class ReservationDAO {
     public ReservationDAO() {
         try {
             this.conn = DatabaseConnection.getInstance();
+            ensureTable();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private void ensureTable() throws SQLException {
+        String ddl = "CREATE TABLE IF NOT EXISTS reservations (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "name VARCHAR(255) NOT NULL, " +
+                "price DECIMAL(10, 2) NOT NULL, " +
+                "reservation_date DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                "event_id INT NOT NULL, " +
+                "status ENUM('WAITING', 'CONFIRMED', 'CANCELLED') DEFAULT 'WAITING', " +
+                "FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE" +
+                ")";
+        try (Statement st = conn.createStatement()) {
+            st.executeUpdate(ddl);
+        } catch (SQLException ignored) {}
     }
 
     public List<Reservation> findAll() throws SQLException {

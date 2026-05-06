@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(100),
     avatar VARCHAR(255),
     google_id VARCHAR(255),
+    discord_id VARCHAR(255),
     is_active TINYINT(1) DEFAULT 1,
     is_verified TINYINT(1) DEFAULT 0,
     verified_role_badge VARCHAR(50),
@@ -184,6 +185,41 @@ CREATE TABLE IF NOT EXISTS orders (
     order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Reclamation Table
+CREATE TABLE IF NOT EXISTS reclamation (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    priority VARCHAR(20) DEFAULT 'normal',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Reclamation Messages Table
+CREATE TABLE IF NOT EXISTS reclamation_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    reclamation_id INT NOT NULL,
+    sender_id INT NOT NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (reclamation_id) REFERENCES reclamation(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Reservations Table (Matches ReservationDAO)
+CREATE TABLE IF NOT EXISTS reservations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    reservation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    event_id INT NOT NULL,
+    status ENUM('WAITING', 'CONFIRMED', 'CANCELLED') DEFAULT 'WAITING',
+    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
 );
 
 -- Insert Admin User (Password: admin123)

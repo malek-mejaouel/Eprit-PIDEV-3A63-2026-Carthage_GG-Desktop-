@@ -1,12 +1,15 @@
 package com.carthagegg.controllers.front;
 
+import com.carthagegg.dao.CouponDAO;
 import com.carthagegg.dao.OrderDAO;
 import com.carthagegg.dao.ProductDAO;
+import com.carthagegg.models.Coupon;
 import com.carthagegg.models.Order;
 import com.carthagegg.models.Product;
 import com.carthagegg.utils.CartManager;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import com.carthagegg.utils.StripeService;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,10 +20,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
 public class CartController {
 
@@ -29,9 +37,16 @@ public class CartController {
     @FXML private Label subtotalLabel;
     @FXML private Label totalLabel;
     @FXML private SidebarController sidebarController;
+    
+    @FXML private TextField couponField;
+    @FXML private Label couponMessageLabel;
+    @FXML private HBox discountRow;
+    @FXML private Label discountLabel;
 
     private OrderDAO orderDAO = new OrderDAO();
     private ProductDAO productDAO = new ProductDAO();
+    private CouponDAO couponDAO = new CouponDAO();
+    private Coupon activeCoupon = null;
 
     @FXML
     public void initialize() {
@@ -94,11 +109,33 @@ public class CartController {
 
         // Product Info
         VBox info = new VBox(5);
+        info.setMinWidth(250); // Ensure enough space for name and prices
         Label name = new Label(product.getName());
         name.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16;");
-        Label price = new Label(product.getPrice() + " TND");
-        price.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold;");
-        info.getChildren().addAll(name, price);
+        
+        HBox priceContainer = new HBox(12);
+        priceContainer.setAlignment(Pos.CENTER_LEFT);
+        
+        if (product.getDiscountPrice() != null && product.getDiscountPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            Text oldPrice = new Text(product.getPrice() + " USD");
+            oldPrice.setFill(Color.web("#949499"));
+            oldPrice.setStyle("-fx-font-size: 13;");
+            oldPrice.setStrikethrough(true);
+            oldPrice.setOpacity(0.6);
+            
+            Label price = new Label(product.getDiscountPrice() + " USD");
+            price.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold; -fx-font-size: 18;");
+            price.setMinWidth(Region.USE_PREF_SIZE); // Prevent truncation
+            
+            priceContainer.getChildren().addAll(oldPrice, price);
+        } else {
+            Label price = new Label(product.getPrice() + " USD");
+            price.setStyle("-fx-text-fill: #ffb800; -fx-font-weight: bold; -fx-font-size: 18;");
+            price.setMinWidth(Region.USE_PREF_SIZE); // Prevent truncation
+            priceContainer.getChildren().add(price);
+        }
+        
+        info.getChildren().addAll(name, priceContainer);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -106,21 +143,28 @@ public class CartController {
         // Quantity Controls
         HBox qtyControls = new HBox(15);
         qtyControls.setAlignment(Pos.CENTER);
+        qtyControls.setStyle("-fx-background-color: #0d0d15; -fx-background-radius: 20; -fx-padding: 5 15;");
         
         Button minusBtn = new Button();
-        minusBtn.setGraphic(new FontIcon("fas-minus"));
-        minusBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #71717a;");
+        FontIcon minusIcon = new FontIcon("fas-minus");
+        minusIcon.setIconSize(12);
+        minusIcon.setIconColor(javafx.scene.paint.Color.web("#ffb800"));
+        minusBtn.setGraphic(minusIcon);
+        minusBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
         minusBtn.setOnAction(e -> {
             CartManager.updateQuantity(product, quantity - 1);
             refreshCart();
         });
 
         Label qtyLabel = new Label(String.valueOf(quantity));
-        qtyLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16;");
+        qtyLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14;");
 
         Button plusBtn = new Button();
-        plusBtn.setGraphic(new FontIcon("fas-plus"));
-        plusBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #71717a;");
+        FontIcon plusIcon = new FontIcon("fas-plus");
+        plusIcon.setIconSize(12);
+        plusIcon.setIconColor(javafx.scene.paint.Color.web("#ffb800"));
+        plusBtn.setGraphic(plusIcon);
+        plusBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
         plusBtn.setOnAction(e -> {
             CartManager.updateQuantity(product, quantity + 1);
             refreshCart();
@@ -146,11 +190,54 @@ public class CartController {
 
     private void updateSummary() {
         int count = CartManager.getTotalItems();
-        String totalStr = CartManager.getTotalPrice().toString() + " TND";
+        BigDecimal subtotal = CartManager.getTotalPrice();
+        BigDecimal total = subtotal;
+
+        if (activeCoupon != null) {
+            BigDecimal discount = subtotal.multiply(new BigDecimal(activeCoupon.getDiscountPercentage()))
+                    .divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+            total = subtotal.subtract(discount);
+            
+            discountRow.setVisible(true);
+            discountRow.setManaged(true);
+            discountLabel.setText("-" + discount + " USD");
+        } else {
+            discountRow.setVisible(false);
+            discountRow.setManaged(false);
+        }
         
         itemCountLabel.setText(count + (count == 1 ? " item" : " items") + " in your cart");
-        subtotalLabel.setText(totalStr);
-        totalLabel.setText(totalStr);
+        subtotalLabel.setText(subtotal + " USD");
+        totalLabel.setText(total + " USD");
+    }
+
+    @FXML private void handleApplyCoupon() {
+        String code = couponField.getText().trim();
+        if (code.isEmpty()) return;
+
+        Optional<Coupon> couponOpt = couponDAO.findByCode(code);
+        if (couponOpt.isPresent()) {
+            Coupon coupon = couponOpt.get();
+            if (coupon.isValid()) {
+                activeCoupon = coupon;
+                couponMessageLabel.setText("Coupon applied: " + coupon.getDiscountPercentage() + "% OFF!");
+                couponMessageLabel.setTextFill(Color.web("#22c55e"));
+                couponMessageLabel.setVisible(true);
+                updateSummary();
+            } else {
+                activeCoupon = null;
+                couponMessageLabel.setText("This coupon has expired.");
+                couponMessageLabel.setTextFill(Color.web("#ef4444"));
+                couponMessageLabel.setVisible(true);
+                updateSummary();
+            }
+        } else {
+            activeCoupon = null;
+            couponMessageLabel.setText("Invalid coupon code.");
+            couponMessageLabel.setTextFill(Color.web("#ef4444"));
+            couponMessageLabel.setVisible(true);
+            updateSummary();
+        }
     }
 
     @FXML private void handleBackToShop() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Shop.fxml"); }
@@ -179,10 +266,40 @@ public class CartController {
                 }
             }
 
+            // --- Stripe Integration ---
+            try {
+                double discountPct = activeCoupon != null ? activeCoupon.getDiscountPercentage() : 0.0;
+                String checkoutUrl = StripeService.createCheckoutSession(items, discountPct);
+                StripeService.openCheckoutInBrowser(checkoutUrl);
+                
+                // For a desktop app, we usually show a dialog asking if payment was successful
+                Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmationAlert.setTitle("Payment Confirmation");
+                confirmationAlert.setHeaderText("A checkout page has been opened in your browser.");
+                confirmationAlert.setContentText("Did you complete the payment successfully?");
+                
+                ButtonType yesButton = new ButtonType("Yes, Complete Order", ButtonBar.ButtonData.YES);
+                ButtonType noButton = new ButtonType("No, Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+                confirmationAlert.getButtonTypes().setAll(yesButton, noButton);
+
+                java.util.Optional<ButtonType> result = confirmationAlert.showAndWait();
+                if (result.isEmpty() || result.get() != yesButton) {
+                    return; // User cancelled or payment failed
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                showAlert("Payment Error", "Could not initialize Stripe checkout: " + e.getMessage(), Alert.AlertType.ERROR);
+                return;
+            }
+            // --------------------------
+
             // 1. Update stock in database
+            BigDecimal subtotal = BigDecimal.ZERO;
             for (Map.Entry<Product, Integer> entry : items.entrySet()) {
                 Product product = entry.getKey();
                 int quantity = entry.getValue();
+                
+                subtotal = subtotal.add(product.getEffectivePrice().multiply(new BigDecimal(quantity)));
                 
                 product.setStock(product.getStock() - quantity);
                 productDAO.update(product);
@@ -201,9 +318,18 @@ public class CartController {
                 orderDAO.save(order);
             }
 
+            // --- Prepare Data for Receipt ---
+            double discountPct = activeCoupon != null ? activeCoupon.getDiscountPercentage() : 0.0;
+            BigDecimal discount = subtotal.multiply(new BigDecimal(discountPct))
+                    .divide(new BigDecimal(100), 2, java.math.RoundingMode.HALF_UP);
+            BigDecimal total = subtotal.subtract(discount);
+            
+            ReceiptController.setOrderData(new java.util.HashMap<>(items), subtotal, discount, total);
+            // --------------------------------
+
             CartManager.clear();
             refreshCart();
-            showAlert("Order Placed", "Your order has been placed successfully!", Alert.AlertType.INFORMATION);
+            SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Receipt.fxml");
             
         } catch (SQLException e) {
             e.printStackTrace();
