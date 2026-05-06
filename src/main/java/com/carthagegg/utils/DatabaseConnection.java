@@ -12,11 +12,9 @@ public class DatabaseConnection {
 
     public static Connection getInstance() throws SQLException {
         try {
-            if (instance == null || instance.isClosed()) {
-                // Ensure the driver is loaded
-                Class.forName("org.mariadb.jdbc.Driver");
-                instance = DriverManager.getConnection(URL, USER, PASSWORD);
-            }
+            // Ensure the driver is loaded
+            Class.forName("org.mariadb.jdbc.Driver");
+            return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (ClassNotFoundException e) {
             throw new SQLException("MariaDB JDBC Driver not found. Please ensure the dependency is in pom.xml", e);
         } catch (SQLException e) {
@@ -24,6 +22,5 @@ public class DatabaseConnection {
             System.err.println("Ensure MariaDB is running on port 3306 and database 'carthage_gg' exists.");
             throw e;
         }
-        return instance;
     }
 }
