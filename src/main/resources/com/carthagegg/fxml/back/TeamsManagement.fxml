@@ -67,12 +67,18 @@
                 <ComboBox fx:id="captainComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
                 <Label fx:id="captainErrorLabel" styleClass="error-label" />
             </VBox>
+
+            <VBox spacing="5">
+                <Label text="AI LOGO PROMPT (OPTIONAL)" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextArea fx:id="aiPromptArea" styleClass="text-field-dark" prefHeight="60" wrapText="true" promptText="e.g. A fierce wolf with neon blue accents..." />
+            </VBox>
             
             <VBox spacing="5">
                 <Label text="TEAM LOGO" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <TextField fx:id="logoField" styleClass="text-field-dark" editable="false" HBox.hgrow="ALWAYS" />
                     <Button text="UPLOAD" onAction="#handleBrowseLogo" styleClass="btn-outline" />
+                    <Button text="AI" onAction="#handleGenerateLogo" style="-fx-background-color: #3b82f6; -fx-text-fill: white;" />
                 </HBox>
                 <ImageView fx:id="logoPreview" fitWidth="120" fitHeight="120" preserveRatio="true" smooth="true" />
                 <Label fx:id="logoErrorLabel" styleClass="error-label" />

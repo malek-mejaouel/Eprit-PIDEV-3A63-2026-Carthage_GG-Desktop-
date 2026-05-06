@@ -2,8 +2,10 @@ package com.carthagegg.controllers.back;
 
 import com.carthagegg.dao.GameDAO;
 import com.carthagegg.models.Game;
+import com.carthagegg.utils.AIService;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -38,6 +40,7 @@ public class GamesManagementController {
     @FXML private Label descriptionErrorLabel;
 
     private final GameDAO gameDAO = new GameDAO();
+    private final AIService aiService = new AIService();
     private final ObservableList<Game> gamesList = FXCollections.observableArrayList();
     private final FilteredList<Game> filteredGames = new FilteredList<>(gamesList, game -> true);
     private final SortedList<Game> sortedGames = new SortedList<>(filteredGames);
@@ -64,14 +67,32 @@ public class GamesManagementController {
         colActions.setCellFactory(param -> new TableCell<Game, Void>() {
             private final Button editBtn = new Button("Edit");
             private final Button deleteBtn = new Button("Delete");
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+            private final Button aiBtn = new Button("AI Strategy");
+            private final Button commentaryBtn = new Button("AI Commentary");
+            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn, aiBtn, commentaryBtn);
 
             {
                 editBtn.getStyleClass().add("btn-gold");
                 deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
+                aiBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white;");
+                commentaryBtn.setStyle("-fx-background-color: #10b981; -fx-text-fill: white;");
                 
-                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
+                editBtn.setOnAction(e -> {
+                    Game g = getTableView().getItems().get(getIndex());
+                    if (g != null) handleEdit(g);
+                });
+                deleteBtn.setOnAction(e -> {
+                    Game g = getTableView().getItems().get(getIndex());
+                    if (g != null) handleDelete(g);
+                });
+                aiBtn.setOnAction(e -> {
+                    Game g = getTableView().getItems().get(getIndex());
+                    if (g != null) handleAIStrategy(g);
+                });
+                commentaryBtn.setOnAction(e -> {
+                    Game g = getTableView().getItems().get(getIndex());
+                    if (g != null) handleAICommentary(g);
+                });
             }
 
             @Override
@@ -156,6 +177,70 @@ public class GamesManagementController {
                 }
             }
         });
+    }
+
+    private void handleAIStrategy(Game g) {
+        Alert loadingAlert = new Alert(Alert.AlertType.INFORMATION);
+        loadingAlert.setTitle("AI Strategy");
+        loadingAlert.setHeaderText("Generating AI Strategy for " + g.getName() + "...");
+        loadingAlert.setContentText("Please wait while we consult the AI...");
+        loadingAlert.show();
+
+        String prompt = "Provide a professional competitive strategy and meta analysis for the game: " + g.getName() + 
+                        " (Genre: " + g.getGenre() + "). Include tips for beginners and advanced players.";
+
+        aiService.getAIResponseAsync(prompt)
+            .thenAccept(response -> Platform.runLater(() -> {
+                loadingAlert.close();
+                showAIDialog("AI Strategy: " + g.getName(), response);
+            }))
+            .exceptionally(ex -> {
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+                    showAlert("AI Error", "Failed to get AI response: " + ex.getMessage(), Alert.AlertType.ERROR);
+                });
+                return null;
+            });
+    }
+
+    private void handleAICommentary(Game g) {
+        Alert loadingAlert = new Alert(Alert.AlertType.INFORMATION);
+        loadingAlert.setTitle("AI Commentary");
+        loadingAlert.setHeaderText("Generating AI Commentary for " + g.getName() + "...");
+        loadingAlert.setContentText("Please wait while we consult the AI...");
+        loadingAlert.show();
+
+        String prompt = "Generate an exciting and professional esports commentary script for a high-stakes match in " + g.getName() + 
+                        ". Capture the energy of the crowd and the intensity of the game.";
+
+        aiService.getAIResponseAsync(prompt)
+            .thenAccept(response -> Platform.runLater(() -> {
+                loadingAlert.close();
+                showAIDialog("AI Commentary: " + g.getName(), response);
+            }))
+            .exceptionally(ex -> {
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+                    showAlert("AI Error", "Failed to get AI response: " + ex.getMessage(), Alert.AlertType.ERROR);
+                });
+                return null;
+            });
+    }
+
+    private void showAIDialog(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        
+        TextArea textArea = new TextArea(content);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefHeight(400);
+        textArea.setPrefWidth(600);
+        
+        alert.getDialogPane().setContent(textArea);
+        alert.setResizable(true);
+        alert.showAndWait();
     }
 
     @FXML
