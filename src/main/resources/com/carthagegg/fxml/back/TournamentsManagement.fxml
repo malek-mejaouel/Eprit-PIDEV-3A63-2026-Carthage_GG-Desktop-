@@ -83,7 +83,7 @@
             </HBox>
             
             <VBox spacing="5">
-                <Label text="PRIZE POOL (USD)" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <Label text="PRIZE POOL (TND)" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="prizeField" styleClass="text-field-dark" />
                 <Label fx:id="prizeErrorLabel" styleClass="error-label" />
             </VBox>

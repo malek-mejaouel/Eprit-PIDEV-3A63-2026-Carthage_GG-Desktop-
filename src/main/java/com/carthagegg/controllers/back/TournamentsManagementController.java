@@ -4,8 +4,10 @@ import com.carthagegg.dao.GameDAO;
 import com.carthagegg.dao.TournamentDAO;
 import com.carthagegg.models.Game;
 import com.carthagegg.models.Tournament;
+import com.carthagegg.utils.AIService;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -54,6 +56,7 @@ public class TournamentsManagementController {
 
     private final TournamentDAO tournamentDAO = new TournamentDAO();
     private final GameDAO gameDAO = new GameDAO();
+    private final AIService aiService = new AIService();
     private final ObservableList<Tournament> tournamentsList = FXCollections.observableArrayList();
     private final FilteredList<Tournament> filteredTournaments = new FilteredList<>(tournamentsList, tournament -> true);
     private final SortedList<Tournament> sortedTournaments = new SortedList<>(filteredTournaments);
@@ -92,13 +95,31 @@ public class TournamentsManagementController {
         colActions.setCellFactory(param -> new TableCell<Tournament, Void>() {
             private final Button editBtn = new Button("Edit");
             private final Button deleteBtn = new Button("Delete");
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+            private final Button aiBtn = new Button("AI Recap");
+            private final Button bracketBtn = new Button("AI Bracket");
+            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn, aiBtn, bracketBtn);
 
             {
                 editBtn.getStyleClass().add("btn-gold");
                 deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
-                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
+                aiBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white;");
+                bracketBtn.setStyle("-fx-background-color: #10b981; -fx-text-fill: white;");
+                editBtn.setOnAction(e -> {
+                    Tournament t = getTableView().getItems().get(getIndex());
+                    if (t != null) handleEdit(t);
+                });
+                deleteBtn.setOnAction(e -> {
+                    Tournament t = getTableView().getItems().get(getIndex());
+                    if (t != null) handleDelete(t);
+                });
+                aiBtn.setOnAction(e -> {
+                    Tournament t = getTableView().getItems().get(getIndex());
+                    if (t != null) handleAIRecap(t);
+                });
+                bracketBtn.setOnAction(e -> {
+                    Tournament t = getTableView().getItems().get(getIndex());
+                    if (t != null) handleAIBracketSuggestion(t);
+                });
             }
 
             @Override
@@ -325,11 +346,85 @@ public class TournamentsManagementController {
         return value == null ? "" : value.toLowerCase();
     }
 
+    private void handleAIRecap(Tournament t) {
+        Game game = gamesById.get(t.getGameId());
+        String gameName = game != null ? game.getName() : "this game";
+
+        Alert loadingAlert = new Alert(Alert.AlertType.INFORMATION);
+        loadingAlert.setTitle("AI Recap");
+        loadingAlert.setHeaderText("Generating AI Recap for " + t.getTournamentName() + "...");
+        loadingAlert.setContentText("Please wait while we consult the AI...");
+        loadingAlert.show();
+
+        String prompt = String.format("Generate a comprehensive recap report for the tournament '%s' for the game %s. " +
+                "Start Date: %s, End Date: %s, Prize Pool: %s, Location: %s. " +
+                "Suggest an optimal bracket and scheduling for future editions.", 
+                t.getTournamentName(), gameName, t.getStartDate(), t.getEndDate(), t.getPrizePool(), t.getLocation());
+
+        aiService.getAIResponseAsync(prompt)
+            .thenAccept(response -> Platform.runLater(() -> {
+                loadingAlert.close();
+                showAIDialog("AI Tournament Recap: " + t.getTournamentName(), response);
+            }))
+            .exceptionally(ex -> {
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+                    showAlert("AI Error", "Failed to get AI response: " + ex.getMessage(), Alert.AlertType.ERROR);
+                });
+                return null;
+            });
+    }
+
+    private void showAIDialog(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        
+        TextArea textArea = new TextArea(content);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefHeight(400);
+        textArea.setPrefWidth(600);
+        
+        alert.getDialogPane().setContent(textArea);
+        alert.setResizable(true);
+        alert.showAndWait();
+    }
+
     private void showAlert(String title, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private void handleAIBracketSuggestion(Tournament t) {
+        Game game = gamesById.get(t.getGameId());
+        String gameName = game != null ? game.getName() : "this game";
+
+        Alert loadingAlert = new Alert(Alert.AlertType.INFORMATION);
+        loadingAlert.setTitle("AI Bracket Suggestion");
+        loadingAlert.setHeaderText("Generating AI Bracket for " + t.getTournamentName() + "...");
+        loadingAlert.setContentText("Please wait while we consult the AI...");
+        loadingAlert.show();
+
+        String prompt = String.format("Generate a detailed tournament bracket and scheduling suggestion for the tournament '%s' for the game %s. " +
+                        "Start Date: %s, End Date: %s, Prize Pool: %s, Location: %s. " +
+                        "Provide a clear structure for matches and rounds.",
+                t.getTournamentName(), gameName, t.getStartDate(), t.getEndDate(), t.getPrizePool(), t.getLocation());
+
+        aiService.getAIResponseAsync(prompt)
+                .thenAccept(response -> Platform.runLater(() -> {
+                    loadingAlert.close();
+                    showAIDialog("AI Bracket Suggestion: " + t.getTournamentName(), response);
+                }))
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        loadingAlert.close();
+                        showAlert("AI Error", "Failed to get AI response: " + ex.getMessage(), Alert.AlertType.ERROR);
+                    });
+                    return null;
+                });
     }
     @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml"); }
 }

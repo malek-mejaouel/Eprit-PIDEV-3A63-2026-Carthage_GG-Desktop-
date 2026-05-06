@@ -30,9 +30,9 @@ public class SceneNavigator {
             }
             FXMLLoader loader = new FXMLLoader(resource);
             Parent root = loader.load();
-            
+
             T controller = loader.getController();
-            
+
             // Wrap in StackPane to add Chatbot if it's a front-end page
             if (fxmlPath.contains("/front/") && !fxmlPath.contains("/components/")) {
                 try {
@@ -40,7 +40,7 @@ public class SceneNavigator {
                     if (chatResource != null) {
                         FXMLLoader chatLoader = new FXMLLoader(chatResource);
                         javafx.scene.Node chatbot = chatLoader.load();
-                        
+
                         javafx.scene.layout.StackPane wrapper = new javafx.scene.layout.StackPane();
                         wrapper.getChildren().addAll(root, chatbot);
                         root = wrapper;
@@ -68,7 +68,7 @@ public class SceneNavigator {
             ft.setFromValue(0);
             ft.setToValue(1);
             ft.play();
-            
+
             return controller;
         } catch (Exception e) {
             e.printStackTrace();

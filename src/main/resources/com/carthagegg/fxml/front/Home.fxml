@@ -65,7 +65,7 @@
                     </VBox>
                     
                     <VBox alignment="CENTER" spacing="5">
-                        <Label fx:id="statPrize" text="0 USD" styleClass="stat-number" />
+                        <Label fx:id="statPrize" text="0 TND" styleClass="stat-number" />
                         <Label text="PRIZE POOL" styleClass="stat-label" />
                     </VBox>
                     

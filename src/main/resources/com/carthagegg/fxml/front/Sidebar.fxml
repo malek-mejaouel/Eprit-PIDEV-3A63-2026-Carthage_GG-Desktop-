@@ -35,6 +35,9 @@
         <Button fx:id="navMatches" text="Matches" onAction="#handleNavMatches" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
             <graphic><FontIcon iconLiteral="fas-fist-raised" iconColor="#949499" iconSize="18"/></graphic>
         </Button>
+        <Button fx:id="navLeaderboard" text="Leaderboard" onAction="#handleNavLeaderboard" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+            <graphic><FontIcon iconLiteral="fas-list-ol" iconColor="#949499" iconSize="18"/></graphic>
+        </Button>
         <Button fx:id="navEvents" text="Events" onAction="#handleNavEvents" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
             <graphic><FontIcon iconLiteral="fas-calendar-alt" iconColor="#949499" iconSize="18"/></graphic>
         </Button>

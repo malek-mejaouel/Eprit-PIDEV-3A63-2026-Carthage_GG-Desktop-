@@ -42,7 +42,7 @@ public class MainApp extends Application {
         // Start at Sign In
         SceneNavigator.navigateTo("/com/carthagegg/fxml/auth/SignIn.fxml");
         primaryStage.show();
-        
+
         // Maximize the window after showing
         Platform.runLater(() -> primaryStage.setMaximized(true));
     }

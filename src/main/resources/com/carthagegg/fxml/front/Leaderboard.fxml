@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.LeaderboardController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <VBox spacing="25">
+            <padding>
+                <Insets top="40" left="40" right="40" bottom="40" />
+            </padding>
+            
+            <VBox spacing="5">
+                <Label text="Global Leaderboard" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 32;" />
+                <Label text="See where you rank among the best players and teams in Tunisia" style="-fx-text-fill: #949499; -fx-font-size: 14;" />
+            </VBox>
+            
+            <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" styleClass="dark-tab-pane">
+                <tabs>
+                    <Tab text="Teams">
+                        <VBox spacing="15">
+                            <padding>
+                                <Insets top="20" />
+                            </padding>
+                            <TableView fx:id="leaderboardTable" VBox.vgrow="ALWAYS" styleClass="dark-table-view">
+                                <columns>
+                                    <TableColumn fx:id="colRank" text="Rank" prefWidth="80" />
+                                    <TableColumn fx:id="colTeam" text="Team" prefWidth="250" />
+                                    <TableColumn fx:id="colWins" text="Wins" prefWidth="100" />
+                                    <TableColumn fx:id="colLosses" text="Losses" prefWidth="100" />
+                                    <TableColumn fx:id="colDraws" text="Draws" prefWidth="100" />
+                                    <TableColumn fx:id="colWinRate" text="Win Rate" prefWidth="150" />
+                                    <TableColumn fx:id="colPoints" text="Points" prefWidth="100" />
+                                </columns>
+                            </TableView>
+                        </VBox>
+                    </Tab>
+                    <Tab text="Players">
+                        <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+                            <Label text="Individual Player Rankings Coming Soon" style="-fx-text-fill: #949499;" />
+                        </VBox>
+                    </Tab>
+                    <Tab text="Points">
+                        <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+                            <Label text="Point System Breakdown" style="-fx-text-fill: #949499;" />
+                        </VBox>
+                    </Tab>
+                </tabs>
+            </TabPane>
+        </VBox>
+    </center>
+    
+</BorderPane>

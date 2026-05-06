@@ -4,9 +4,13 @@ import com.carthagegg.dao.TeamDAO;
 import com.carthagegg.dao.UserDAO;
 import com.carthagegg.models.Team;
 import com.carthagegg.models.User;
+import com.carthagegg.utils.AIService;
 import com.carthagegg.utils.FileStorage;
+import com.carthagegg.utils.LogoGeneratorService;
+import com.carthagegg.utils.TeamStatsService;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,6 +24,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -46,12 +51,16 @@ public class TeamsManagementController {
     @FXML private Label nameErrorLabel;
     @FXML private ComboBox<User> captainComboBox;
     @FXML private Label captainErrorLabel;
+    @FXML private TextArea aiPromptArea;
     @FXML private TextField logoField;
     @FXML private Label logoErrorLabel;
     @FXML private ImageView logoPreview;
 
     private final TeamDAO teamDAO = new TeamDAO();
     private final UserDAO userDAO = new UserDAO();
+    private final AIService aiService = new AIService();
+    private final LogoGeneratorService logoGeneratorService = new LogoGeneratorService();
+    private final TeamStatsService teamStatsService = new TeamStatsService();
     private final ObservableList<Team> teamsList = FXCollections.observableArrayList();
     private final FilteredList<Team> filteredTeams = new FilteredList<>(teamsList, team -> true);
     private final SortedList<Team> sortedTeams = new SortedList<>(filteredTeams);
@@ -85,13 +94,26 @@ public class TeamsManagementController {
         colActions.setCellFactory(param -> new TableCell<Team, Void>() {
             private final Button editBtn = new Button("Edit");
             private final Button deleteBtn = new Button("Delete");
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+            private final Button statsBtn = new Button("Fetch Stats");
+            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn, statsBtn);
 
             {
                 editBtn.getStyleClass().add("btn-gold");
                 deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
-                editBtn.setOnAction(e -> handleEdit(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
+                statsBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white;");
+                
+                editBtn.setOnAction(e -> {
+                    Team t = getTableView().getItems().get(getIndex());
+                    if (t != null) handleEdit(t);
+                });
+                deleteBtn.setOnAction(e -> {
+                    Team t = getTableView().getItems().get(getIndex());
+                    if (t != null) handleDelete(t);
+                });
+                statsBtn.setOnAction(e -> {
+                    Team t = getTableView().getItems().get(getIndex());
+                    if (t != null) handleFetchStats(t);
+                });
             }
 
             @Override
@@ -236,6 +258,43 @@ public class TeamsManagementController {
     }
 
     @FXML
+    private void handleGenerateLogo() {
+        String teamName = nameField.getText();
+        String customPrompt = aiPromptArea.getText();
+        if (teamName == null || teamName.trim().isEmpty()) {
+            showAlert("Input Required", "Please enter a team name first.", Alert.AlertType.WARNING);
+            return;
+        }
+
+        Alert loadingAlert = new Alert(Alert.AlertType.INFORMATION);
+        loadingAlert.setTitle("AI Logo Generation");
+        loadingAlert.setHeaderText("Generating Logo for " + teamName + "...");
+        loadingAlert.setContentText("This may take a few seconds. Please wait...");
+        loadingAlert.show();
+
+        logoGeneratorService.generateLogoAsync(teamName, customPrompt)
+            .thenAccept(imageData -> Platform.runLater(() -> {
+                try {
+                    loadingAlert.close();
+                    java.nio.file.Path tempPath = logoGeneratorService.saveLogoLocally(imageData, teamName);
+                    selectedLogoFile = tempPath.toFile();
+                    logoField.setText(selectedLogoFile.getAbsolutePath());
+                    logoPreview.setImage(new Image(new ByteArrayInputStream(imageData)));
+                    showAlert("Success", "AI Logo generated successfully!", Alert.AlertType.INFORMATION);
+                } catch (IOException e) {
+                    showAlert("Error", "Failed to save generated image: " + e.getMessage(), Alert.AlertType.ERROR);
+                }
+            }))
+            .exceptionally(ex -> {
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+                    showAlert("AI Error", "Failed to generate logo: " + ex.getMessage(), Alert.AlertType.ERROR);
+                });
+                return null;
+            });
+    }
+
+    @FXML
     private void handleBrowseLogo() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Choose Team Logo");
@@ -289,15 +348,62 @@ public class TeamsManagementController {
     private void clearForm() {
         nameField.clear();
         captainComboBox.setValue(null);
+        aiPromptArea.clear();
         logoField.clear();
         selectedLogoFile = null;
         logoPreview.setImage(null);
+    }
+
+    private void handleFetchStats(Team t) {
+        Alert loadingAlert = new Alert(Alert.AlertType.INFORMATION);
+        loadingAlert.setTitle("Fetching Statistics");
+        loadingAlert.setHeaderText("Retrieving stats for " + t.getTeamName() + "...");
+        loadingAlert.setContentText("Please wait...");
+        loadingAlert.show();
+
+        new Thread(() -> {
+            try {
+                String summary = teamStatsService.getTeamSummary(t.getTeamName());
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+                    showStatsDialog(t.getTeamName(), summary);
+                });
+            } catch (IOException e) {
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+                    showAlert("API Error", "Could not fetch stats: " + e.getMessage(), Alert.AlertType.ERROR);
+                });
+            }
+        }).start();
+    }
+
+    private void showStatsDialog(String teamName, String summary) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("📊 Team Statistics");
+        alert.setHeaderText("Statistics for: " + teamName);
+        
+        TextArea textArea = new TextArea(summary);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefHeight(200);
+        textArea.setPrefWidth(300);
+        textArea.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 14px;");
+
+        alert.getDialogPane().setContent(textArea);
+        alert.showAndWait();
     }
 
     private void clearErrors() {
         nameErrorLabel.setText("");
         captainErrorLabel.setText("");
         logoErrorLabel.setText("");
+    }
+
+    private void showAlert(String title, String content, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     private String safe(String value) {
@@ -318,13 +424,6 @@ public class TeamsManagementController {
         } catch (Exception e) {
             logoPreview.setImage(null);
         }
-    }
-
-    private void showAlert(String title, String content, Alert.AlertType type) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
     @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml"); }
 }

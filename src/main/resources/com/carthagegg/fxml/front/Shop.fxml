@@ -34,8 +34,8 @@
                         <graphic>
                             <StackPane>
                                 <FontIcon iconLiteral="fas-shopping-cart" iconSize="20" iconColor="#0a0a0f"/>
-                                <Label fx:id="cartCountLabel" text="0" 
-                                       style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold; -fx-padding: 2 5; -fx-background-radius: 10;" 
+                                <Label fx:id="cartCountLabel" text="0"
+                                       style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold; -fx-padding: 2 5; -fx-background-radius: 10;"
                                        StackPane.alignment="TOP_RIGHT">
                                     <StackPane.margin>
                                         <Insets top="-10" right="-10" />

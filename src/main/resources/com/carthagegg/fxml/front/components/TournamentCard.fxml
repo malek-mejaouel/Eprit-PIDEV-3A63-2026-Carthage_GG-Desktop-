@@ -36,7 +36,7 @@
     <HBox alignment="CENTER_LEFT">
         <VBox>
             <Label text="PRIZE POOL" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 9;" />
-            <Label fx:id="prizeLabel" text="5,000 USD" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 16;" />
+            <Label fx:id="prizeLabel" text="5,000 TND" style="-fx-text-fill: #FFC107; -fx-font-weight: bold; -fx-font-size: 16;" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
         <Button text="DETAILS" onAction="#handleViewDetails" styleClass="btn-primary" prefHeight="35" prefWidth="100" />
