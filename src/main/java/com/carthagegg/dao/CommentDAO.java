@@ -77,6 +77,32 @@ public class CommentDAO {
         return filtered;
     }
 
+    public int getCommentCount(int newsId) {
+        String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE news_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newsId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getTotalUpvotes(int newsId) {
+        String sql = "SELECT SUM(upvotes) FROM " + tableName + " WHERE news_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newsId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public void save(Comment c) throws SQLException {
         String contentCol = hasColumn(tableName, "contenu") ? "contenu" : "content";
         String dateCol = hasColumn(tableName, "date_commentaire") ? "date_commentaire" : "created_at";
@@ -127,6 +153,40 @@ public class CommentDAO {
         String sql3 = "DELETE FROM " + tableName + " WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql3)) {
             ps.setInt(1, commentaireId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void update(Comment c) throws SQLException {
+        String contentCol = hasColumn(tableName, "contenu") ? "contenu" : "content";
+        String idCol = "commentaire_id";
+        if (!hasColumn(tableName, "commentaire_id")) {
+            if (hasColumn(tableName, "comment_id")) {
+                idCol = "comment_id";
+            } else if (hasColumn(tableName, "id")) {
+                idCol = "id";
+            }
+        }
+
+        String sql = "UPDATE " + tableName + " SET " + contentCol + " = ? WHERE " + idCol + " = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, c.getRawContent());
+            ps.setInt(2, c.getCommentaireId());
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateVotes(int commentId, int upvotes, int downvotes) throws SQLException {
+        String idCol = "commentaire_id";
+        if (!hasColumn(tableName, "commentaire_id")) {
+            if (hasColumn(tableName, "comment_id")) idCol = "comment_id";
+            else if (hasColumn(tableName, "id")) idCol = "id";
+        }
+        String sql = "UPDATE " + tableName + " SET upvotes = ?, downvotes = ? WHERE " + idCol + " = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, upvotes);
+            ps.setInt(2, downvotes);
+            ps.setInt(3, commentId);
             ps.executeUpdate();
         }
     }

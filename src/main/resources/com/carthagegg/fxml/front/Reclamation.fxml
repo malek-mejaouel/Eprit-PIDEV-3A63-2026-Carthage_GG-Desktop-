@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.carthagegg.controllers.front.ReclamationController"
+            prefHeight="750.0" prefWidth="1200.0"
+            styleClass="root">
+    
+    <left>
+        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+    </left>
+    
+    <center>
+        <VBox spacing="20">
+            <padding>
+                <Insets top="40" left="40" right="40" bottom="40" />
+            </padding>
+            
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="My Reclamations" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 28;" />
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+            
+            <HBox spacing="30" VBox.vgrow="ALWAYS">
+                <!-- Submit Form -->
+                <VBox spacing="15" styleClass="card" prefWidth="400">
+                    <padding><Insets top="25" right="25" bottom="25" left="25" /></padding>
+                    <Label text="SUBMIT NEW RECLAMATION" style="-fx-text-fill: #00f0ff; -fx-font-weight: bold; -fx-font-size: 14;" />
+                    
+                    <VBox spacing="5">
+                        <Label text="TITLE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                        <TextField fx:id="titleField" promptText="Enter reclamation title" styleClass="text-field-dark" />
+                    </VBox>
+                    
+                    <VBox spacing="5" VBox.vgrow="ALWAYS">
+                        <Label text="DESCRIPTION" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                        <TextArea fx:id="descriptionArea" promptText="Explain your issue in detail..." styleClass="text-area-dark" wrapText="true" VBox.vgrow="ALWAYS" />
+                    </VBox>
+                    
+                    <Label fx:id="errorLabel" style="-fx-text-fill: #ef4444; -fx-font-size: 12;" visible="false" managed="false" />
+                    
+                    <Button text="SUBMIT RECLAMATION" onAction="#handleSubmit" maxWidth="Infinity" styleClass="btn-primary" prefHeight="45" />
+                </VBox>
+                
+                <!-- History Table -->
+                <VBox spacing="15" styleClass="card" HBox.hgrow="ALWAYS">
+                    <padding><Insets top="25" right="25" bottom="25" left="25" /></padding>
+                    <Label text="RECLAMATION HISTORY" style="-fx-text-fill: #00f0ff; -fx-font-weight: bold; -fx-font-size: 14;" />
+                    
+                    <TableView fx:id="reclamationTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                        <columns>
+                            <TableColumn fx:id="colDate" text="Date" prefWidth="150" />
+                            <TableColumn fx:id="colTitle" text="Title" prefWidth="150" />
+                            <TableColumn fx:id="colStatus" text="Status" prefWidth="100" />
+                            <TableColumn fx:id="colActions" text="Actions" prefWidth="100" />
+                        </columns>
+                    </TableView>
+                </VBox>
+            </HBox>
+        </VBox>
+    </center>
+    
+</BorderPane>

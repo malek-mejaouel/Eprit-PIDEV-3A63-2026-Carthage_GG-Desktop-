@@ -31,7 +31,15 @@
                 <Insets top="20" left="20" right="20" bottom="20" />
             </padding>
             
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <Label text="Sort By:" style="-fx-text-fill: #949499; -fx-font-size: 13;" />
+                <ComboBox fx:id="sortComboBox" promptText="Default (ID ASC)" styleClass="text-field-dark" prefWidth="200" />
+            </HBox>
+
             <TableView fx:id="streamsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                </columnResizePolicy>
                 <columns>
                     <TableColumn fx:id="colId" text="ID" prefWidth="50" />
                     <TableColumn fx:id="colTitle" text="Title" prefWidth="250" />
@@ -52,30 +60,47 @@
             </padding>
             <Label fx:id="formTitle" text="ADD STREAM" styleClass="neon-label" style="-fx-font-size: 18; -fx-font-weight: bold;" />
             
+            <Label fx:id="errorLabel" wrapText="true" visible="false" managed="false" 
+                   style="-fx-text-fill: #ef4444; -fx-font-size: 11; -fx-font-weight: bold; -fx-background-color: rgba(239, 68, 68, 0.1); -fx-padding: 8; -fx-background-radius: 4; -fx-border-color: rgba(239, 68, 68, 0.3); -fx-border-radius: 4;" 
+                   maxWidth="Infinity" />
+            
             <VBox spacing="5">
-                <Label text="STREAM TITLE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <Label text="TWITCH STREAM LINK (OPTIONAL)" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <HBox spacing="10">
+                    <TextField fx:id="twitchLinkField" promptText="twitch.tv/channel" styleClass="text-field-dark" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="fetchTwitchBtn" text="FETCH" onAction="#handleFetchTwitchInfo" styleClass="btn-gold" prefHeight="35" />
+                </HBox>
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="STREAM TITLE" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="titleField" styleClass="text-field-dark" />
             </VBox>
             
             <VBox spacing="5">
-                <Label text="PLATFORM" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <Label text="DESCRIPTION" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <TextArea fx:id="descriptionField" styleClass="text-field-dark" prefHeight="80" wrapText="true" />
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="PLATFORM" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <ComboBox fx:id="platformComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
             </VBox>
             
             <VBox spacing="5">
-                <Label text="CHANNEL NAME" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <Label text="CHANNEL NAME" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="channelField" styleClass="text-field-dark" />
             </VBox>
             
             <VBox spacing="5">
-                <Label text="YOUTUBE VIDEO ID (IF YT)" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                <Label text="YOUTUBE VIDEO ID (IF YT)" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="ytIdField" styleClass="text-field-dark" />
             </VBox>
             
             <HBox spacing="10">
                 <CheckBox fx:id="liveCheckBox" text="Is Live Now?" style="-fx-text-fill: white;" />
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="VIEWER COUNT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
+                    <Label text="VIEWER COUNT" style="-fx-text-fill: #949499; -fx-font-weight: bold; -fx-font-size: 10;" />
                     <TextField fx:id="viewersField" styleClass="text-field-dark" text="0" />
                 </VBox>
             </HBox>

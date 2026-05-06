@@ -28,6 +28,23 @@
                     <Label text="Official CarthageGG merchandise and gear" style="-fx-text-fill: #949499;" />
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
+                <HBox alignment="CENTER_RIGHT" spacing="15">
+                    <TextField fx:id="searchField" promptText="Search products..." styleClass="text-field-dark" prefWidth="250" prefHeight="40" />
+                    <Button onAction="#handleViewCart" styleClass="btn-gold" prefHeight="40" prefWidth="60">
+                        <graphic>
+                            <StackPane>
+                                <FontIcon iconLiteral="fas-shopping-cart" iconSize="20" iconColor="#0a0a0f"/>
+                                <Label fx:id="cartCountLabel" text="0"
+                                       style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold; -fx-padding: 2 5; -fx-background-radius: 10;"
+                                       StackPane.alignment="TOP_RIGHT">
+                                    <StackPane.margin>
+                                        <Insets top="-10" right="-10" />
+                                    </StackPane.margin>
+                                </Label>
+                            </StackPane>
+                        </graphic>
+                    </Button>
+                </HBox>
             </HBox>
             
             <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">

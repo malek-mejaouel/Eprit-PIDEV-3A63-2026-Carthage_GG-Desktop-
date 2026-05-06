@@ -8,15 +8,22 @@ public class DatabaseConnection {
     private static final String URL = "jdbc:mariadb://localhost:3306/carthage_gg";
     private static final String USER = "root";
     private static final String PASSWORD = "";
+    private static Connection instance;
 
     public static Connection getInstance() throws SQLException {
         try {
-            // Return a fresh connection for each DAO operation so one screen
-            // cannot accidentally close the shared connection used by another.
-            Class.forName("org.mariadb.jdbc.Driver");
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+            if (instance == null || instance.isClosed()) {
+                // Ensure the driver is loaded
+                Class.forName("org.mariadb.jdbc.Driver");
+                instance = DriverManager.getConnection(URL, USER, PASSWORD);
+            }
         } catch (ClassNotFoundException e) {
-            throw new SQLException("MariaDB JDBC Driver not found", e);
+            throw new SQLException("MariaDB JDBC Driver not found. Please ensure the dependency is in pom.xml", e);
+        } catch (SQLException e) {
+            System.err.println("Database connection failed! URL: " + URL);
+            System.err.println("Ensure MariaDB is running on port 3306 and database 'carthage_gg' exists.");
+            throw e;
         }
+        return instance;
     }
 }

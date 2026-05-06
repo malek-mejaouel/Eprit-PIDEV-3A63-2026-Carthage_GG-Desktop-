@@ -52,11 +52,13 @@
             <VBox spacing="5">
                 <Label text="TITLE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextField fx:id="titleField" styleClass="text-field-dark" />
+                <Label fx:id="titleErrorLabel" text="Title is required" style="-fx-text-fill: #ef4444; -fx-font-size: 10;" visible="false" managed="false" />
             </VBox>
             
             <VBox spacing="5">
                 <Label text="CATEGORY" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" styleClass="text-field-dark" />
+                <Label fx:id="categoryErrorLabel" text="Category is required" style="-fx-text-fill: #ef4444; -fx-font-size: 10;" visible="false" managed="false" />
             </VBox>
 
             <VBox spacing="5">
@@ -65,11 +67,13 @@
                     <TextField fx:id="imageField" editable="false" promptText="Choose an image..." styleClass="text-field-dark" HBox.hgrow="ALWAYS" />
                     <Button text="BROWSE" onAction="#handleBrowseImage" styleClass="btn-gold" prefHeight="36" />
                 </HBox>
+                <Label fx:id="imageErrorLabel" text="Image is required" style="-fx-text-fill: #ef4444; -fx-font-size: 10;" visible="false" managed="false" />
             </VBox>
             
             <VBox spacing="5" VBox.vgrow="ALWAYS">
                 <Label text="CONTENT" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
                 <TextArea fx:id="contentArea" prefHeight="300" styleClass="text-field-dark" wrapText="true" />
+                <Label fx:id="contentErrorLabel" text="Content must be between 5 and 5000 characters" style="-fx-text-fill: #ef4444; -fx-font-size: 10;" visible="false" managed="false" />
             </VBox>
             
             <HBox spacing="10">

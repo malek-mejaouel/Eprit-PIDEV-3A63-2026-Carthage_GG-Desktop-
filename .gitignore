@@ -38,6 +38,7 @@ build/
 ### Mac OS ###
 .DS_Store
 
-# Local configuration
-src/main/resources/config.properties
+### Secrets ###
+.env
 config.properties
+src/main/resources/config.properties

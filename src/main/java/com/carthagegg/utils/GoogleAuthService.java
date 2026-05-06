@@ -22,10 +22,24 @@ import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public class GoogleAuthService {
 
-    private static final String DEFAULT_CLIENT_ID = ""; // REPLACED: Moved to environment variables for security
-    private static final String DEFAULT_CLIENT_SECRET = ""; // REPLACED: Moved to environment variables for security
+    private static final Properties config = new Properties();
+    static {
+        try (InputStream input = GoogleAuthService.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input != null) {
+                config.load(input);
+            }
+        } catch (IOException ex) {
+            System.err.println("Could not load config.properties: " + ex.getMessage());
+        }
+    }
+
+    private static final String DEFAULT_CLIENT_ID = config.getProperty("google.client_id", "");
+    private static final String DEFAULT_CLIENT_SECRET = config.getProperty("google.client_secret", "");
     private static final String ENV_CLIENT_ID = "CARTHAGEGG_GOOGLE_CLIENT_ID";
     private static final String ENV_CLIENT_SECRET = "CARTHAGEGG_GOOGLE_CLIENT_SECRET";
     private static final int PREFERRED_LOCAL_PORT = 5317;
@@ -33,9 +47,6 @@ public class GoogleAuthService {
     private static final String AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
     private static final String USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-    private static volatile String overrideClientId;
-    private static volatile String overrideClientSecret;
 
     public interface GoogleAuthCallback {
         void onSuccess(GoogleUser user);
@@ -51,22 +62,7 @@ public class GoogleAuthService {
         public String picture;
     }
 
-    public static void setClientCredentials(String clientId, String clientSecret) {
-        overrideClientId = (clientId != null && !clientId.isBlank()) ? clientId.trim() : null;
-        overrideClientSecret = (clientSecret != null && !clientSecret.isBlank()) ? clientSecret.trim() : null;
-    }
-
     public static void authenticate(GoogleAuthCallback callback) {
-        String clientId = resolveClientId();
-        String clientSecret = resolveClientSecret();
-
-        if (clientId.isEmpty() || clientSecret.isEmpty()) {
-            System.err.println("CRITICAL: Google OAuth credentials are not configured.");
-            System.err.println("Please set the environment variables: " + ENV_CLIENT_ID + " and " + ENV_CLIENT_SECRET);
-            callback.onError("Google Login is not configured. Please contact support.");
-            return;
-        }
-
         new Thread(() -> {
             try {
                 HttpServer server;
@@ -106,7 +102,7 @@ public class GoogleAuthService {
                         } else if (error != null && !error.isBlank()) {
                             authError[0] = error;
                         }
-                        
+
                         exchange.sendResponseHeaders(200, responseText.length());
                         try (OutputStream os = exchange.getResponseBody()) {
                             os.write(responseText.getBytes());
@@ -114,8 +110,11 @@ public class GoogleAuthService {
                         latch.countDown();
                     }
                 });
-                
+
                 server.start();
+
+                String clientId = resolveClientId();
+                String clientSecret = resolveClientSecret();
 
                 String url = AUTH_URL +
                         "?client_id=" + urlEncode(clientId) +
@@ -142,7 +141,7 @@ public class GoogleAuthService {
                     callback.onError("Authentication timed out.");
                     return;
                 }
-                
+
                 if (authError[0] != null) {
                     if ("state_mismatch".equals(authError[0])) {
                         callback.onError("Google Sign-In failed due to an invalid callback state. Please try again.");
@@ -176,26 +175,26 @@ public class GoogleAuthService {
 
                 HttpResponse<String> tokenResponse = client.send(tokenRequest, HttpResponse.BodyHandlers.ofString());
                 JsonObject tokenJson = JsonParser.parseString(tokenResponse.body()).getAsJsonObject();
-                
+
                 if (!tokenJson.has("access_token")) {
                     String desc = tokenJson.has("error_description") ? tokenJson.get("error_description").getAsString() : tokenResponse.body();
                     if (desc != null && desc.toLowerCase().contains("client_secret is missing")) {
                         callback.onError(
                                 "Google token exchange requires a client secret for your current OAuth client. " +
-                                "Set the environment variable CARTHAGEGG_GOOGLE_CLIENT_SECRET when launching the app, " +
-                                "or create a Desktop OAuth client ID in Google Cloud Console (recommended)."
+                                        "Set the environment variable CARTHAGEGG_GOOGLE_CLIENT_SECRET when launching the app, " +
+                                        "or create a Desktop OAuth client ID in Google Cloud Console (recommended)."
                         );
                     } else if (port != PREFERRED_LOCAL_PORT && clientSecret != null && !clientSecret.isBlank()) {
                         callback.onError(
                                 "Google token exchange failed. If you are using a Web OAuth client, configure an authorized redirect URI " +
-                                "that matches exactly: http://127.0.0.1:" + PREFERRED_LOCAL_PORT + CALLBACK_PATH + " and try again."
+                                        "that matches exactly: http://127.0.0.1:" + PREFERRED_LOCAL_PORT + CALLBACK_PATH + " and try again."
                         );
                     } else {
                         callback.onError("Failed to get access token: " + tokenResponse.body());
                     }
                     return;
                 }
-                
+
                 String accessToken = tokenJson.get("access_token").getAsString();
 
                 HttpRequest userInfoRequest = HttpRequest.newBuilder()
@@ -271,14 +270,12 @@ public class GoogleAuthService {
     }
 
     private static String resolveClientId() {
-        if (overrideClientId != null && !overrideClientId.isBlank()) return overrideClientId;
         String env = System.getenv(ENV_CLIENT_ID);
         if (env != null && !env.isBlank()) return env.trim();
         return DEFAULT_CLIENT_ID;
     }
 
     private static String resolveClientSecret() {
-        if (overrideClientSecret != null && !overrideClientSecret.isBlank()) return overrideClientSecret;
         String env = System.getenv(ENV_CLIENT_SECRET);
         if (env != null && !env.isBlank()) return env.trim();
         return DEFAULT_CLIENT_SECRET;

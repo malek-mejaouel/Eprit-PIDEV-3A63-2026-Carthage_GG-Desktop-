@@ -19,6 +19,10 @@ public class SceneNavigator {
     }
 
     public static void navigateTo(String fxmlPath) {
+        navigateTo(fxmlPath, null);
+    }
+
+    public static <T> T navigateTo(String fxmlPath, Object data) {
         try {
             java.net.URL resource = SceneNavigator.class.getResource(fxmlPath);
             if (resource == null) {
@@ -26,6 +30,26 @@ public class SceneNavigator {
             }
             FXMLLoader loader = new FXMLLoader(resource);
             Parent root = loader.load();
+
+            T controller = loader.getController();
+
+            // Wrap in StackPane to add Chatbot if it's a front-end page
+            if (fxmlPath.contains("/front/") && !fxmlPath.contains("/components/")) {
+                try {
+                    java.net.URL chatResource = SceneNavigator.class.getResource("/com/carthagegg/fxml/front/components/Chatbot.fxml");
+                    if (chatResource != null) {
+                        FXMLLoader chatLoader = new FXMLLoader(chatResource);
+                        javafx.scene.Node chatbot = chatLoader.load();
+
+                        javafx.scene.layout.StackPane wrapper = new javafx.scene.layout.StackPane();
+                        wrapper.getChildren().addAll(root, chatbot);
+                        root = wrapper;
+                    }
+                } catch (IOException e) {
+                    System.err.println("Could not load chatbot: " + e.getMessage());
+                }
+            }
+
             if (root instanceof Region region) {
                 region.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             }
@@ -44,6 +68,8 @@ public class SceneNavigator {
             ft.setFromValue(0);
             ft.setToValue(1);
             ft.play();
+
+            return controller;
         } catch (Exception e) {
             e.printStackTrace();
             // Show alert for debugging
@@ -52,6 +78,7 @@ public class SceneNavigator {
             alert.setHeaderText("Failed to load screen: " + fxmlPath);
             alert.setContentText(e.toString());
             alert.showAndWait();
+            return null;
         }
     }
 

@@ -3,6 +3,7 @@ package com.carthagegg.controllers.auth;
 import com.carthagegg.dao.UserDAO;
 import com.carthagegg.models.User;
 import com.carthagegg.utils.GoogleAuthService;
+import com.carthagegg.utils.DiscordAuthService;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.application.Platform;
@@ -71,9 +72,13 @@ public class SignInController {
                     return;
                 }
 
+                // Check if active
+                if (!user.isActive()) {
+                    showError("Account is inactive");
+                    return;
+                }
+
                 // Successful login
-                userDAO.setActiveStatus(user.getUserId(), true);
-                user.setActive(true);
                 SessionManager.setCurrentUser(user);
 
                 if (rememberMeCheckbox != null && rememberMeCheckbox.isSelected()) {
@@ -135,8 +140,9 @@ public class SignInController {
                             // 2. Fallback: try by email (if they registered manually before)
                             user = userDAO.findByEmail(gUser.email);
                             if (user != null) {
-                                // Link Google ID to existing account (optional, requires a DAO update method)
-                                // For now, we just log them in
+                                // Link Google ID to existing account
+                                user.setGoogleId(gUser.id);
+                                userDAO.linkGoogleId(user.getUserId(), gUser.id);
                             }
                         }
 
@@ -156,8 +162,17 @@ public class SignInController {
                             user.setFirstName(gUser.givenName != null ? gUser.givenName : "");
                             user.setLastName(gUser.familyName != null ? gUser.familyName : "");
                             user.setAvatar(gUser.picture);
+                            user.setActive(true); // Ensure user is marked active in memory
                             
                             userDAO.save(user);
+                        }
+
+                        if (user != null) {
+                            // Ensure user is active if they just signed in via Google
+                            if (!user.isActive()) {
+                                user.setActive(true);
+                                userDAO.activateUser(user.getUserId());
+                            }
                         }
 
                         // Check if banned
@@ -166,9 +181,13 @@ public class SignInController {
                             return;
                         }
 
+                        // Check if active (now redundant but good to keep)
+                        if (!user.isActive()) {
+                            showError("Account is inactive");
+                            return;
+                        }
+
                         // Successful login
-                        userDAO.setActiveStatus(user.getUserId(), true);
-                        user.setActive(true);
                         SessionManager.setCurrentUser(user);
                         
                         if (user.isAdmin()) {
@@ -180,6 +199,83 @@ public class SignInController {
                     } catch (SQLException e) {
                         e.printStackTrace();
                         showError("Database error during Google Login.");
+                        
+                        // Show detailed alert for connection failures
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Connection Error");
+                        alert.setHeaderText("Database connection failed during Google Login");
+                        alert.setContentText("Please ensure MariaDB is running and the database 'carthage_gg' exists.\n\nError: " + e.getMessage());
+                        alert.showAndWait();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                Platform.runLater(() -> showError(error));
+            }
+        });
+    }
+
+    @FXML
+    private void handleDiscordSignIn() {
+        DiscordAuthService.authenticate(new DiscordAuthService.DiscordAuthCallback() {
+            @Override
+            public void onSuccess(DiscordAuthService.DiscordUser dUser) {
+                Platform.runLater(() -> {
+                    try {
+                        // 1. Try to find user by Discord ID
+                        User user = userDAO.findByDiscordId(dUser.id);
+                        
+                        if (user == null && dUser.email != null) {
+                            // 2. Fallback: try by email
+                            user = userDAO.findByEmail(dUser.email);
+                            if (user != null) {
+                                // Link Discord ID to existing account
+                                user.setDiscordId(dUser.id);
+                                userDAO.linkDiscordId(user.getUserId(), dUser.id);
+                            }
+                        }
+
+                        if (user == null) {
+                            // 3. Register new user
+                            user = new User();
+                            user.setEmail(dUser.email != null ? dUser.email : dUser.id + "@discord.com");
+                            user.setDiscordId(dUser.id);
+                            user.setPassword(BCrypt.hashpw(java.util.UUID.randomUUID().toString(), BCrypt.gensalt()));
+                            user.setRoles("[\"ROLE_USER\"]");
+                            user.setUsername(dUser.username + "_" + System.currentTimeMillis() % 1000);
+                            user.setFirstName(dUser.username);
+                            user.setLastName("");
+                            user.setAvatar(dUser.avatar);
+                            user.setActive(true);
+                            
+                            userDAO.save(user);
+                        }
+
+                        if (user != null) {
+                            if (!user.isActive()) {
+                                user.setActive(true);
+                                userDAO.activateUser(user.getUserId());
+                            }
+                        }
+
+                        if (user.getBannedUntil() != null && user.getBannedUntil().isAfter(LocalDateTime.now())) {
+                            showBanAlert(user);
+                            return;
+                        }
+
+                        SessionManager.setCurrentUser(user);
+                        
+                        if (user.isAdmin()) {
+                            SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml");
+                        } else {
+                            SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Home.fxml");
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                        showError("Database error during Discord Login.");
                     }
                 });
             }

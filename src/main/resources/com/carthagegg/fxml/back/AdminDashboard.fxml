@@ -61,6 +61,9 @@
                     <Button text="Streams" onAction="#handleNavStreams" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
                         <graphic><FontIcon iconLiteral="fas-video" iconColor="#71717a" iconSize="18"/></graphic>
                     </Button>
+                    <Button text="Reclamations" onAction="#handleNavReclamations" maxWidth="Infinity" alignment="BASELINE_LEFT" styleClass="sidebar-item">
+                        <graphic><FontIcon iconLiteral="fas-exclamation-circle" iconColor="#71717a" iconSize="18"/></graphic>
+                    </Button>
                 </VBox>
                 
                 <VBox spacing="5">
@@ -97,7 +100,7 @@
                 </VBox>
                 <VBox styleClass="stat-card" prefWidth="250">
                     <Label text="TOTAL REVENUE" style="-fx-text-fill: #71717a; -fx-font-weight: bold; -fx-font-size: 10;" />
-                    <Label fx:id="totalRevenue" text="0.00 TND" style="-fx-text-fill: #D4AF37; -fx-font-size: 32; -fx-font-weight: bold;" />
+                    <Label fx:id="totalRevenue" text="0.00 USD" style="-fx-text-fill: #D4AF37; -fx-font-size: 32; -fx-font-weight: bold;" />
                 </VBox>
             </FlowPane>
         </VBox>

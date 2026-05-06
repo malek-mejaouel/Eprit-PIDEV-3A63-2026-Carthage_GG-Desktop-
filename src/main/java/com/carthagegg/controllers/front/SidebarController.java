@@ -22,6 +22,8 @@ public class SidebarController {
     @FXML private Button navNews;
     @FXML private Button navShop;
     @FXML private Button navStreams;
+    @FXML private Button navReclamation;
+    @FXML private Button navSnake;
     @FXML private Button navProfile;
 
     @FXML
@@ -52,6 +54,8 @@ public class SidebarController {
         resetStyle(navNews);
         resetStyle(navShop);
         resetStyle(navStreams);
+        resetStyle(navReclamation);
+        resetStyle(navSnake);
         resetStyle(navProfile);
 
         // Set active
@@ -66,6 +70,8 @@ public class SidebarController {
             case "news": setActive(navNews); break;
             case "shop": setActive(navShop); break;
             case "streams": setActive(navStreams); break;
+            case "reclamation": setActive(navReclamation); break;
+            case "snake": setActive(navSnake); break;
             case "profile": setActive(navProfile); break;
         }
     }
@@ -101,18 +107,11 @@ public class SidebarController {
     @FXML private void handleNavNews() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/News.fxml"); }
     @FXML private void handleNavShop() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Shop.fxml"); }
     @FXML private void handleNavStreams() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Streams.fxml"); }
+    @FXML private void handleNavReclamation() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Reclamation.fxml"); }
+    @FXML private void handleNavSnake() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/SnakeGame.fxml"); }
     @FXML private void handleNavProfile() { SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Profile.fxml"); }
 
-    @FXML
-    private void handleSignOut() {
-        User user = SessionManager.getCurrentUser();
-        if (user != null) {
-            try {
-                new com.carthagegg.dao.UserDAO().setActiveStatus(user.getUserId(), false);
-            } catch (java.sql.SQLException e) {
-                e.printStackTrace();
-            }
-        }
+    @FXML private void handleSignOut() {
         SessionManager.logout();
         SceneNavigator.navigateTo("/com/carthagegg/fxml/auth/SignIn.fxml");
     }
