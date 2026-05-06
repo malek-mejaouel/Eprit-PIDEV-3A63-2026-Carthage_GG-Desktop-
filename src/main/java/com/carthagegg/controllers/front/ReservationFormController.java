@@ -1,63 +1,44 @@
 package com.carthagegg.controllers.front;
 
-import com.carthagegg.dao.LocationDAO;
+import com.carthagegg.dao.EventDAO;
 import com.carthagegg.dao.ReservationDAO;
 import com.carthagegg.models.Event;
-import com.carthagegg.models.Location;
 import com.carthagegg.models.Reservation;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.web.WebView;
+
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class EventDetailsController {
+public class ReservationFormController {
 
-    @FXML private SidebarController sidebarController;
-    
+    @FXML private TextField fullNameField;
+    @FXML private TextField priceField;
+    @FXML private TextField seatsField;
+    @FXML private TextField reservationIdField;
+    @FXML private TextField createdAtField;
+    @FXML private TextField eventIdField;
     @FXML private Label eventTitleLabel;
     @FXML private Label eventDateLabel;
-    @FXML private Label eventSeatsLabel;
-    @FXML private Label eventDescriptionLabel;
-    
-    @FXML private Label locationNameLabel;
-    @FXML private Label locationAddressLabel;
-    @FXML private Label locationCapacityLabel;
-    
-    @FXML private WebView mapWebView;
-    
-    // Reservation form fields
-    @FXML private TextField fullNameField;
-    @FXML private TextField seatsField;
-    @FXML private TextField priceField;
-    @FXML private TextField totalPriceField;
+    @FXML private Label availableSeatsLabel;
     @FXML private Button reserveButton;
     @FXML private Button cancelButton;
 
-    private LocationDAO locationDAO = new LocationDAO();
+    private Event event;
     private ReservationDAO reservationDAO = new ReservationDAO();
-    private Event currentEvent;
+    private EventDAO eventDAO = new EventDAO();
 
     @FXML
     public void initialize() {
-        if (sidebarController != null) {
-            sidebarController.setActiveItem("events");
-        }
-        
         // Initialize seats field
         seatsField.setText("1");
-        
-        // Add listener to update total price
+
+        // Add listener to seats field to update total price
         seatsField.textProperty().addListener((obs, oldValue, newValue) -> {
-            updateTotalPrice();
-        });
-        
-        priceField.textProperty().addListener((obs, oldValue, newValue) -> {
             updateTotalPrice();
         });
         
@@ -71,73 +52,36 @@ public class EventDetailsController {
     }
 
     public void setEvent(Event event) {
-        this.currentEvent = event;
+        this.event = event;
+
+        // Set event details
         eventTitleLabel.setText(event.getTitle());
         if (event.getStartAt() != null) {
             eventDateLabel.setText(event.getStartAt().format(DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' HH:mm")));
         }
-        eventSeatsLabel.setText(event.getMaxSeats() + " seats available");
-        eventDescriptionLabel.setText(event.getDescription());
+        availableSeatsLabel.setText("Available seats: " + event.getMaxSeats());
 
-        try {
-            Location location = locationDAO.findAll().stream()
-                    .filter(l -> l.getId() == event.getLocationId())
-                    .findFirst()
-                    .orElse(null);
+        // Auto-fill event ID
+        eventIdField.setText(String.valueOf(event.getId()));
 
-            if (location != null) {
-                locationNameLabel.setText(location.getName());
-                locationAddressLabel.setText(location.getAddress());
-                locationCapacityLabel.setText("Capacity: " + location.getCapacity() + " people");
-                
-                // Load map if coordinates are available
-                if (location.getLatitude() != 0 && location.getLongitude() != 0) {
-                    String html = "<!DOCTYPE html><html><head>" +
-                        "<link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.7.1/dist/leaflet.css\" />" +
-                        "<script src=\"https://unpkg.com/leaflet@1.7.1/dist/leaflet.js\"></script>" +
-                        "<style>body { margin: 0; } #map { height: 300px; }</style>" +
-                        "</head><body>" +
-                        "<div id=\"map\"></div>" +
-                        "<script>" +
-                        "var map = L.map('map').setView([" + location.getLatitude() + ", " + location.getLongitude() + "], 15);" +
-                        "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {" +
-                        "    attribution: '© OpenStreetMap contributors'" +
-                        "}).addTo(map);" +
-                        "L.marker([" + location.getLatitude() + ", " + location.getLongitude() + "]).addTo(map);" +
-                        "</script>" +
-                        "</body></html>";
-                    mapWebView.getEngine().loadContent(html);
-                } else {
-                    mapWebView.setVisible(false);
-                }
-            } else {
-                locationNameLabel.setText("Unknown Location");
-                locationAddressLabel.setText("N/A");
-                locationCapacityLabel.setText("");
-                mapWebView.setVisible(false);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-        // Set default price for the event
-        BigDecimal pricePerSeat = new BigDecimal("25.00"); // Default price
+        // Set price per seat (assuming a default price, you can modify this logic)
+        BigDecimal pricePerSeat = new BigDecimal("25.00"); // Default price, you can make this dynamic
         priceField.setText(pricePerSeat.toString());
+
         updateTotalPrice();
     }
-    
+
     private void updateTotalPrice() {
         try {
             BigDecimal pricePerSeat = new BigDecimal(priceField.getText());
             int seats = Integer.parseInt(seatsField.getText());
             BigDecimal total = pricePerSeat.multiply(new BigDecimal(seats));
-            totalPriceField.setText(total.toString());
+            reservationIdField.setText("Will be auto-generated");
         } catch (NumberFormatException e) {
-            totalPriceField.setText("0.00");
+            reservationIdField.setText("Will be auto-generated");
         }
     }
 
-    @FXML
     private void handleReserve() {
         // Validation
         String name = fullNameField.getText().trim();
@@ -178,7 +122,7 @@ public class EventDetailsController {
             reservation.setName(name);
             reservation.setPrice(price);
             reservation.setSeats(seats);
-            reservation.setEventId(currentEvent.getId());
+            reservation.setEventId(event.getId());
             reservation.setUserId(SessionManager.getCurrentUser().getUserId());
             // Statut toujours WAITING - l'admin le changera plus tard
             reservation.setStatus(Reservation.Status.WAITING);
@@ -186,6 +130,10 @@ public class EventDetailsController {
             reservationDAO.save(reservation);
 
             showAlert("Succès", "Réservation créée avec succès!\nVotre réservation est en attente de confirmation par l'admin.", Alert.AlertType.INFORMATION);
+
+            // Update the form with generated values
+            reservationIdField.setText(String.valueOf(reservation.getId()));
+            createdAtField.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy 'at' HH:mm")));
 
             // Navigate back to events
             SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Events.fxml");
@@ -200,11 +148,6 @@ public class EventDetailsController {
 
     @FXML
     private void handleCancel() {
-        SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Events.fxml");
-    }
-    
-    @FXML
-    private void handleBack() {
         SceneNavigator.navigateTo("/com/carthagegg/fxml/front/Events.fxml");
     }
 

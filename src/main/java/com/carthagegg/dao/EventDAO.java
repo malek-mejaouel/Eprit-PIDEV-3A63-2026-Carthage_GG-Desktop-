@@ -82,6 +82,19 @@ public class EventDAO {
         }
     }
 
+    public Event findById(int id) throws SQLException {
+        String sql = "SELECT * FROM event WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapEvent(rs);
+                }
+            }
+        }
+        return null;
+    }
+
     private Event mapEvent(ResultSet rs) throws SQLException {
         Event e = new Event();
         if (hasColumn(rs, "id")) {

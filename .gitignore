@@ -35,6 +35,11 @@ build/
 ### VS Code ###
 .vscode/
 
+### Config ###
+.env
+config.properties
+src/main/resources/config.properties
+
 ### Mac OS ###
 .DS_Store
 

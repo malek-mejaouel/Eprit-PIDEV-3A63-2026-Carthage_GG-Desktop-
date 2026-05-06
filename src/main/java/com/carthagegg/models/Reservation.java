@@ -11,7 +11,9 @@ public class Reservation {
     private BigDecimal price;
     private LocalDateTime reservationDate;
     private int eventId;
+    private int seats;
     private Status status;
+    private int userId;
 
     public Reservation() {}
 
@@ -25,6 +27,10 @@ public class Reservation {
     public void setReservationDate(LocalDateTime reservationDate) { this.reservationDate = reservationDate; }
     public int getEventId() { return eventId; }
     public void setEventId(int eventId) { this.eventId = eventId; }
+    public int getSeats() { return seats; }
+    public void setSeats(int seats) { this.seats = seats; }
     public Status getStatus() { return status; }
     public void setStatus(Status status) { this.status = status; }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
 }

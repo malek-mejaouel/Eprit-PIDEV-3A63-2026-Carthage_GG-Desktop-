@@ -3,6 +3,7 @@ package com.carthagegg.controllers.front;
 import com.carthagegg.models.User;
 import com.carthagegg.services.VerificationService;
 import com.carthagegg.utils.ImageGenerator;
+import com.carthagegg.dao.EventDAO;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
 import javafx.fxml.FXML;
@@ -28,6 +29,8 @@ public class ProfileController {
     @FXML private VBox verificationBox;
     @FXML private SidebarController sidebarController;
 
+    private EventDAO eventDAO;
+
     private final VerificationService verificationService = new VerificationService();
 
     @FXML
@@ -39,6 +42,11 @@ public class ProfileController {
     }
 
     private void updateUI() {
+
+        // Initialize DAO
+        eventDAO = new EventDAO();
+
+        // Load user profile
         User user = SessionManager.getCurrentUser();
         if (user != null) {
             usernameLabel.setText(user.getUsername());
@@ -85,6 +93,14 @@ public class ProfileController {
         }
     }
 
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     private String formatRoles(String rolesJson) {
         if (rolesJson == null || rolesJson.isEmpty()) return "USER";
         return rolesJson.replace("[", "")
@@ -110,13 +126,13 @@ public class ProfileController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Upload Certification Image");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
-        
+
         File file = fileChooser.showOpenDialog(avatarView.getScene().getWindow());
         if (file != null) {
             try {
                 User user = SessionManager.getCurrentUser();
                 String role = formatRoles(user.getRoles());
-                
+
                 boolean success = verificationService.verifyCertification(user, file, role);
                 if (success) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -141,3 +157,8 @@ public class ProfileController {
         alert.showAndWait();
     }
 }
+
+
+
+
+

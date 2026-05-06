@@ -139,8 +139,36 @@ CREATE TABLE IF NOT EXISTS streams (
 CREATE TABLE IF NOT EXISTS locations (
     location_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    address TEXT
+    address TEXT,
+    capacity INT DEFAULT 100,
+    latitude DOUBLE DEFAULT 0.0,
+    longitude DOUBLE DEFAULT 0.0
 );
+
+-- Reservations Table
+DROP TABLE IF EXISTS reservation;
+CREATE TABLE reservation (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	name VARCHAR(255) NOT NULL COMMENT 'Full name of the person making the reservation',
+	price DECIMAL(10, 2) NOT NULL COMMENT 'Price of the reservation',
+	reservation_date DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Date when the reservation was created',
+	event_id INT NOT NULL COMMENT 'Reference to the event being reserved',
+	seats INT DEFAULT 1 COMMENT 'Number of seats reserved',
+	status ENUM('WAITING', 'CONFIRMED', 'CANCELLED') DEFAULT 'WAITING' COMMENT 'Reservation status: WAITING (pending admin approval), CONFIRMED (approved), CANCELLED (rejected/cancelled)',
+	user_id INT COMMENT 'Reference to the user who made the reservation',
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp when reservation was created',
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Timestamp when reservation was last updated',
+	FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
+	FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL,
+	INDEX idx_user_id (user_id),
+	INDEX idx_event_id (event_id),
+	INDEX idx_status (status)
+);
+
+-- Sample data for testing (optional)
+INSERT INTO reservation (name, price, event_id, seats, status, user_id) VALUES
+('Test Reservation 1', 50.00, 1, 2, 'WAITING', 1),
+('Test Reservation 2', 75.50, 1, 1, 'CONFIRMED', 1);
 
 -- Categories (for News/Products)
 CREATE TABLE IF NOT EXISTS categories (

@@ -66,6 +66,19 @@ public class LocationDAO {
         }
     }
 
+    public Location findById(int id) throws SQLException {
+        String sql = "SELECT * FROM location WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapLocation(rs);
+                }
+            }
+        }
+        return null;
+    }
+
     private Location mapLocation(ResultSet rs) throws SQLException {
         Location l = new Location();
         l.setId(rs.getInt("id"));

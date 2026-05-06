@@ -6,8 +6,10 @@ import com.carthagegg.dao.ReservationDAO;
 import com.carthagegg.models.Event;
 import com.carthagegg.models.Location;
 import com.carthagegg.models.Reservation;
+import com.carthagegg.utils.ConfigUtils;
 import com.carthagegg.utils.SceneNavigator;
 import com.carthagegg.utils.SessionManager;
+import com.carthagegg.utils.PDFTicketGenerator;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,11 +19,24 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public class EventsManagementController {
 
@@ -125,6 +140,10 @@ public class EventsManagementController {
     private Event selectedEvent;
     private Location selectedLocation;
     private Reservation selectedReservation;
+
+    private static final String OPENAI_API_KEY = ConfigUtils.getProperty("openai.api.key");
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final Gson gson = new Gson();
 
     @FXML
     public void initialize() {
@@ -302,13 +321,16 @@ public class EventsManagementController {
         colResStatus.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStatus().name()));
 
         colResActions.setCellFactory(param -> new TableCell<Reservation, Void>() {
+            private final Button emailBtn = new Button("📧 Email");
             private final Button editBtn = new Button("Edit");
             private final Button deleteBtn = new Button("Delete");
-            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
+            private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(10, emailBtn, editBtn, deleteBtn);
 
             {
+                emailBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white;");
                 editBtn.getStyleClass().add("btn-gold");
                 deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white;");
+                emailBtn.setOnAction(e -> handleSendEmailTicket(getTableView().getItems().get(getIndex())));
                 editBtn.setOnAction(e -> handleEditReservation(getTableView().getItems().get(getIndex())));
                 deleteBtn.setOnAction(e -> handleDeleteReservation(getTableView().getItems().get(getIndex())));
             }
@@ -635,6 +657,120 @@ public class EventsManagementController {
         });
     }
 
+    private void handleDownloadTicket(Reservation reservation) {
+        try {
+            // Get associated event
+            Event event = eventsList.stream()
+                .filter(e -> e.getId() == reservation.getEventId())
+                .findFirst()
+                .orElse(null);
+            
+            if (event == null) {
+                showAlert("Error", "Event not found for this reservation", Alert.AlertType.ERROR);
+                return;
+            }
+            
+            // Get associated location
+            Location location = locationsList.stream()
+                .filter(l -> l.getId() == event.getLocationId())
+                .findFirst()
+                .orElse(null);
+            
+            if (location == null) {
+                showAlert("Error", "Location not found for this event", Alert.AlertType.ERROR);
+                return;
+            }
+            
+            // Generate ticket file
+            File ticketFile = PDFTicketGenerator.generateReservationTicket(reservation, event, location);
+            
+            // Open file chooser to save
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save Reservation Ticket");
+            fileChooser.setInitialFileName("Ticket_" + reservation.getId() + ".pdf");
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+            );
+            
+            File selectedFile = fileChooser.showSaveDialog(null);
+            if (selectedFile != null) {
+                // Copy generated file to selected location
+                Files.copy(
+                    Paths.get(ticketFile.getAbsolutePath()),
+                    Paths.get(selectedFile.getAbsolutePath()),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                );
+                showAlert("Success", "Ticket downloaded successfully!", Alert.AlertType.INFORMATION);
+                
+                // Clean up temp file
+                if (ticketFile.exists()) {
+                    ticketFile.delete();
+                }
+            }
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to generate ticket: " + ex.getMessage(), Alert.AlertType.ERROR);
+            ex.printStackTrace();
+        }
+    }
+
+    private void handleSendEmailTicket(Reservation reservation) {
+        try {
+            // Get user information
+            com.carthagegg.dao.UserDAO userDAO = new com.carthagegg.dao.UserDAO();
+            com.carthagegg.models.User user = userDAO.findById(reservation.getUserId());
+
+            if (user == null) {
+                showAlert("Error", "User not found for this reservation", Alert.AlertType.ERROR);
+                return;
+            }
+
+            // Get associated event
+            Event event = eventsList.stream()
+                .filter(e -> e.getId() == reservation.getEventId())
+                .findFirst()
+                .orElse(null);
+
+            if (event == null) {
+                showAlert("Error", "Event not found for this reservation", Alert.AlertType.ERROR);
+                return;
+            }
+
+            // Get associated location
+            Location location = locationsList.stream()
+                .filter(l -> l.getId() == event.getLocationId())
+                .findFirst()
+                .orElse(null);
+
+            if (location == null) {
+                showAlert("Error", "Location not found for this event", Alert.AlertType.ERROR);
+                return;
+            }
+
+            // Generate PDF ticket
+            File pdfFile = PDFTicketGenerator.generateReservationTicket(reservation, event, location);
+
+            // Send email with PDF attachment
+            boolean emailSent = com.carthagegg.utils.EmailService.sendReservationConfirmation(
+                user.getEmail(),
+                user.getFirstName() + " " + user.getLastName(),
+                reservation.getId(),
+                event.getTitle(),
+                pdfFile
+            );
+
+            if (emailSent) {
+                showAlert("Success", "Email sent successfully to " + user.getEmail(), Alert.AlertType.INFORMATION);
+            } else {
+                showAlert("Error", "Failed to send email", Alert.AlertType.ERROR);
+            }
+
+        } catch (Exception ex) {
+            showAlert("Error", "Failed to send email: " + ex.getMessage(), Alert.AlertType.ERROR);
+            ex.printStackTrace();
+        }
+    }
+
     @FXML private void handleSaveReservation() {
         if (!validateReservationForm()) return;
 
@@ -683,6 +819,96 @@ public class EventsManagementController {
         alert.setTitle(title);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void handleGenerateDescription() {
+        String title = eventTitleField.getText();
+        Location location = eventLocationComboBox.getValue();
+        String date = eventStartDatePicker.getValue() != null ? eventStartDatePicker.getValue().toString() : "";
+        String seats = eventSeatsField.getText();
+
+        if (title.isEmpty() || location == null || date.isEmpty() || seats.isEmpty()) {
+            showAlert("Error", "Please fill in title, location, start date, and seats before generating description.", Alert.AlertType.ERROR);
+            return;
+        }
+
+        String prompt = "Generate an engaging description for an event titled '" + title + "' at '" + location.getName() + "' (" + location.getAddress() + ") starting on " + date + " with " + seats + " seats available. Make it exciting and informative. Keep it to 2-3 sentences.";
+
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                // Try OpenAI first
+                if (!OPENAI_API_KEY.equals("your-openai-api-key-here")) {
+                    return generateWithOpenAI(prompt);
+                } else {
+                    // Use Hugging Face alternative if no OpenAI key
+                    return generateWithHuggingFace(prompt);
+                }
+            } catch (Exception e) {
+                // Fallback to Hugging Face if OpenAI fails
+                try {
+                    return generateWithHuggingFace(prompt);
+                } catch (Exception ex) {
+                    return generateFallbackDescription(title, location, seats);
+                }
+            }
+        }).thenAccept(description -> {
+            javafx.application.Platform.runLater(() -> eventDescriptionArea.setText(description));
+        });
+    }
+
+    private String generateWithOpenAI(String prompt) throws Exception {
+        JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("model", "gpt-3.5-turbo");
+        
+        JsonArray messages = new JsonArray();
+        JsonObject message = new JsonObject();
+        message.addProperty("role", "user");
+        message.addProperty("content", prompt);
+        messages.add(message);
+        
+        requestBody.add("messages", messages);
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("https://api.openai.com/v1/chat/completions"))
+            .header("Content-Type", "application/json")
+            .header("Authorization", "Bearer " + OPENAI_API_KEY)
+            .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestBody)))
+            .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 200) {
+            JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
+            return jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString().trim();
+        } else {
+            throw new Exception("OpenAI Error " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    private String generateWithHuggingFace(String prompt) throws Exception {
+        JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("inputs", prompt);
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("https://api-inference.huggingface.co/models/gpt2"))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestBody)))
+            .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 200) {
+            JsonObject[] results = gson.fromJson(response.body(), JsonObject[].class);
+            if (results.length > 0) {
+                return results[0].get("generated_text").getAsString().trim();
+            }
+        }
+        throw new Exception("HuggingFace Error: " + response.statusCode());
+    }
+
+    private String generateFallbackDescription(String title, Location location, String seats) {
+        return "Rejoignez-nous pour " + title + " à " + location.getName() + " (" + location.getAddress() + "). "
+            + "Un événement inoubliable vous attend avec " + seats + " places disponibles. "
+            + "Ne manquez pas cette occasion unique de vivre une expérience extraordinaire!";
     }
 
     @FXML private void handleBack() { SceneNavigator.navigateTo("/com/carthagegg/fxml/back/AdminDashboard.fxml"); }

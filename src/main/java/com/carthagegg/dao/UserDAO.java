@@ -49,17 +49,7 @@ public class UserDAO {
         return null;
     }
 
-    public User findById(int userId) throws SQLException {
-        String sql = "SELECT * FROM users WHERE user_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapUser(rs);
-            }
-        }
-        return null;
-    }
+   
 
     public void save(User user) throws SQLException {
         String sql = "INSERT INTO users (email, password, roles, username, first_name, last_name, google_id, discord_id, avatar, is_active, created_at, updated_at) " +
@@ -119,7 +109,6 @@ public class UserDAO {
         u.setLastName(rs.getString("last_name"));
         u.setAvatar(rs.getString("avatar"));
         u.setGoogleId(rs.getString("google_id"));
-        u.setDiscordId(rs.getString("discord_id"));
         u.setActive(rs.getBoolean("is_active"));
         
         Timestamp lastLogin = rs.getTimestamp("last_login_at");
@@ -175,6 +164,20 @@ public class UserDAO {
             ps.setInt(2, userId);
             ps.executeUpdate();
         }
+    }
+
+    public User findById(int userId) throws SQLException {
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUser(rs);
+                }
+            }
+        }
+        return null;
     }
 
     public void activateUser(int userId) throws SQLException {
