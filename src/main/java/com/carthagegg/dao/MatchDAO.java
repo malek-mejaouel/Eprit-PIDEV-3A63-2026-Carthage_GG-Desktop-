@@ -25,14 +25,11 @@ public class MatchDAO {
         }
     }
 
-    private Connection conn;
-
     public MatchDAO() {
-        try {
-            this.conn = DatabaseConnection.getInstance();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    }
+
+    private Connection getConnection() throws SQLException {
+        return DatabaseConnection.getInstance();
     }
 
     public List<Match> findAll() throws SQLException {
@@ -43,12 +40,14 @@ public class MatchDAO {
                               "LEFT JOIN teams t2 ON m.team_b_id = t2.team_id " +
                               "LEFT JOIN tournaments tr ON m.tournament_id = tr.tournament_id " +
                               "ORDER BY m.match_date DESC";
-        try (Statement st = conn.createStatement();
+        try (Connection conn = getConnection();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sqlWithJoins)) {
             while (rs.next()) list.add(mapMatch(rs));
         } catch (SQLException ex) {
             String sqlFallback = "SELECT * FROM matches ORDER BY match_date DESC";
-            try (Statement st = conn.createStatement();
+            try (Connection conn = getConnection();
+                 Statement st = conn.createStatement();
                  ResultSet rs = st.executeQuery(sqlFallback)) {
                 while (rs.next()) list.add(mapMatch(rs));
             }
@@ -61,7 +60,8 @@ public class MatchDAO {
             throw new IllegalArgumentException("A match cannot have the same team on both sides.");
         }
         String sql = "INSERT INTO matches (match_date, score_team_a, score_team_b, tournament_id, game_id, team_a_id, team_b_id, is_rivalry) VALUES (?,?,?,?,?,?,?,?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (m.getMatchDate() != null) {
                 ps.setTimestamp(1, Timestamp.valueOf(m.getMatchDate()));
             } else {
@@ -87,7 +87,8 @@ public class MatchDAO {
             throw new IllegalArgumentException("A match cannot have the same team on both sides.");
         }
         String sql = "UPDATE matches SET match_date=?, score_team_a=?, score_team_b=?, tournament_id=?, game_id=?, team_a_id=?, team_b_id=?, is_rivalry=? WHERE match_id=?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             if (m.getMatchDate() != null) {
                 ps.setTimestamp(1, Timestamp.valueOf(m.getMatchDate()));
             } else {
@@ -115,7 +116,8 @@ public class MatchDAO {
 
     private void updateRivalryFlag(int teamAId, int teamBId, boolean isRivalry) throws SQLException {
         String sql = "UPDATE matches SET is_rivalry = ? WHERE (team_a_id = ? AND team_b_id = ?) OR (team_a_id = ? AND team_b_id = ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setBoolean(1, isRivalry);
             ps.setInt(2, teamAId);
             ps.setInt(3, teamBId);
@@ -127,7 +129,8 @@ public class MatchDAO {
 
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM matches WHERE match_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
         }
@@ -177,7 +180,8 @@ public class MatchDAO {
                      "LEFT JOIN tournaments tr ON m.tournament_id = tr.tournament_id " +
                      "WHERE (m.team_a_id = ? AND m.team_b_id = ?) OR (m.team_a_id = ? AND m.team_b_id = ?) " +
                      "ORDER BY m.match_date DESC";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, teamAId);
             ps.setInt(2, teamBId);
             ps.setInt(3, teamBId);
@@ -198,7 +202,8 @@ public class MatchDAO {
                      "LEFT JOIN tournaments tr ON m.tournament_id = tr.tournament_id " +
                      "WHERE m.team_a_id = ? OR m.team_b_id = ? " +
                      "ORDER BY m.match_date DESC";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, teamId);
             ps.setInt(2, teamId);
             try (ResultSet rs = ps.executeQuery()) {

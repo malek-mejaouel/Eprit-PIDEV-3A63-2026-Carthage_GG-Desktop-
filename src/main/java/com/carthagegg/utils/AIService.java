@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 public class AIService {
 
     // ─── Groq / OpenAI-compatible config ────────────────────────────────────
-    private static String groqApiKey;
+    private static String groqApiKey = ConfigManager.get("openai.api.key");
     private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
     private static final String GROQ_MODEL    = "llama-3.3-70b-versatile";
     private static final int    MAX_TOKENS    = 1024;
@@ -38,37 +38,7 @@ public class AIService {
             "https://generativelanguage.googleapis.com/v1/models/%s:generateContent?key=";
 
     static {
-        loadGroqConfig();
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // Groq config loading
-    // ════════════════════════════════════════════════════════════════════════
-
-    private static void loadGroqConfig() {
-        Properties props = new Properties();
-
-        // 1. Root-level config.properties
-        try (java.io.FileInputStream fis = new java.io.FileInputStream("config.properties")) {
-            props.load(fis);
-            groqApiKey = props.getProperty("openai.api.key");
-            if (groqApiKey != null) System.out.println("Groq key loaded from ./config.properties");
-        } catch (IOException ignored) {}
-
-        // 2. Classpath (src/main/resources)
-        if (groqApiKey == null) {
-            try (InputStream is = AIService.class.getResourceAsStream("/config.properties")) {
-                if (is != null) {
-                    props.load(is);
-                    groqApiKey = props.getProperty("openai.api.key");
-                    if (groqApiKey != null) System.out.println("Groq key loaded from classpath");
-                }
-            } catch (IOException e) {
-                System.err.println("Error reading classpath config.properties");
-            }
-        }
-
-        // 3. Environment variables
+        // Fallback to environment variables if not in config
         if (isBlankOrPlaceholder(groqApiKey)) {
             groqApiKey = System.getenv("OPENAI_API_KEY");
             if (groqApiKey != null) System.out.println("Groq key loaded from OPENAI_API_KEY env var");
@@ -107,11 +77,6 @@ public class AIService {
         }
         String masked = groqApiKey.length() > 10 ? groqApiKey.substring(0, 10) + "..." : "invalid-key";
         System.out.println("Using Groq API key: " + masked);
-
-        if (!groqApiKey.startsWith("gsk_")) {
-            System.err.println("WARNING: Key does not start with 'gsk_'. " +
-                    "Starts with: " + groqApiKey.substring(0, Math.min(groqApiKey.length(), 7)));
-        }
     }
 
     private JsonObject buildGroqRequestBody(String prompt) {
